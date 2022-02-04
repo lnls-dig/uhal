@@ -99,6 +99,7 @@
         (*((barp) + (addr)) = *(datap));                            \
     } while (0)
 
+#include "wb_acq_core_regs.h"
 
 struct pcie_bars {
     void *bar0;
@@ -107,3 +108,5 @@ struct pcie_bars {
 
 uint32_t bar4_read(const struct pcie_bars *bars, size_t addr);
 void bar4_read_u32s(const struct pcie_bars *bars, size_t addr, void *dest, size_t n);
+
+void decode_registers_print(struct acq_core *acq, FILE *f);

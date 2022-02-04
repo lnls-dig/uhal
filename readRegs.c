@@ -103,8 +103,13 @@ int main(int argc, char *argv[])
     } registers;
 
     bar4_read_u32s(&bars, address, registers.array, ACQ_CORE_SIZE_32);
-    for (unsigned i = 0; i < ACQ_CORE_SIZE_32; i++)
-        printf("%08X\n", registers.array[i]);
+    if (verbose) {
+        fprintf(stdout, "Raw register values:\n");
+        for (unsigned i = 0; i < ACQ_CORE_SIZE_32; i++)
+            fprintf(stdout, "%08X\n", registers.array[i]);
+    }
+
+    decode_registers_print(&registers.regs, stdout);
 
 exit_unmap_bar:
     unmap_bar(dev, 0, bars.bar0);

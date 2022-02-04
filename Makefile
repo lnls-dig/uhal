@@ -3,4 +3,4 @@ LDLIBS = -lpcidriver -lpthread
 
 all: readRegs
 
-readRegs: readRegs.c pcie.c
+readRegs: readRegs.c pcie.c decode.c
