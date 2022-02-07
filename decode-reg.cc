@@ -11,9 +11,11 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <memory>
 
 #include <pciDriver/lib/PciDevice.h>
 
+#include "decoders.h"
 #include "pcie.h"
 #include "wb_acq_core_regs.h"
 
@@ -88,11 +90,9 @@ int main(int argc, char *argv[])
         fprintf (stdout, "BAR 4 host address = %p\n", bars.bar4);
     }
 
-#define ACQ_CORE_SIZE_32 (sizeof(struct acq_core) / 4)
-    struct acq_core registers;
-    bar4_read_u32s(&bars, address, &registers, ACQ_CORE_SIZE_32);
-
-    decode_registers_print(&registers, stdout);
+    std::unique_ptr<RegisterDecoder> dec{new LnlsBpmAcqCore};
+    dec->read(&bars, address);
+    dec->print(stdout);
 
     return 0;
 }

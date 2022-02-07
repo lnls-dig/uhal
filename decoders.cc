@@ -5,11 +5,20 @@
  * Released according to the GNU GPL, version 3 or any later version.
  */
 
-#include <cstdio>
 #include <cstring>
 
-#include "pcie.h"
-#include "wb_acq_core_regs.h"
+#include "decoders.h"
+
+void RegisterDecoder::read(const struct pcie_bars *bars, size_t address)
+{
+    bar4_read_u32s(bars, address, read_dest, read_size/4);
+}
+
+LnlsBpmAcqCore::LnlsBpmAcqCore()
+{
+    read_size = sizeof regs;
+    read_dest = &regs;
+}
 
 static void print_bool(FILE *f, const char *name, int value, const char *truth, const char *not_truth)
 {
@@ -31,16 +40,16 @@ static void print_value(FILE *f, const char *name, unsigned value)
     fprintf(f, "%s: %u\n", name, value);
 }
 
-void decode_registers_print(struct acq_core *acq, FILE *f)
+void LnlsBpmAcqCore::print(FILE *f)
 {
     unsigned t, t2;
 
     /* control register */
-    t = acq->ctl;
+    t = regs.ctl;
     print_bool(f, "FSQ_ACQ_NOW", t & ACQ_CORE_CTL_FSM_ACQ_NOW, "acquire immediately", "wait on trigger");
 
     /* status register */
-    t = acq->sta;
+    t = regs.sta;
 
     fprintf(f, "FSM_STATE: ");
     const char *fsm_states[] = {"IDLE", "PRE_TRIG", "WAIT_TRIG", "POST_TRIG", "DECR_SHOT"};
@@ -66,7 +75,7 @@ void decode_registers_print(struct acq_core *acq, FILE *f)
     print_progress(f, "DDR3_TRANS_DONE", t & ACQ_CORE_STA_DDR3_TRANS_DONE);
 
     /* trigger configuration */
-    t = acq->trig_cfg;
+    t = regs.trig_cfg;
     print_bool(f, "HW_TRIG_SEL", t & ACQ_CORE_TRIG_CFG_HW_TRIG_SEL, "external", "internal");
     print_bool(f, "HW_TRIG_POL", t & ACQ_CORE_TRIG_CFG_HW_TRIG_POL, "negative edge", "positive edge");
     print_enable(f, "HW_TRIG_EN", t & ACQ_CORE_TRIG_CFG_HW_TRIG_EN);
@@ -74,33 +83,33 @@ void decode_registers_print(struct acq_core *acq, FILE *f)
     print_value(f, "INT_TRIG_SEL channel", ((t & ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_MASK) >> ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_SHIFT) + 1);
 
     /* trigger data config thresold */
-    t = acq->trig_data_cfg;
+    t = regs.trig_data_cfg;
     print_value(f, "THRES_FILT", (t & ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_MASK) >> ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_SHIFT);
 
     /* trigger */
-    print_value(f, "TRIG_DATA_THRES", acq->trig_data_thres);
-    print_value(f, "TRIG_DLY", acq->trig_dly);
+    print_value(f, "TRIG_DATA_THRES", regs.trig_data_thres);
+    print_value(f, "TRIG_DLY", regs.trig_dly);
 
     /* number of shots */
-    t = acq->shots;
+    t = regs.shots;
     print_value(f, "NB", (t & ACQ_CORE_SHOTS_NB_MASK) >> ACQ_CORE_SHOTS_NB_SHIFT);
     print_bool(f, "MULTISHOT_RAM_SIZE_IMPL", t & ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_IMPL, "multishot RAM size reg is implemented", "multishot RAM size reg is not implemented");
     print_value(f, "MULTISHOT_RAM_SIZE", (t & ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_MASK) >> ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_SHIFT);
 
     /* trigger address register */
-    print_value(f, "TRIG_POS", acq->trig_pos);
+    print_value(f, "TRIG_POS", regs.trig_pos);
     
     /* samples */
-    print_value(f, "PRE_SAMPLES", acq->pre_samples);
-    print_value(f, "POST_SAMPLES", acq->post_samples);
-    print_value(f, "SAMPLES_CNT", acq->samples_cnt);
+    print_value(f, "PRE_SAMPLES", regs.pre_samples);
+    print_value(f, "POST_SAMPLES", regs.post_samples);
+    print_value(f, "SAMPLES_CNT", regs.samples_cnt);
 
     /* ddr3 addresses */
-    print_value(f, "DDR3_START_ADDR", acq->ddr3_start_addr);
-    print_value(f, "DDR3_END_ADDR", acq->ddr3_end_addr);
+    print_value(f, "DDR3_START_ADDR", regs.ddr3_start_addr);
+    print_value(f, "DDR3_END_ADDR", regs.ddr3_end_addr);
 
     /* acquisition channel control */
-    t = acq->acq_chan_ctl;
+    t = regs.acq_chan_ctl;
     /* will be used to determine how many channels to show in the next block */
     unsigned num_chan = (t & ACQ_CORE_ACQ_CHAN_CTL_NUM_CHAN_MASK) >> ACQ_CORE_ACQ_CHAN_CTL_NUM_CHAN_SHIFT;
     print_value(f, "WHICH", (t & ACQ_CORE_ACQ_CHAN_CTL_WHICH_MASK) >> ACQ_CORE_ACQ_CHAN_CTL_WHICH_SHIFT);
@@ -116,7 +125,7 @@ void decode_registers_print(struct acq_core *acq, FILE *f)
     /* channel description and atom description - 24 channels maximum (0-23).
      * the loop being used depends on the struct having no padding and elements in a set order */
     uint32_t p[MAX_NUM_CHAN];
-    memcpy(p, &acq->ch0_desc, sizeof p);
+    memcpy(p, &regs.ch0_desc, sizeof p);
     for (unsigned i = 0; i < num_chan; i++) {
         uint32_t desc = p[i*2], adesc = p[i*2 + 1];
         fprintf(f, "    channel %u:\n", i);

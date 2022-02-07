@@ -5,7 +5,7 @@ CXXFLAGS = -std=c++11 $(BASEFLAGS)
 LDLIBS = -lpcidriver -lpthread
 
 ALL = decode-reg
-OBJ = decode-reg.o pcie.o decoder.o
+OBJ = decode-reg.o pcie.o decoders.o
 
 all: $(ALL)
 
