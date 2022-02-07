@@ -5,8 +5,10 @@
  * Released according to the GNU GPL, version 3 or any later version.
  */
 
+#ifndef PCIE_H
+#define PCIE_H
+
 #include <stdint.h>
-#include <stdio.h>
 #include <sys/types.h>
 
 #include "wb_acq_core_regs.h"
@@ -72,4 +74,4 @@ void bar4_read_u32s(const struct pcie_bars *bars, size_t addr, void *dest, size_
 }
 #endif
 
-void decode_registers_print(struct acq_core *acq, FILE *f);
+#endif
