@@ -106,6 +106,11 @@ void decode_registers_print(struct acq_core *acq, FILE *f)
     print_value(f, "DTRIG_WHICH", (t & ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_MASK) >> ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_SHIFT);
     print_value(f, "NUM_CHAN", num_chan);
 
+    if (num_chan > 24) {
+        fprintf(f, "ERROR: max number of supported channels is 24, received %u\n", num_chan);
+        return;
+    }
+
     /* channel description and atom description - 24 channels maximum (0-23).
      * the loop being used depends on the struct having no padding and elements in a set order */
     uint32_t *p = &acq->ch0_desc;
