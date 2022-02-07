@@ -14,9 +14,7 @@
 
 #include <pciDriver/lib/PciDevice.h>
 
-extern "C" {
 #include "pcie.h"
-}
 #include "wb_acq_core_regs.h"
 
 static void print_help (char *program_name)

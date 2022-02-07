@@ -6,6 +6,7 @@
  */
 
 #include <stdint.h>
+#include <stdio.h>
 #include <sys/types.h>
 
 #include "wb_acq_core_regs.h"
@@ -62,7 +63,13 @@ struct pcie_bars {
     void *bar4;
 };
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 uint32_t bar4_read(const struct pcie_bars *bars, size_t addr);
 void bar4_read_u32s(const struct pcie_bars *bars, size_t addr, void *dest, size_t n);
+#ifdef __cplusplus
+}
+#endif
 
 void decode_registers_print(struct acq_core *acq, FILE *f);
