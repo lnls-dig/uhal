@@ -5,15 +5,19 @@
  * Released according to the GNU GPL, version 3 or any later version.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <getopt.h>
 #include <inttypes.h>
+#include <unistd.h>
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #include <pciDriver/lib/pciDriver.h>
+#include <pciDriver/lib/PciDevice.h>
 
+extern "C" {
 #include "pcie.h"
+}
 #include "wb_acq_core_regs.h"
 
 static void print_help (char *program_name)
@@ -79,7 +83,7 @@ int main(int argc, char *argv[])
     }
 
     uint64_t address = 0;
-    if (sscanf (address_str, "%"PRIx64, &address) != 1) {
+    if (sscanf (address_str, "%" PRIx64, &address) != 1) {
         fprintf (stderr, "--address format is invalid!\n");
         print_help (argv [0]);
         return 1;
@@ -104,19 +108,10 @@ int main(int argc, char *argv[])
     }
 
 #define ACQ_CORE_SIZE_32 (sizeof(struct acq_core) / 4)
-    union {
-        struct acq_core regs;
-        uint32_t array[ACQ_CORE_SIZE_32];
-    } registers;
+    struct acq_core registers;
+    bar4_read_u32s(&bars, address, &registers, ACQ_CORE_SIZE_32);
 
-    bar4_read_u32s(&bars, address, registers.array, ACQ_CORE_SIZE_32);
-    if (verbose) {
-        fprintf(stdout, "Raw register values:\n");
-        for (unsigned i = 0; i < ACQ_CORE_SIZE_32; i++)
-            fprintf(stdout, "%08X\n", registers.array[i]);
-    }
-
-    decode_registers_print(&registers.regs, stdout);
+    decode_registers_print(&registers, stdout);
 
 exit_unmap_bar:
     unmap_bar(dev, 0, bars.bar0);

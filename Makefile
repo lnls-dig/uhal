@@ -1,6 +1,16 @@
-CFLAGS = -O2 -std=c99 -g2
+BASEFLAGS = -O2 -g2 -Wall -Wextra
+CFLAGS = -std=c99 $(BASEFLAGS)
+CXXFLAGS = -std=c++11 $(BASEFLAGS)
+
 LDLIBS = -lpcidriver -lpthread
 
-all: decode-reg
+ALL = decode-reg
+OBJ = decode-reg.o pcie.o decoder.o
 
-decode-reg: decode-reg.c pcie.c decoder.c
+all: $(ALL)
+
+decode-reg: $(OBJ)
+	$(CXX) $(BASEFLAGS) $(LDFLAGS) $^ -o $@ $(LDLIBS)
+
+clean:
+	rm -f $(ALL) $(OBJ)
