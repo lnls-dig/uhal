@@ -142,9 +142,13 @@ void LnlsBpmAcqCore::print(FILE *f, bool verbose)
     bool v = verbose;
     unsigned t, t2;
 
+    auto print = [f, v](const char *name, uint32_t value) {
+        printers.at(name).print(f, v, value);
+    };
+
     /* control register */
     t = regs.ctl;
-    printers.at("FSQ_ACQ_NOW").print(f, v, t & ACQ_CORE_CTL_FSM_ACQ_NOW);
+    print("FSQ_ACQ_NOW", t & ACQ_CORE_CTL_FSM_ACQ_NOW);
 
     /* status register */
     t = regs.sta;
@@ -167,52 +171,52 @@ void LnlsBpmAcqCore::print(FILE *f, bool verbose)
     }
     fputc('\n', f);
 
-    printers.at("FSM_ACQ_DONE").print(f, v, t & ACQ_CORE_STA_FSM_ACQ_DONE);
-    printers.at("FC_TRANS_DONE").print(f, v, t & ACQ_CORE_STA_FC_TRANS_DONE);
-    printers.at("FC_FULL").print(f, v, t & ACQ_CORE_STA_FC_FULL);
-    printers.at("DDR3_TRANS_DONE").print(f, v, t & ACQ_CORE_STA_DDR3_TRANS_DONE);
+    print("FSM_ACQ_DONE", t & ACQ_CORE_STA_FSM_ACQ_DONE);
+    print("FC_TRANS_DONE", t & ACQ_CORE_STA_FC_TRANS_DONE);
+    print("FC_FULL", t & ACQ_CORE_STA_FC_FULL);
+    print("DDR3_TRANS_DONE", t & ACQ_CORE_STA_DDR3_TRANS_DONE);
 
     /* trigger configuration */
     t = regs.trig_cfg;
-    printers.at("HW_TRIG_SEL").print(f, v, t & ACQ_CORE_TRIG_CFG_HW_TRIG_SEL);
-    printers.at("HW_TRIG_POL").print(f, v, t & ACQ_CORE_TRIG_CFG_HW_TRIG_POL);
-    printers.at("HW_TRIG_EN").print(f, v, t & ACQ_CORE_TRIG_CFG_HW_TRIG_EN);
-    printers.at("SW_TRIG_EN").print(f, v, t & ACQ_CORE_TRIG_CFG_SW_TRIG_EN);
-    printers.at("INT_TRIG_SEL").print(f, v, ((t & ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_MASK) >> ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_SHIFT) + 1);
+    print("HW_TRIG_SEL", t & ACQ_CORE_TRIG_CFG_HW_TRIG_SEL);
+    print("HW_TRIG_POL", t & ACQ_CORE_TRIG_CFG_HW_TRIG_POL);
+    print("HW_TRIG_EN", t & ACQ_CORE_TRIG_CFG_HW_TRIG_EN);
+    print("SW_TRIG_EN", t & ACQ_CORE_TRIG_CFG_SW_TRIG_EN);
+    print("INT_TRIG_SEL", ((t & ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_MASK) >> ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_SHIFT) + 1);
 
     /* trigger data config thresold */
     t = regs.trig_data_cfg;
-    printers.at("THRES_FILT").print(f, v, (t & ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_MASK) >> ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_SHIFT);
+    print("THRES_FILT", (t & ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_MASK) >> ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_SHIFT);
 
     /* trigger */
-    printers.at("TRIG_DATA_THRES").print(f, v, regs.trig_data_thres);
-    printers.at("TRIG_DLY").print(f, v, regs.trig_dly);
+    print("TRIG_DATA_THRES", regs.trig_data_thres);
+    print("TRIG_DLY", regs.trig_dly);
 
     /* number of shots */
     t = regs.shots;
-    printers.at("NB").print(f, v, (t & ACQ_CORE_SHOTS_NB_MASK) >> ACQ_CORE_SHOTS_NB_SHIFT);
-    printers.at("MULTISHOT_RAM_SIZE_IMPL").print(f, v, t & ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_IMPL);
-    printers.at("MULTISHOT_RAM_SIZE").print(f, v, (t & ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_MASK) >> ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_SHIFT);
+    print("NB", (t & ACQ_CORE_SHOTS_NB_MASK) >> ACQ_CORE_SHOTS_NB_SHIFT);
+    print("MULTISHOT_RAM_SIZE_IMPL", t & ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_IMPL);
+    print("MULTISHOT_RAM_SIZE", (t & ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_MASK) >> ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_SHIFT);
 
     /* trigger address register */
-    printers.at("TRIG_POS").print(f, v, regs.trig_pos);
+    print("TRIG_POS", regs.trig_pos);
     
     /* samples */
-    printers.at("PRE_SAMPLES").print(f, v, regs.pre_samples);
-    printers.at("POST_SAMPLES").print(f, v, regs.post_samples);
-    printers.at("SAMPLES_CNT").print(f, v, regs.samples_cnt);
+    print("PRE_SAMPLES", regs.pre_samples);
+    print("POST_SAMPLES", regs.post_samples);
+    print("SAMPLES_CNT", regs.samples_cnt);
 
     /* ddr3 addresses */
-    printers.at("DDR3_START_ADDR").print(f, v, regs.ddr3_start_addr);
-    printers.at("DDR3_END_ADDR").print(f, v, regs.ddr3_end_addr);
+    print("DDR3_START_ADDR", regs.ddr3_start_addr);
+    print("DDR3_END_ADDR", regs.ddr3_end_addr);
 
     /* acquisition channel control */
     t = regs.acq_chan_ctl;
     /* will be used to determine how many channels to show in the next block */
     unsigned num_chan = (t & ACQ_CORE_ACQ_CHAN_CTL_NUM_CHAN_MASK) >> ACQ_CORE_ACQ_CHAN_CTL_NUM_CHAN_SHIFT;
-    printers.at("WHICH").print(f, v, (t & ACQ_CORE_ACQ_CHAN_CTL_WHICH_MASK) >> ACQ_CORE_ACQ_CHAN_CTL_WHICH_SHIFT);
-    printers.at("DTRIG_WHICH").print(f, v, (t & ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_MASK) >> ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_SHIFT);
-    printers.at("NUM_CHAN").print(f, v, num_chan);
+    print("WHICH", (t & ACQ_CORE_ACQ_CHAN_CTL_WHICH_MASK) >> ACQ_CORE_ACQ_CHAN_CTL_WHICH_SHIFT);
+    print("DTRIG_WHICH", (t & ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_MASK) >> ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_SHIFT);
+    print("NUM_CHAN", num_chan);
 
 #define MAX_NUM_CHAN 24
     if (num_chan > MAX_NUM_CHAN) {
@@ -227,9 +231,9 @@ void LnlsBpmAcqCore::print(FILE *f, bool verbose)
     for (unsigned i = 0; i < num_chan; i++) {
         uint32_t desc = p[i*2], adesc = p[i*2 + 1];
         fprintf(f, "    channel %u:\n", i);
-        printers.at("INT_WIDTH").print(f, v, (desc & ACQ_CORE_CH0_DESC_INT_WIDTH_MASK) >> ACQ_CORE_CH0_DESC_INT_WIDTH_SHIFT);
-        printers.at("NUM_COALESCE").print(f, v, (desc & ACQ_CORE_CH0_DESC_NUM_COALESCE_MASK) >> ACQ_CORE_CH0_DESC_NUM_COALESCE_SHIFT);
-        printers.at("NUM_ATOMS").print(f, v, (adesc & ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_MASK) >> ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_SHIFT);
-        printers.at("ATOM_WIDTH").print(f, v, (adesc & ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_MASK) >> ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_SHIFT);
+        print("INT_WIDTH", (desc & ACQ_CORE_CH0_DESC_INT_WIDTH_MASK) >> ACQ_CORE_CH0_DESC_INT_WIDTH_SHIFT);
+        print("NUM_COALESCE", (desc & ACQ_CORE_CH0_DESC_NUM_COALESCE_MASK) >> ACQ_CORE_CH0_DESC_NUM_COALESCE_SHIFT);
+        print("NUM_ATOMS", (adesc & ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_MASK) >> ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_SHIFT);
+        print("ATOM_WIDTH", (adesc & ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_MASK) >> ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_SHIFT);
     }
 }
