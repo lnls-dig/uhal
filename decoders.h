@@ -21,7 +21,7 @@ class RegisterDecoder {
   public:
     virtual ~RegisterDecoder() {};
     virtual void read(const struct pcie_bars *, size_t);
-    virtual void print(FILE *) { /* dummy */ }
+    virtual void print(FILE *, bool) { /* dummy */ }
 };
 
 class LnlsBpmAcqCore: public RegisterDecoder {
@@ -29,5 +29,5 @@ class LnlsBpmAcqCore: public RegisterDecoder {
 
   public:
     LnlsBpmAcqCore();
-    void print(FILE *);
+    void print(FILE *, bool);
 };

@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
 
     std::unique_ptr<RegisterDecoder> dec{new LnlsBpmAcqCore};
     dec->read(&bars, address);
-    dec->print(stdout);
+    dec->print(stdout, verbose);
 
     return 0;
 }
