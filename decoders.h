@@ -5,6 +5,9 @@
  * Released according to the GNU GPL, version 3 or any later version.
  */
 
+#ifndef DECODERS_H
+#define DECODERS_H
+
 #include <cstdint>
 #include <cstdio>
 
@@ -31,3 +34,5 @@ class LnlsBpmAcqCore: public RegisterDecoder {
     LnlsBpmAcqCore();
     void print(FILE *, bool);
 };
+
+#endif
