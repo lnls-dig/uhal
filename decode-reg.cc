@@ -6,7 +6,6 @@
  */
 
 #include <inttypes.h>
-#include <unistd.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -15,70 +14,32 @@
 
 #include <pciDriver/lib/PciDevice.h>
 
+#include "docopt.h"
+
 #include "decoders.h"
 #include "pcie.h"
 #include "wb_acq_core_regs.h"
 
-static void print_help (char *program_name)
-{
-    fprintf (stdout, "Simple FPGA Register Reader\n"
-            "Usage: %s [options]\n"
-            "  -h                        Display this usage information\n"
-            "  -b <Device Number>        Device number as used in /dev/fpga-N\n"
-            "  -v                        Verbose output\n"
-            "  -a <FPGA Address in hex>  Base address to start reads from\n",
-            program_name);
-}
+static const char usage[] =
+R"(Simple FPGA Register Reader
+
+Usage:
+    decode-reg [-hv] -b <device> -a <base_address>
+
+-h                 Display this usage information
+-v                 Verbose output
+-b <device>        Device number as used in /dev/fpga-N
+-a <base_address>  Base address to start reads from (in hex)
+)";
 
 int main(int argc, char *argv[])
 {
-    int verbose = 0;
-    char *device_number_str = NULL;
-    char *address_str = NULL;
-    int opt;
+    auto args = docopt::docopt(usage, {argv+1, argv+argc}, true);
 
-    while ((opt = getopt (argc, argv, "hb:va:")) != -1) {
-        /* Get the user selected options */
-        switch (opt) {
-            /* Display Help */
-            case 'h':
-                print_help (argv [0]);
-                return 1;
-            case 'b':
-                device_number_str = optarg;
-                break;
-            case 'v':
-                verbose = 1;
-                break;
-            case 'a':
-                address_str = optarg;
-                break;
-            default:
-                fprintf (stderr, "Could not parse options\n");
-                print_help (argv [0]);
-                return 1;
-        }
-    }
-
-    /* Parse data/address */
-    if (address_str == NULL) {
-        fprintf (stderr, "no address has been selected!\n");
-        return 1;
-    }
-
-    uint64_t address = 0;
-    if (sscanf (address_str, "%" PRIx64, &address) != 1) {
-        fprintf (stderr, "-a format is invalid!\n");
-        print_help (argv [0]);
-        return 1;
-    }
-
-    int device_number;
-    if (device_number_str == NULL || sscanf (device_number_str, "%d", &device_number) != 1) {
-        fprintf(stderr, "invalid or unspecified device number\n");
-        print_help(argv[0]);
-        return 1;
-    }
+    bool verbose = args["-v"].asBool();
+    std::string address_str = args["<base_address>"].asString();
+    size_t address = std::stol(address_str, nullptr, 16);
+    int device_number = args["<device>"].asLong();
 
     pciDriver::PciDevice dev{device_number};
     dev.open();
