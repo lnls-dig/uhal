@@ -61,13 +61,15 @@
     SET_PG(bar0, PCIE_CFG_REG_WB_PG, num)
 
 struct pcie_bars {
-    void *bar0;
-    void *bar4;
+    volatile void *bar0;
+    volatile void *bar4;
 };
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+void bar4_write(const struct pcie_bars *bars, size_t addr, uint32_t value);
+void bar4_write_u32s(const struct pcie_bars *bars, size_t addr, const void *src, size_t n);
 uint32_t bar4_read(const struct pcie_bars *bars, size_t addr);
 void bar4_read_u32s(const struct pcie_bars *bars, size_t addr, void *dest, size_t n);
 #ifdef __cplusplus
