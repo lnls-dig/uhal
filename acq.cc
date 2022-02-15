@@ -5,11 +5,13 @@
  * Released according to the GNU GPL, version 3 or any later version.
  */
 
+#include <array>
 #include <cstring>
 #include <unordered_map>
 
 #include "printer.h"
 #include "decoders.h"
+#include "acq.h"
 
 LnlsBpmAcqCore::LnlsBpmAcqCore()
 {
@@ -175,4 +177,60 @@ void LnlsBpmAcqCore::print(FILE *f, bool verbose)
         print("NUM_ATOMS", (adesc & ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_MASK) >> ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_SHIFT);
         print("ATOM_WIDTH", (adesc & ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_MASK) >> ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_SHIFT);
     }
+}
+
+static void clear_and_insert(uint32_t &dest, unsigned value, uint32_t mask, unsigned shift)
+{
+    dest &= UINT32_MAX & ~mask;
+    dest |= (value << shift) & mask;
+}
+
+static void insert_bit(uint32_t &dest, bool value, uint32_t mask)
+{
+    if (value)
+        dest |= mask;
+    else
+        dest &= ~mask;
+}
+
+void LnlsBpmAcqCoreController::encode_config()
+{
+    clear_and_insert(regs.acq_chan_ctl, channel, ACQ_CORE_ACQ_CHAN_CTL_WHICH_MASK, ACQ_CORE_ACQ_CHAN_CTL_WHICH_SHIFT);
+    regs.pre_samples = pre_samples;
+    regs.post_samples = post_samples;
+    clear_and_insert(regs.shots, number_shots, ACQ_CORE_SHOTS_NB_MASK, ACQ_CORE_SHOTS_NB_SHIFT);
+
+    const static std::unordered_map<std::string, std::array<bool, 4>> trigger_types({
+        /* CTL_FSM_ACQ_NOW, TRIG_CFG_HW_TRIG_EN, TRIG_CFG_SW_TRIG_EN, TRIG_CFG_HW_TRIG_SEL */
+        {"immediate", {true, false, false, false}},
+        {"external", {false, true, false, true}},
+        {"data-driven", {false, true, false, false}},
+        {"software", {false, false, true, false}},
+    });
+    auto &trigger_setting = trigger_types.at(trigger_type);
+    insert_bit(regs.ctl, trigger_setting[0], ACQ_CORE_CTL_FSM_ACQ_NOW);
+    insert_bit(regs.trig_cfg, trigger_setting[1], ACQ_CORE_TRIG_CFG_HW_TRIG_EN);
+    insert_bit(regs.trig_cfg, trigger_setting[2], ACQ_CORE_TRIG_CFG_SW_TRIG_EN);
+    insert_bit(regs.trig_cfg, trigger_setting[3], ACQ_CORE_TRIG_CFG_HW_TRIG_SEL);
+
+    regs.trig_data_thres = data_trigger_threshold;
+    insert_bit(regs.trig_cfg, !data_trigger_polarity_p, ACQ_CORE_TRIG_CFG_HW_TRIG_POL);
+    clear_and_insert(regs.trig_cfg, data_trigger_sel, ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_MASK, ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_SHIFT);
+    clear_and_insert(regs.trig_data_cfg, data_trigger_filt, ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_MASK, ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_SHIFT);
+    clear_and_insert(regs.ctl, data_trigger_channel, ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_MASK, ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_SHIFT);
+    regs.trig_dly = trigger_delay;
+}
+
+void LnlsBpmAcqCoreController::write_config()
+{
+    encode_config();
+
+    /* FIXME: before writing we should make sure nothing is currently running */
+    bar4_write_u32s(bars, addr, &regs, sizeof regs / 4);
+}
+
+void LnlsBpmAcqCoreController::start_acquisition()
+{
+    insert_bit(regs.ctl, true, ACQ_CORE_CTL_FSM_START_ACQ);
+    bar4_write_u32s(bars, addr + ACQ_CORE_CTL, &regs.ctl, 1);
 }

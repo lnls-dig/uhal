@@ -18,7 +18,7 @@
 
 #include "decoders.h"
 #include "pcie.h"
-#include "wb_acq_core_regs.h"
+#include "acq.h"
 
 static const char usage[] =
 R"(Simple FPGA Register Reader
