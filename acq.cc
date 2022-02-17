@@ -41,7 +41,7 @@ void LnlsBpmAcqCore::print(FILE *f, bool verbose)
         ),
         I("FSM_ACQ_DONE", "FSM acquisition status", PrinterType::progress),
         I("FC_TRANS_DONE", "External flow control transfer status", PrinterType::boolean),
-        I("FC_FULL", "External flow control FIFO full status", PrinterType::progress, "full (data may be lost)", "full"),
+        I("FC_FULL", "External flow control FIFO full status", PrinterType::boolean, "full (data may be lost)", "full"),
         I("DDR3_TRANS_DONE", "DDR3 transfer status", PrinterType::progress),
         I("HW_TRIG_SEL", "Hardware trigger selection", PrinterType::boolean, "external", "internal"),
         I("HW_TRIG_POL", "Hardware trigger polarity", PrinterType::boolean, "negative edge", "positive edge"),
