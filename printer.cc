@@ -5,6 +5,8 @@
  * Released according to the GNU GPL, version 3 or any later version.
  */
 
+#include <string>
+
 #include "printer.h"
 
 void Printer::print(FILE *f, bool verbose, uint32_t value) const

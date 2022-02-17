@@ -8,6 +8,7 @@
 #ifndef PRINTER_H
 #define PRINTER_H
 
+#include <stdexcept>
 #include <functional>
 
 #include <stdint.h>
@@ -35,7 +36,7 @@ class Printer {
     struct {
         const char *truth;
         const char *not_truth;
-    } boolean_names;
+    } boolean_names{};
 
     printing_function custom_fn;
 
@@ -56,6 +57,9 @@ class Printer {
                 boolean_names.truth = "enabled";
                 boolean_names.not_truth = "disabled";
                 break;
+            case PrinterType::custom_function:
+                throw std::invalid_argument("this constructor shouldn't be used for PrinterType::custom_function");
+                break;
             default:
                 break;
         }
@@ -64,11 +68,17 @@ class Printer {
     Printer(const char *name, const char *description, PrinterType type, printing_function custom_fn):
         type(type), name(name), description(description), custom_fn(custom_fn)
     {
+        if (type != PrinterType::custom_function) {
+            throw std::invalid_argument("this constructor should only be used for PrinterType::custom_function");
+        }
     }
 
     Printer(const char *name, const char *description, PrinterType type, const char *truth, const char *not_truth):
         type(type), name(name), description(description), boolean_names{truth, not_truth}
     {
+        if (type != PrinterType::boolean) {
+            throw std::invalid_argument("this constructor should only be used for PrinterType::boolean");
+        }
     }
 
     void print(FILE *, bool, uint32_t) const;
