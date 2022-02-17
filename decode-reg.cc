@@ -78,6 +78,7 @@ int main(int argc, char *argv[])
 
         ctl.write_config();
         ctl.start_acquisition();
+        ctl.wait_for_acquisition();
     }
 
     std::unique_ptr<RegisterDecoder> dec{new LnlsBpmAcqCore};
