@@ -39,6 +39,7 @@ class LnlsBpmAcqCoreController {
     void encode_config();
     void write_config();
     void start_acquisition();
+    void wait_for_acquisition();
 };
 
 #endif

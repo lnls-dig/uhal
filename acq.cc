@@ -232,5 +232,17 @@ void LnlsBpmAcqCoreController::write_config()
 void LnlsBpmAcqCoreController::start_acquisition()
 {
     insert_bit(regs.ctl, true, ACQ_CORE_CTL_FSM_START_ACQ);
-    bar4_write_u32s(bars, addr + ACQ_CORE_CTL, &regs.ctl, 1);
+    bar4_write(bars, addr + ACQ_CORE_CTL, regs.ctl);
+    /* FIXME: hardcoded memory size */ bar4_write(bars, addr + ACQ_CORE_DDR3_END_ADDR, 0x0FFFFFE0);
+}
+
+#define ACQ_CORE_STA_FSM_IDLE (1 << ACQ_CORE_STA_FSM_STATE_SHIFT)
+#define COMPLETE_MASK  (ACQ_CORE_STA_FSM_STATE_MASK | ACQ_CORE_STA_FSM_ACQ_DONE | ACQ_CORE_STA_FC_TRANS_DONE | ACQ_CORE_STA_DDR3_TRANS_DONE)
+#define COMPLETE_VALUE (ACQ_CORE_STA_FSM_IDLE       | ACQ_CORE_STA_FSM_ACQ_DONE | ACQ_CORE_STA_FC_TRANS_DONE | ACQ_CORE_STA_DDR3_TRANS_DONE)
+
+void LnlsBpmAcqCoreController::wait_for_acquisition()
+{
+    do {
+        regs.sta = bar4_read(bars, addr + ACQ_CORE_STA);
+    } while ((regs.sta & COMPLETE_MASK) != COMPLETE_VALUE);
 }
