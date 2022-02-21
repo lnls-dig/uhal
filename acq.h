@@ -30,7 +30,7 @@ class LnlsBpmAcqCoreController {
     unsigned number_shots = 1;
     std::string trigger_type = "immediate";
     unsigned data_trigger_threshold = 0;
-    bool data_trigger_polarity_p = true;
+    bool data_trigger_polarity_neg = true;
     unsigned data_trigger_sel = 0;
     unsigned data_trigger_filt = 1;
     unsigned data_trigger_channel = 0;
