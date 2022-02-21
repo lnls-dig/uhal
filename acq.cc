@@ -50,7 +50,7 @@ void LnlsBpmAcqCore::print(FILE *f, bool verbose)
         I("HW_TRIG_POL", "Hardware trigger polarity", PrinterType::boolean, "negative edge", "positive edge"),
         I("HW_TRIG_EN", "Hardware trigger enable", PrinterType::enable),
         I("SW_TRIG_EN", "Software trigger enable", PrinterType::enable),
-        I("INT_TRIG_SEL", "Channel selection for internal trigger", PrinterType::value),
+        I("INT_TRIG_SEL", "Atom selection for internal trigger", PrinterType::value),
         I("THRES_FILT", "Internal trigger threshold glitch filter", PrinterType::value),
         I("TRIG_DATA_THRES", "Threshold for internal trigger", PrinterType::value_2c),
         I("TRIG_DLY", "Trigger delay value", PrinterType::value),
