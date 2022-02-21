@@ -9,14 +9,20 @@
 #define ACQ_H
 
 #include <string>
+#include <vector>
 
 #include "decoders.h"
 
 class LnlsBpmAcqCoreController {
     const struct pcie_bars *bars;
     size_t addr;
+    unsigned sample_size, alignment;
+    /* current channel variables */
+    unsigned channel_atom_width, channel_num_atoms;
 
     struct acq_core regs{};
+
+    void get_internal_values();
 
   public:
     LnlsBpmAcqCoreController(const struct pcie_bars *bars, size_t addr):
@@ -40,6 +46,7 @@ class LnlsBpmAcqCoreController {
     void write_config();
     void start_acquisition();
     void wait_for_acquisition();
+    std::vector<uint16_t> result_16();
 };
 
 #endif

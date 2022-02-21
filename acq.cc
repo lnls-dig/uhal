@@ -7,11 +7,14 @@
 
 #include <array>
 #include <cstring>
+#include <stdexcept>
 #include <unordered_map>
 
 #include "printer.h"
 #include "decoders.h"
 #include "acq.h"
+
+static unsigned ddr3_payload_size = 32;
 
 LnlsBpmAcqCore::LnlsBpmAcqCore()
 {
@@ -193,11 +196,42 @@ static void insert_bit(uint32_t &dest, bool value, uint32_t mask)
         dest &= ~mask;
 }
 
+static unsigned align_extend(unsigned value, unsigned alignment)
+{
+    unsigned extra = value % alignment;
+    if (extra)
+        return value + (alignment - extra);
+    else
+        return value;
+}
+
+void LnlsBpmAcqCoreController::get_internal_values()
+{
+    uint32_t channel_desc = bar4_read(bars, addr + ACQ_CORE_CH0_DESC + 8*channel);
+    uint32_t num_coalesce = (channel_desc & ACQ_CORE_CH0_DESC_NUM_COALESCE_MASK) >> ACQ_CORE_CH0_DESC_NUM_COALESCE_SHIFT;
+    uint32_t int_width = (channel_desc & ACQ_CORE_CH0_DESC_INT_WIDTH_MASK) >> ACQ_CORE_CH0_DESC_INT_WIDTH_SHIFT;
+
+    /* taken from halcs:
+     *  - int_width is a width in bits, so we need to divide by 8 to get a number of bytes
+     */
+    sample_size = (int_width / 8) * num_coalesce;
+
+    alignment = (ddr3_payload_size < sample_size) ? ddr3_payload_size / sample_size : 1;
+
+    uint32_t channel_atom_desc = bar4_read(bars, addr + ACQ_CORE_CH0_ATOM_DESC + 8*channel);
+    channel_atom_width = (channel_atom_desc & ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_MASK) >> ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_SHIFT;
+    channel_num_atoms = (channel_atom_desc & ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_MASK) >> ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_SHIFT;
+}
+
 void LnlsBpmAcqCoreController::encode_config()
 {
+    get_internal_values();
+
     clear_and_insert(regs.acq_chan_ctl, channel, ACQ_CORE_ACQ_CHAN_CTL_WHICH_MASK, ACQ_CORE_ACQ_CHAN_CTL_WHICH_SHIFT);
-    regs.pre_samples = pre_samples;
-    regs.post_samples = post_samples;
+
+    regs.pre_samples = align_extend(pre_samples, alignment);
+    regs.post_samples = align_extend(post_samples, alignment);
+
     clear_and_insert(regs.shots, number_shots, ACQ_CORE_SHOTS_NB_MASK, ACQ_CORE_SHOTS_NB_SHIFT);
 
     const static std::unordered_map<std::string, std::array<bool, 4>> trigger_types({
@@ -245,4 +279,19 @@ void LnlsBpmAcqCoreController::wait_for_acquisition()
     do {
         regs.sta = bar4_read(bars, addr + ACQ_CORE_STA);
     } while ((regs.sta & COMPLETE_MASK) != COMPLETE_VALUE);
+}
+
+std::vector<uint16_t> LnlsBpmAcqCoreController::result_16()
+{
+    if (channel_atom_width != 16)
+        throw std::logic_error("expected channel_atom_width == 16");
+
+    std::vector<uint16_t> result;
+    result.resize((pre_samples + post_samples) * channel_num_atoms);
+
+    size_t trigger_pos = bar4_read(bars, addr + ACQ_CORE_TRIG_POS);
+
+    bar2_read_v(bars, trigger_pos - sample_size * pre_samples, result.data(), result.size() * sizeof(result[0]));
+
+    return result;
 }
