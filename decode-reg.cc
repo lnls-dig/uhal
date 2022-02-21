@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
         ctl.number_shots = args.at("<shots>").asLong();
         if (args.at("-t")) ctl.trigger_type = args.at("<trigger>").asString();
         try_long(ctl.data_trigger_threshold, args, "-e", "<data_trigger_threshold>");
-        ctl.data_trigger_polarity_p = !args.at("-l");
+        ctl.data_trigger_polarity_neg = args.at("-l").asBool();
         try_long(ctl.data_trigger_sel, args, "-z", "<data_trigger_selection>");
         try_long(ctl.data_trigger_filt, args, "-i", "<data_trigger_filter>");
         try_long(ctl.data_trigger_channel, args, "-C", "<data_trigger_channel>");

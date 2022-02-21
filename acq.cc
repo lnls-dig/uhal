@@ -214,7 +214,7 @@ void LnlsBpmAcqCoreController::encode_config()
     insert_bit(regs.trig_cfg, trigger_setting[3], ACQ_CORE_TRIG_CFG_HW_TRIG_SEL);
 
     regs.trig_data_thres = data_trigger_threshold;
-    insert_bit(regs.trig_cfg, !data_trigger_polarity_p, ACQ_CORE_TRIG_CFG_HW_TRIG_POL);
+    insert_bit(regs.trig_cfg, data_trigger_polarity_neg, ACQ_CORE_TRIG_CFG_HW_TRIG_POL);
     clear_and_insert(regs.trig_cfg, data_trigger_sel, ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_MASK, ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_SHIFT);
     clear_and_insert(regs.trig_data_cfg, data_trigger_filt, ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_MASK, ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_SHIFT);
     clear_and_insert(regs.ctl, data_trigger_channel, ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_MASK, ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_SHIFT);
