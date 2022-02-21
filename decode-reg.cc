@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
     pciDriver::PciDevice dev{device_number};
     dev.open();
 
-    struct pcie_bars bars = { .bar0 = dev.mapBAR (0), .bar4 = dev.mapBAR(4) };
+    struct pcie_bars bars = { .bar0 = dev.mapBAR(0), .bar2 = dev.mapBAR(2), .bar4 = dev.mapBAR(4) };
 
     if (verbose) {
         fprintf (stdout, "BAR 0 host address = %p\n", bars.bar0);
@@ -79,6 +79,11 @@ int main(int argc, char *argv[])
         ctl.write_config();
         ctl.start_acquisition();
         ctl.wait_for_acquisition();
+
+        auto res = ctl.result_16();
+        for (auto &v: res) {
+            fprintf(stdout, "%08X\n", (unsigned)v);
+        }
     }
 
     std::unique_ptr<RegisterDecoder> dec{new LnlsBpmAcqCore};
