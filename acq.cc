@@ -173,7 +173,7 @@ void LnlsBpmAcqCore::print(FILE *f, bool verbose)
     for (unsigned i = 0; i < num_chan; i++) {
         uint32_t desc = p[i*2], adesc = p[i*2 + 1];
         fprintf(f, "channel %u description and atom description (%02X and %02X):\n",
-            i, (unsigned)ACQ_CORE_CH0_DESC + 4*i, (unsigned)ACQ_CORE_CH0_ATOM_DESC + 4*i);
+            i, (unsigned)ACQ_CORE_CH0_DESC + 8*i, (unsigned)ACQ_CORE_CH0_ATOM_DESC + 8*i);
         indent = 4;
         print("INT_WIDTH", (desc & ACQ_CORE_CH0_DESC_INT_WIDTH_MASK) >> ACQ_CORE_CH0_DESC_INT_WIDTH_SHIFT);
         print("NUM_COALESCE", (desc & ACQ_CORE_CH0_DESC_NUM_COALESCE_MASK) >> ACQ_CORE_CH0_DESC_NUM_COALESCE_SHIFT);
