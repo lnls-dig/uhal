@@ -8,10 +8,16 @@
 #ifndef ACQ_H
 #define ACQ_H
 
+#include <chrono>
 #include <string>
 #include <vector>
 
 #include "decoders.h"
+
+enum class acq_status {
+    success,
+    timeout,
+};
 
 class LnlsBpmAcqCoreController {
     const struct pcie_bars *bars;
@@ -23,6 +29,7 @@ class LnlsBpmAcqCoreController {
     struct acq_core regs{};
 
     void get_internal_values();
+    bool acquisition_ready();
 
   public:
     LnlsBpmAcqCoreController(const struct pcie_bars *bars, size_t addr):
@@ -46,6 +53,9 @@ class LnlsBpmAcqCoreController {
     void write_config();
     void start_acquisition();
     void wait_for_acquisition();
+    [[nodiscard]]
+    acq_status wait_for_acquisition(std::chrono::milliseconds wait_time);
+
     std::vector<uint32_t> result_unsigned();
     std::vector<int32_t> result_signed();
 };

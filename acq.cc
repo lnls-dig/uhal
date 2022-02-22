@@ -252,11 +252,27 @@ void LnlsBpmAcqCoreController::start_acquisition()
 #define COMPLETE_MASK  (ACQ_CORE_STA_FSM_STATE_MASK | ACQ_CORE_STA_FSM_ACQ_DONE | ACQ_CORE_STA_FC_TRANS_DONE | ACQ_CORE_STA_DDR3_TRANS_DONE)
 #define COMPLETE_VALUE (ACQ_CORE_STA_FSM_IDLE       | ACQ_CORE_STA_FSM_ACQ_DONE | ACQ_CORE_STA_FC_TRANS_DONE | ACQ_CORE_STA_DDR3_TRANS_DONE)
 
+bool LnlsBpmAcqCoreController::acquisition_ready()
+{
+    regs.sta = bar4_read(bars, addr + ACQ_CORE_STA);
+    return (regs.sta & COMPLETE_MASK) == COMPLETE_VALUE;
+}
+
 void LnlsBpmAcqCoreController::wait_for_acquisition()
 {
-    do {
-        regs.sta = bar4_read(bars, addr + ACQ_CORE_STA);
-    } while ((regs.sta & COMPLETE_MASK) != COMPLETE_VALUE);
+    while (!acquisition_ready());
+}
+
+acq_status LnlsBpmAcqCoreController::wait_for_acquisition(std::chrono::milliseconds wait_time)
+{
+    auto start = std::chrono::steady_clock::now();
+
+    while (!acquisition_ready()) {
+        if (std::chrono::steady_clock::now() - start > wait_time)
+            return acq_status::timeout;
+    }
+
+    return acq_status::success;
 }
 
 std::vector<uint32_t> LnlsBpmAcqCoreController::result_unsigned()
