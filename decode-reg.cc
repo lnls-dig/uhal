@@ -80,9 +80,12 @@ int main(int argc, char *argv[])
         ctl.start_acquisition();
         ctl.wait_for_acquisition();
 
-        std::vector<uint16_t> res = ctl.result_16();
+        std::vector<uint32_t> res = ctl.result_unsigned();
         for (auto &v: res)
             fprintf(stdout, "%08X\n", (unsigned)v);
+        std::vector<int32_t> ress = ctl.result_signed();
+        for (auto &v: ress)
+            fprintf(stdout, "%d\n", (int)v);
     } else {
         std::unique_ptr<RegisterDecoder> dec{new LnlsBpmAcqCore};
         dec->read(&bars, address);

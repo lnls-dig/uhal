@@ -10,8 +10,9 @@
 #include <stdexcept>
 #include <unordered_map>
 
-#include "printer.h"
 #include "decoders.h"
+#include "printer.h"
+#include "util.h"
 #include "acq.h"
 
 static unsigned ddr3_payload_size = 32;
@@ -182,29 +183,6 @@ void LnlsBpmAcqCore::print(FILE *f, bool verbose)
     }
 }
 
-static void clear_and_insert(uint32_t &dest, unsigned value, uint32_t mask, unsigned shift)
-{
-    dest &= UINT32_MAX & ~mask;
-    dest |= (value << shift) & mask;
-}
-
-static void insert_bit(uint32_t &dest, bool value, uint32_t mask)
-{
-    if (value)
-        dest |= mask;
-    else
-        dest &= ~mask;
-}
-
-static unsigned align_extend(unsigned value, unsigned alignment)
-{
-    unsigned extra = value % alignment;
-    if (extra)
-        return value + (alignment - extra);
-    else
-        return value;
-}
-
 void LnlsBpmAcqCoreController::get_internal_values()
 {
     uint32_t channel_desc = bar4_read(bars, addr + ACQ_CORE_CH0_DESC + 8*channel);
@@ -281,17 +259,62 @@ void LnlsBpmAcqCoreController::wait_for_acquisition()
     } while ((regs.sta & COMPLETE_MASK) != COMPLETE_VALUE);
 }
 
-std::vector<uint16_t> LnlsBpmAcqCoreController::result_16()
+std::vector<uint32_t> LnlsBpmAcqCoreController::result_unsigned()
 {
-    if (channel_atom_width != 16)
-        throw std::logic_error("expected channel_atom_width == 16");
+    /* intermediate vectors for smaller atoms */
+    std::vector<uint8_t> v8;
+    std::vector<uint16_t> v16;
 
-    std::vector<uint16_t> result;
-    result.resize((pre_samples + post_samples) * channel_num_atoms);
+    std::vector<uint32_t> result;
+
+    /* total length to be read */
+    size_t length = (pre_samples + post_samples) * channel_num_atoms;
 
     size_t trigger_pos = bar4_read(bars, addr + ACQ_CORE_TRIG_POS);
 
-    bar2_read_v(bars, trigger_pos - sample_size * pre_samples, result.data(), result.size() * sizeof(result[0]));
+    /* how we interpret the contents of FPGA memory depends on atom width */
+    void *data_pointer;
+    size_t data_size;
+    switch (channel_atom_width) {
+        case 8:
+            v8.resize(length);
+            data_pointer = v8.data();
+            data_size = 1;
+            break;
+        case 16:
+            v16.resize(length);
+            data_pointer = v16.data();
+            data_size = 2;
+            break;
+        case 32:
+            result.resize(length);
+            data_pointer = result.data();
+            data_size = 4;
+            break;
+        default:
+            throw std::runtime_error("unsupported channel atom width");
+    }
+    bar2_read_v(bars, trigger_pos - sample_size * pre_samples, data_pointer, length * data_size);
+
+    /* stuff values back into result, if necessary - no effect if vectors are empty.
+     * the reserve() call should also have no effect if resize() was called above.
+     * since these are unsigned, we don't need to care about signal extension. */
+    result.reserve(length);
+    for (auto v: v8) result.push_back(v);
+    for (auto v: v16) result.push_back(v);
+
+    return result;
+}
+
+std::vector<int32_t> LnlsBpmAcqCoreController::result_signed()
+{
+    std::vector<uint32_t> unsigned_results = result_unsigned();
+    std::vector<int32_t> result;
+    result.reserve(unsigned_results.size());
+
+    sign_extension_fn &chosen_se = sign_extend_function(channel_atom_width);
+
+    for (auto v: unsigned_results) result.push_back(chosen_se(v));
 
     return result;
 }
