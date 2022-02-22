@@ -46,7 +46,8 @@ class LnlsBpmAcqCoreController {
     void write_config();
     void start_acquisition();
     void wait_for_acquisition();
-    std::vector<uint16_t> result_16();
+    std::vector<uint32_t> result_unsigned();
+    std::vector<int32_t> result_signed();
 };
 
 #endif
