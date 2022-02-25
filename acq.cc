@@ -10,6 +10,8 @@
 #include <stdexcept>
 #include <unordered_map>
 
+#include <pciDriver/lib/KernelMemory.h>
+
 #include "decoders.h"
 #include "printer.h"
 #include "util.h"
@@ -283,8 +285,8 @@ std::vector<uint32_t> LnlsBpmAcqCoreController::result_unsigned()
 
     std::vector<uint32_t> result;
 
-    /* total length to be read */
-    size_t length = (pre_samples + post_samples) * channel_num_atoms;
+    /* total number of elements (samples*atoms) */
+    size_t elements = (pre_samples + post_samples) * channel_num_atoms;
 
     size_t trigger_pos = bar4_read(bars, addr + ACQ_CORE_TRIG_POS);
 
@@ -293,29 +295,44 @@ std::vector<uint32_t> LnlsBpmAcqCoreController::result_unsigned()
     size_t data_size;
     switch (channel_atom_width) {
         case 8:
-            v8.resize(length);
+            v8.resize(elements);
             data_pointer = v8.data();
             data_size = 1;
             break;
         case 16:
-            v16.resize(length);
+            v16.resize(elements);
             data_pointer = v16.data();
             data_size = 2;
             break;
         case 32:
-            result.resize(length);
+            result.resize(elements);
             data_pointer = result.data();
             data_size = 4;
             break;
         default:
             throw std::runtime_error("unsupported channel atom width");
     }
-    bar2_read_v(bars, trigger_pos - sample_size * pre_samples, data_pointer, length * data_size);
+
+    /* try DMA if device is available
+     * TODO: if DMA is busy, also fall back to bar2 reads */
+    size_t initial_pos = trigger_pos - sample_size * pre_samples;
+    size_t total_bytes = elements * data_size;
+    /* this is an identity, just want to be sure */
+    if (total_bytes != (pre_samples + post_samples) * sample_size)
+        throw std::runtime_error("elements * data_size different from samples * sample_size");
+
+    if (device) {
+        pciDriver::KernelMemory kmem = device->allocKernelMemory(total_bytes);
+        bar2_read_dma(bars, initial_pos, 2, kmem.getPhysicalAddress(), total_bytes);
+        memcpy(data_pointer, kmem.getBuffer(), total_bytes);
+    } else {
+        bar2_read_v(bars, initial_pos, data_pointer, total_bytes);
+    }
 
     /* stuff values back into result, if necessary - no effect if vectors are empty.
      * the reserve() call should also have no effect if resize() was called above.
      * since these are unsigned, we don't need to care about signal extension. */
-    result.reserve(length);
+    result.reserve(elements);
     for (auto v: v8) result.push_back(v);
     for (auto v: v16) result.push_back(v);
 

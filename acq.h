@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+#include <pciDriver/lib/PciDevice.h>
+
 #include "decoders.h"
 
 enum class acq_status {
@@ -36,6 +38,8 @@ class LnlsBpmAcqCoreController {
         bars(bars), addr(addr)
     {
     }
+
+    pciDriver::PciDevice *device = nullptr;
 
     unsigned channel = 0;
     unsigned pre_samples = 4;

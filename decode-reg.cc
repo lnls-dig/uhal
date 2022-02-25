@@ -80,6 +80,8 @@ int main(int argc, char *argv[])
         ctl.start_acquisition();
         ctl.wait_for_acquisition();
 
+        ctl.device = &dev;
+
         std::vector<uint32_t> res = ctl.result_unsigned();
         for (auto &v: res)
             fprintf(stdout, "%08X\n", (unsigned)v);
