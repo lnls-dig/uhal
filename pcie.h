@@ -57,6 +57,29 @@
                 num;                                                \
     } while (0)
 
+/* First register of the block*/
+#define PCIE_CFG_REG_DMA_US_BASE            (11 << WB_DWORD_ACC)
+
+/* Offset for DMA registers */
+#define PCIE_CFG_REG_DMA_PAH                (0 << WB_DWORD_ACC)
+#define PCIE_CFG_REG_DMA_PAL                (1 << WB_DWORD_ACC)
+#define PCIE_CFG_REG_DMA_HAH                (2 << WB_DWORD_ACC)
+#define PCIE_CFG_REG_DMA_HAL                (3 << WB_DWORD_ACC)
+#define PCIE_CFG_REG_DMA_BDAH               (4 << WB_DWORD_ACC)
+#define PCIE_CFG_REG_DMA_BDAL               (5 << WB_DWORD_ACC)
+#define PCIE_CFG_REG_DMA_LENG               (6 << WB_DWORD_ACC)
+#define PCIE_CFG_REG_DMA_CTRL               (7 << WB_DWORD_ACC)
+#define PCIE_CFG_REG_DMA_STA                (8 << WB_DWORD_ACC)
+
+/* Relevant values for DMA registers */
+#define PCIE_CFG_DMA_CTRL_AINC (1 << 15)
+#define PCIE_CFG_DMA_CTRL_BAR_SHIFT 16
+#define PCIE_CFG_DMA_CTRL_LAST (1 << 24)
+#define PCIE_CFG_DMA_CTRL_VALID (1 << 25)
+#define PCIE_CFG_TX_CTRL_CHANNEL_RST 0x0A
+#define PCIE_CFG_DMA_STA_DONE (1 << 0)
+#define PCIE_CFG_DMA_STA_TIMEOUT (1 << 4)
+
 struct pcie_bars {
     volatile void *bar0;
     volatile void *bar2;
@@ -67,6 +90,7 @@ struct pcie_bars {
 extern "C" {
 #endif
 void bar2_read_v(const struct pcie_bars *bars, size_t addr, void *dest, size_t n);
+void bar2_read_dma(const struct pcie_bars *bars, size_t addr, unsigned bar, unsigned long physical_address, size_t n);
 void bar4_write(const struct pcie_bars *bars, size_t addr, uint32_t value);
 void bar4_write_u32s(const struct pcie_bars *bars, size_t addr, const void *src, size_t n);
 uint32_t bar4_read(const struct pcie_bars *bars, size_t addr);
