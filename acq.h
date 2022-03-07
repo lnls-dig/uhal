@@ -43,7 +43,7 @@ class LnlsBpmAcqCoreController {
 
     unsigned channel = 0;
     unsigned pre_samples = 4;
-    unsigned post_samples = 16;
+    unsigned post_samples = 0;
     unsigned number_shots = 1;
     std::string trigger_type = "immediate";
     unsigned data_trigger_threshold = 0;
