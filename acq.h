@@ -10,16 +10,24 @@
 
 #include <chrono>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include <pciDriver/lib/PciDevice.h>
 
 #include "decoders.h"
 
+enum class data_sign {
+    d_unsigned,
+    d_signed,
+};
+
 enum class acq_status {
     success,
+    in_progress,
     timeout,
 };
+typedef std::variant<acq_status, std::vector<uint32_t>, std::vector<int32_t>> acq_result;
 
 class LnlsBpmAcqCoreController {
     const struct pcie_bars *bars;
@@ -31,7 +39,21 @@ class LnlsBpmAcqCoreController {
     struct acq_core regs{};
 
     void get_internal_values();
+    void encode_config();
+    void write_config();
+    void start_acquisition();
     bool acquisition_ready();
+
+    acq_result m_result(data_sign sign, bool is_timed, std::chrono::milliseconds wait_time={});
+    std::vector<uint32_t> result_unsigned();
+    std::vector<int32_t> convert_to_signed(std::vector<uint32_t> unsigned_result);
+
+    /* state variables for async */
+    enum class acq_step {
+        acq_stop,
+        acq_started,
+        acq_done,
+    } m_step = acq_step::acq_stop;
 
   public:
     LnlsBpmAcqCoreController(const struct pcie_bars *bars, size_t addr):
@@ -53,15 +75,12 @@ class LnlsBpmAcqCoreController {
     unsigned data_trigger_channel = 0;
     unsigned trigger_delay = 0;
 
-    void encode_config();
-    void write_config();
-    void start_acquisition();
-    void wait_for_acquisition();
     [[nodiscard]]
-    acq_status wait_for_acquisition(std::chrono::milliseconds wait_time);
-
-    std::vector<uint32_t> result_unsigned();
-    std::vector<int32_t> result_signed();
+    acq_result result(data_sign sign);
+    [[nodiscard]]
+    acq_result result(data_sign sign, std::chrono::milliseconds wait_time);
+    [[nodiscard]]
+    acq_result result_async(data_sign sign);
 };
 
 #endif

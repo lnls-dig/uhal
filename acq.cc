@@ -260,23 +260,6 @@ bool LnlsBpmAcqCoreController::acquisition_ready()
     return (regs.sta & COMPLETE_MASK) == COMPLETE_VALUE;
 }
 
-void LnlsBpmAcqCoreController::wait_for_acquisition()
-{
-    while (!acquisition_ready());
-}
-
-acq_status LnlsBpmAcqCoreController::wait_for_acquisition(std::chrono::milliseconds wait_time)
-{
-    auto start = std::chrono::steady_clock::now();
-
-    while (!acquisition_ready()) {
-        if (std::chrono::steady_clock::now() - start > wait_time)
-            return acq_status::timeout;
-    }
-
-    return acq_status::success;
-}
-
 std::vector<uint32_t> LnlsBpmAcqCoreController::result_unsigned()
 {
     /* intermediate vectors for smaller atoms */
@@ -339,15 +322,69 @@ std::vector<uint32_t> LnlsBpmAcqCoreController::result_unsigned()
     return result;
 }
 
-std::vector<int32_t> LnlsBpmAcqCoreController::result_signed()
+std::vector<int32_t> LnlsBpmAcqCoreController::convert_to_signed(std::vector<uint32_t> unsigned_result)
 {
-    std::vector<uint32_t> unsigned_results = result_unsigned();
     std::vector<int32_t> result;
-    result.reserve(unsigned_results.size());
+    result.reserve(unsigned_result.size());
 
     sign_extension_fn &chosen_se = sign_extend_function(channel_atom_width);
 
-    for (auto v: unsigned_results) result.push_back(chosen_se(v));
+    for (auto v: unsigned_result) result.push_back(chosen_se(v));
 
     return result;
+}
+
+acq_result LnlsBpmAcqCoreController::m_result(data_sign sign, bool is_timed, std::chrono::milliseconds wait_time)
+{
+    std::chrono::steady_clock::time_point start_time;
+    if (is_timed) start_time = std::chrono::steady_clock::now();
+
+    acq_result r;
+    const acq_status *status;
+    do {
+        r = result_async(sign);
+    } while (
+        (status = std::get_if<acq_status>(&r)) &&
+        *status == acq_status::in_progress &&
+        (!is_timed || std::chrono::steady_clock::now() - start_time < wait_time)
+    );
+
+    return r;
+}
+
+acq_result LnlsBpmAcqCoreController::result(data_sign sign, std::chrono::milliseconds wait_time)
+{
+    return m_result(sign, true, wait_time);
+}
+
+acq_result LnlsBpmAcqCoreController::result(data_sign sign)
+{
+    return m_result(sign, false);
+}
+
+acq_result LnlsBpmAcqCoreController::result_async(data_sign sign)
+{
+    if (m_step == acq_step::acq_stop) {
+        write_config();
+        start_acquisition();
+        m_step = acq_step::acq_started;
+    }
+    if (m_step == acq_step::acq_started) {
+        if (acquisition_ready())
+            m_step = acq_step::acq_done;
+        else
+            return acq_status::in_progress;
+    }
+    if (m_step == acq_step::acq_done) {
+        m_step = acq_step::acq_stop;
+
+        /* TODO: add async DMA API? */
+        std::vector<uint32_t> r = result_unsigned();
+        if (sign == data_sign::d_signed)
+            return convert_to_signed(r);
+        else
+            return r;
+    }
+
+    throw std::logic_error("should be unreachable");
 }

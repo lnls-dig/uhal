@@ -76,17 +76,10 @@ int main(int argc, char *argv[])
         try_long(ctl.data_trigger_channel, args, "-C", "<data_trigger_channel>");
         try_long(ctl.trigger_delay, args, "-d", "<trigger_delay>");
 
-        ctl.write_config();
-        ctl.start_acquisition();
-        ctl.wait_for_acquisition();
-
         ctl.device = &dev;
 
-        std::vector<uint32_t> res = ctl.result_unsigned();
+        auto res = std::get<std::vector<int32_t>>(ctl.result(data_sign::d_signed));
         for (auto &v: res)
-            fprintf(stdout, "%08X\n", (unsigned)v);
-        std::vector<int32_t> ress = ctl.result_signed();
-        for (auto &v: ress)
             fprintf(stdout, "%d\n", (int)v);
     } else {
         std::unique_ptr<RegisterDecoder> dec{new LnlsBpmAcqCore};
