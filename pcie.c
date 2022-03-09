@@ -10,6 +10,19 @@
 
 #include "pcie.h"
 
+static void bar_generic_read_v(const struct pcie_bars *bars, size_t addr, void *dest, size_t n,
+    uint32_t (*fn)(const struct pcie_bars *bars, size_t addr))
+{
+    /* we receive n in bytes, it's our job to turn it into uint32_t accesses;
+     * we begin by asserting the alignment */
+    assert((addr & 0x3) == 0);
+    assert((n & 0x3) == 0);
+
+    uint32_t *destp = dest;
+    for (size_t i = 0; i < n; i += 4)
+        destp[i/4] = fn(bars, addr + i);
+}
+
 static volatile uint32_t *bar0_get_u32p(const struct pcie_bars *bars, size_t addr)
 {
     return (volatile void *)((unsigned char *)bars->bar0 + addr);
@@ -59,14 +72,7 @@ static uint32_t bar2_read(const struct pcie_bars *bars, size_t addr)
 
 void bar2_read_v(const struct pcie_bars *bars, size_t addr, void *dest, size_t n)
 {
-    /* we receive n in bytes, it's our job to turn it into uint32_t accesses;
-     * we begin by asserting the alignment */
-    assert((addr & 0x3) == 0);
-    assert((n & 0x3) == 0);
-
-    uint32_t *destp = dest;
-    for (size_t i = 0; i < n; i += 4)
-        destp[i/4] = bar2_read(bars, addr + i);
+    bar_generic_read_v(bars, addr, dest, n, bar2_read);
 }
 
 void bar2_read_dma(const struct pcie_bars *bars, size_t addr, unsigned bar, unsigned long physical_address, size_t n)
@@ -122,11 +128,11 @@ void bar4_write(const struct pcie_bars *bars, size_t addr, uint32_t value)
     *bar4_get_u32p(bars, addr) = value;
 }
 
-void bar4_write_u32s(const struct pcie_bars *bars, size_t addr, const void *src, size_t n)
+void bar4_write_v(const struct pcie_bars *bars, size_t addr, const void *src, size_t n)
 {
     const uint32_t *srcp = src;
-    for (size_t i = 0; i < n; i++) {
-        bar4_write(bars, addr + i*4, srcp[i]);
+    for (size_t i = 0; i < n; i += 4) {
+        bar4_write(bars, addr + i, srcp[i/4]);
     }
 }
 
@@ -135,11 +141,7 @@ uint32_t bar4_read(const struct pcie_bars *bars, size_t addr)
     return *bar4_get_u32p(bars, addr);
 }
 
-void bar4_read_u32s(const struct pcie_bars *bars, size_t addr, void *dest, size_t n)
+void bar4_read_v(const struct pcie_bars *bars, size_t addr, void *dest, size_t n)
 {
-    uint32_t *destp = dest;
-
-    /* registers are offset in multiples of 4 */
-    for (size_t i = 0; i < n; i++)
-        destp[i] = bar4_read(bars, addr + i*4);
+    bar_generic_read_v(bars, addr, dest, n, bar4_read);
 }
