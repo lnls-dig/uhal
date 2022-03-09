@@ -9,5 +9,5 @@
 
 void RegisterDecoder::read(const struct pcie_bars *bars, size_t address)
 {
-    bar4_read_u32s(bars, address, read_dest, read_size/4);
+    bar4_read_v(bars, address, read_dest, read_size);
 }

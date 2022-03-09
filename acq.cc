@@ -240,7 +240,7 @@ void LnlsBpmAcqCoreController::write_config()
     encode_config();
 
     /* FIXME: before writing we should make sure nothing is currently running */
-    bar4_write_u32s(bars, addr, &regs, sizeof regs / 4);
+    bar4_write_v(bars, addr, &regs, sizeof regs);
 }
 
 void LnlsBpmAcqCoreController::start_acquisition()
