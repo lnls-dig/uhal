@@ -5,7 +5,7 @@ CXXFLAGS = -std=c++17 $(BASEFLAGS)
 LDLIBS = -lpcidriver -lpthread
 
 ALL = decode-reg
-OBJ = decode-reg.o pcie.o decoders.o printer.o acq.o util.o third_party/docopt.cpp/docopt.o
+OBJ = decode-reg.o pcie.o decoders.o printer.o acq.o lamp.o util.o third_party/docopt.cpp/docopt.o
 
 all: $(ALL)
 

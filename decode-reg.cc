@@ -19,6 +19,7 @@
 #include "decoders.h"
 #include "pcie.h"
 #include "acq.h"
+#include "lamp.h"
 
 static const char usage[] =
 R"(Simple FPGA Register Reader
@@ -26,6 +27,7 @@ R"(Simple FPGA Register Reader
 Usage:
     decode-reg [-hv] -b <device> -a <base_address>
     decode-reg [-hv] -r -b <device> -a <base_address> -c <channel> -n <pre_samples> -p <post_samples> -s <shots> [-t <trigger>] [-e <data_trigger_threshold>] [-l] [-z <data_trigger_selection>] [-i <data_trigger_filter>] [-C <data_trigger_channel>] [-d <trigger_delay>]
+    decode-reg [-hv] -x -b <device> -a <base_address> [-e] -c <channel> -m <mode> -k <pi_kp> -t <pi_ti> -s <pi_sp> [-d <dac>]
 
   -h                 Display this usage information
   -v                 Verbose output
@@ -34,6 +36,9 @@ Usage:
   -b <device>        Device number as used in /dev/fpga-N
   -a <base_address>  Base address to start reads from (in hex)
   -c <channel>       Channel to be used for acquisition
+  -x                 Set RTM LAMP parameters
+  -e                 Enable amplifier for channel - for RTM LAMP
+  -m                 Choose output mode for RTM LAMP. Should be "none" if using -d argument
 )";
 
 
@@ -81,6 +86,22 @@ int main(int argc, char *argv[])
         auto res = std::get<std::vector<int32_t>>(ctl.result(data_sign::d_signed));
         for (auto &v: res)
             fprintf(stdout, "%d\n", (int)v);
+    } else if (args.at("-x").asBool()) {
+        LnlsRtmLampController ctl(&bars, address);
+
+        ctl.amp_enable = args.at("-e").asBool();
+        ctl.mode = args.at("<mode>").asString();
+        ctl.channel = args.at("<channel>").asLong();
+        ctl.pi_kp = args.at("<pi_kp>").asLong();
+        ctl.pi_ti = args.at("<pi_ti>").asLong();
+        ctl.pi_sp = args.at("<pi_sp>").asLong();
+
+        if (args.at("-d").asBool()) {
+            ctl.dac_data = true;
+            ctl.dac = args.at("<dac>").asLong();
+        }
+
+        ctl.write_params();
     } else {
         std::unique_ptr<RegisterDecoder> dec{new LnlsBpmAcqCore};
         dec->read(&bars, address);
