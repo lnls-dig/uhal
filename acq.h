@@ -16,6 +16,15 @@
 #include <pciDriver/lib/PciDevice.h>
 
 #include "decoders.h"
+#include "wb_acq_core_regs.h"
+
+class LnlsBpmAcqCore: public RegisterDecoder {
+    struct acq_core regs;
+
+  public:
+    LnlsBpmAcqCore();
+    void print(FILE *, bool);
+};
 
 enum class data_sign {
     d_unsigned,

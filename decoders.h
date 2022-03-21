@@ -14,7 +14,6 @@
 #include <sys/types.h>
 
 #include "pcie.h"
-#include "wb_acq_core_regs.h"
 
 class RegisterDecoder {
   protected:
@@ -25,14 +24,6 @@ class RegisterDecoder {
     virtual ~RegisterDecoder() {};
     virtual void read(const struct pcie_bars *, size_t);
     virtual void print(FILE *, bool) { /* dummy */ }
-};
-
-class LnlsBpmAcqCore: public RegisterDecoder {
-    struct acq_core regs;
-
-  public:
-    LnlsBpmAcqCore();
-    void print(FILE *, bool);
 };
 
 #endif

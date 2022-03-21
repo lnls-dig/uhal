@@ -9,8 +9,10 @@
 
 #include "printer.h"
 
-void Printer::print(FILE *f, bool verbose, uint32_t value) const
+void Printer::print(FILE *f, bool verbose, unsigned indent, uint32_t value) const
 {
+    while (indent--) fputc(' ', f);
+
     std::string s;
     const char *final_name;
     if (verbose) {
@@ -42,5 +44,13 @@ void Printer::print(FILE *f, bool verbose, uint32_t value) const
             fprintf(f, "%s: ", final_name);
             custom_fn(f, verbose, value);
             break;
+    }
+}
+
+void print_reg_impl(FILE *f, bool v, unsigned &indent, const char *reg, unsigned offset)
+{
+    if (v) {
+        fprintf(f, "%s (0x%02X)\n", reg, offset);
+        indent = 4;
     }
 }
