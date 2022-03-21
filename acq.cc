@@ -17,7 +17,10 @@
 #include "util.h"
 #include "acq.h"
 
-static unsigned ddr3_payload_size = 32;
+#define MAX_NUM_CHAN 24
+#define REGISTERS_PER_CHAN 2
+
+static const unsigned ddr3_payload_size = 32;
 
 LnlsBpmAcqCore::LnlsBpmAcqCore()
 {
@@ -27,7 +30,6 @@ LnlsBpmAcqCore::LnlsBpmAcqCore()
 
 void LnlsBpmAcqCore::print(FILE *f, bool verbose)
 {
-    #define I(name, ...) {name, {name, __VA_ARGS__}}
     static const std::unordered_map<const char *, Printer> printers({
         I("FSQ_ACQ_NOW", "Acquire data immediately and don't wait for any trigger", PrinterType::boolean, "acquire immediately", "wait on trigger"),
         I("FSM_STATE", "State machine status", PrinterType::custom_function,
@@ -75,23 +77,16 @@ void LnlsBpmAcqCore::print(FILE *f, bool verbose)
         I("NUM_ATOMS", "Number of atoms inside the complete data word", PrinterType::value),
         I("ATOM_WIDTH", "Atom width in bits", PrinterType::value),
     });
-    #undef I
 
     bool v = verbose;
     unsigned indent = 0;
-    unsigned t;
+    uint32_t t;
 
     auto print_reg = [f, v, &indent](const char *reg, unsigned offset) {
-        if (v) {
-            fprintf(f, "%s (0x%02X)\n", reg, offset);
-            indent = 4;
-        }
+        print_reg_impl(f, v, indent, reg, offset);
     };
-
     auto print = [f, v, &indent](const char *name, uint32_t value) {
-        unsigned i = indent;
-        while (i--) fputc(' ', f);
-        printers.at(name).print(f, v, value);
+        printers.at(name).print(f, v, indent, value);
     };
 
     /* control register */
@@ -163,7 +158,6 @@ void LnlsBpmAcqCore::print(FILE *f, bool verbose)
     print("DTRIG_WHICH", (t & ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_MASK) >> ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_SHIFT);
     print("NUM_CHAN", num_chan);
 
-#define MAX_NUM_CHAN 24
     if (num_chan > MAX_NUM_CHAN) {
         fprintf(f, "ERROR: max number of supported channels is %d, received %u\n", MAX_NUM_CHAN, num_chan);
         return;
@@ -171,10 +165,10 @@ void LnlsBpmAcqCore::print(FILE *f, bool verbose)
 
     /* channel description and atom description - 24 channels maximum (0-23).
      * the loop being used depends on the struct having no padding and elements in a set order */
-    uint32_t p[MAX_NUM_CHAN];
+    uint32_t p[MAX_NUM_CHAN * REGISTERS_PER_CHAN];
     memcpy(p, &regs.ch0_desc, sizeof p);
     for (unsigned i = 0; i < num_chan; i++) {
-        uint32_t desc = p[i*2], adesc = p[i*2 + 1];
+        uint32_t desc = p[i*REGISTERS_PER_CHAN], adesc = p[i*REGISTERS_PER_CHAN + 1];
         fprintf(f, "channel %u description and atom description (%02X and %02X):\n",
             i, (unsigned)ACQ_CORE_CH0_DESC + 8*i, (unsigned)ACQ_CORE_CH0_ATOM_DESC + 8*i);
         indent = 4;
