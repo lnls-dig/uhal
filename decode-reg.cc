@@ -25,7 +25,7 @@ static const char usage[] =
 R"(Simple FPGA Register Reader
 
 Usage:
-    decode-reg [-hv] -b <device> -a <base_address>
+    decode-reg [-hv] -q <device_type> -b <device> -a <base_address>
     decode-reg [-hv] -r -b <device> -a <base_address> -c <channel> -n <pre_samples> -p <post_samples> -s <shots> [-t <trigger>] [-e <data_trigger_threshold>] [-l] [-z <data_trigger_selection>] [-i <data_trigger_filter>] [-C <data_trigger_channel>] [-d <trigger_delay>]
     decode-reg [-hv] -x -b <device> -a <base_address> [-e] -c <channel> -m <mode> -k <pi_kp> -t <pi_ti> -s <pi_sp> [-d <dac>]
 
@@ -103,7 +103,17 @@ int main(int argc, char *argv[])
 
         ctl.write_params();
     } else {
-        std::unique_ptr<RegisterDecoder> dec{new LnlsBpmAcqCore};
+        std::string device_type = args.at("<device_type>").asString();
+
+        std::unique_ptr<RegisterDecoder> dec;
+        if (device_type == "acq") {
+            dec = std::make_unique<LnlsBpmAcqCore>();
+        } else if (device_type == "lamp") {
+            dec = std::make_unique<LnlsRtmLampCore>();
+        } else {
+            fprintf(stderr, "Unknown device: '%s'\n", device_type.c_str());
+            return 1;
+        }
         dec->read(&bars, address);
         dec->print(stdout, verbose);
     }
