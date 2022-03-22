@@ -13,19 +13,29 @@
 #include "pcie.h"
 #include "util.h"
 
+#include "decoders.h"
 #include "wb_rtmlamp_ohwr_regs.h"
+
+struct channel_registers {
+    uint32_t sta, ctl, pi_kp, pi_ti, pi_sp, dac;
+};
+
+class LnlsRtmLampCore: public RegisterDecoder {
+    struct rtmlamp_ohwr_regs regs;
+
+  public:
+    LnlsRtmLampCore() {}
+    void read(const struct pcie_bars *, size_t);
+    void print(FILE *, bool);
+};
 
 class LnlsRtmLampController {
     const struct pcie_bars *bars;
     size_t addr;
 
     /* control registers */
-    uint32_t ctl=0;
-    struct {
-        uint32_t
-            sta=0, /* sta is here to guarantee the struct layout */
-            ctl=0, pi_kp=0, pi_ti=0, pi_sp=0, dac=0;
-    } channel_regs;
+    uint32_t ctl = 0;
+    struct channel_registers channel_regs{};
 
     void encode_config();
 
