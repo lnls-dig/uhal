@@ -1,3 +1,6 @@
 [submodule "docopt.cpp"]
 	path = third_party/docopt.cpp
 	url = https://github.com/docopt/docopt.cpp.git
+[submodule "third_party/fpga-config-space"]
+	path = third_party/fpga-config-space
+	url = https://ohwr.org/project/fpga-config-space.git
