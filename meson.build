@@ -14,6 +14,6 @@ thread_dep = dependency('threads')
 executable(
   'decode-reg',
   ['decode-reg.cc', 'pcie.c', 'decoders.cc', 'printer.cc', 'acq.cc', 'lamp.cc', 'util.cc'],
-  dependencies: [pcidevice, thread_dep, docopt],
+  dependencies: [pcidevice, thread_dep, docopt, sdbfs],
   install: true,
 )
