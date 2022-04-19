@@ -1,0 +1,12 @@
+[wrap-file]
+directory = argparse-2.4
+source_url = https://github.com/p-ranav/argparse/archive/refs/tags/v2.4.tar.gz
+source_filename = argparse-2.4.tar.gz
+source_hash = 3589559f115bfedfef2edffb3e7b61d88657ba7b70a0b1f47352ff3043abc825
+patch_filename = argparse_2.4-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/argparse_2.4-1/get_patch
+patch_hash = faa95d9f8f5f5792b1cebc2325cea63557eb46d7e06d51bbb8fa49534ac8a9f8
+
+[provide]
+argparse = argparse_dep
+

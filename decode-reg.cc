@@ -13,109 +13,140 @@
 #include <memory>
 
 #include <pciDriver/lib/PciDevice.h>
-
-#include "docopt.h"
+#include <argparse/argparse.hpp>
 
 #include "decoders.h"
 #include "pcie.h"
 #include "acq.h"
 #include "lamp.h"
 
-static const char usage[] =
-R"(Simple FPGA Register Reader
-
-Usage:
-    decode-reg [-hv] -q <device_type> -b <device> -a <base_address>
-    decode-reg [-hv] -r -b <device> -a <base_address> -c <channel> -n <pre_samples> -p <post_samples> -s <shots> [-t <trigger>] [-e <data_trigger_threshold>] [-l] [-z <data_trigger_selection>] [-i <data_trigger_filter>] [-C <data_trigger_channel>] [-d <trigger_delay>]
-    decode-reg [-hv] -x -b <device> -a <base_address> [-e] -c <channel> -m <mode> -k <pi_kp> -t <pi_ti> -s <pi_sp> [-d <dac>]
-
-  -h                 Display this usage information
-  -v                 Verbose output
-  -r                 Perform read acquisition
-  -l                 Use negative edge data trigger
-  -b <device>        Device number as used in /dev/fpga-N
-  -a <base_address>  Base address to start reads from (in hex)
-  -c <channel>       Channel to be used for acquisition
-  -x                 Set RTM LAMP parameters
-  -e                 Enable amplifier for channel - for RTM LAMP
-  -m                 Choose output mode for RTM LAMP. Should be "none" if using -d argument
-)";
-
-
-static void try_long(unsigned &dest, const docopt::Options &args, const char *flag, const char *parameter)
+static void try_unsigned(unsigned &dest, const argparse::ArgumentParser &args, const char *flag)
 {
-    if (args.at(flag))
-        dest = args.at(parameter).asLong();
+    if (auto v = args.present<unsigned>(flag))
+        dest = *v;
 }
 
 int main(int argc, char *argv[])
 {
-    const docopt::Options args = docopt::docopt(usage, {argv+1, argv+argc}, true);
+    /* argparse doesn't support subcommands, so we simulate them here */
+    if (argc < 2) {
+        fputs("Usage: decode-reg mode <mode specific options>\n\nPositional arguments:\nmode      mode of operation ('decode', 'acq' or 'lamp')\n", stderr);
+        return 1;
+    }
+    std::string mode = argv[1];
 
-    bool verbose = args.at("-v").asBool();
-    std::string address_str = args.at("<base_address>").asString();
-    size_t address = std::stol(address_str, nullptr, 16);
-    int device_number = args.at("<device>").asLong();
+    argparse::ArgumentParser parent_args("decode-reg", "1.0", argparse::default_arguments::none);
+    parent_args.add_argument("-b").help("device number").required().scan<'d', int>();
+    parent_args.add_argument("-a").help("base address").required().scan<'x', size_t>().default_value((size_t)0);
+    parent_args.add_argument("-v").help("verbose output").implicit_value(true);
+
+    argparse::ArgumentParser decode_args("decode-reg decode", "2.0");
+    decode_args.add_parents(parent_args);
+    decode_args.add_argument("-q").help("type of registers").required();
+
+    argparse::ArgumentParser acq_args("decode-reg acq");
+    acq_args.add_parents(parent_args);
+    acq_args.add_argument("-c").help("channel number").required().scan<'d', unsigned>();
+    acq_args.add_argument("-n").help("number of pre samples").required().scan<'d', unsigned>();
+    acq_args.add_argument("-p").help("number of post samples").scan<'d', unsigned>();
+    acq_args.add_argument("-s").help("number of shots").scan<'d', unsigned>();
+    acq_args.add_argument("-t").help("trigger type");
+    acq_args.add_argument("-e").help("data trigger threshold").scan<'d', unsigned>();
+    acq_args.add_argument("-l").help("use negative edge data trigger").implicit_value(true);
+    acq_args.add_argument("-z").help("data trigger selection").scan<'d', unsigned>();
+    acq_args.add_argument("-i").help("data trigger filter").scan<'d', unsigned>();
+    acq_args.add_argument("-C").help("data trigger channel").scan<'d', unsigned>();
+    acq_args.add_argument("-d").help("trigger delay").scan<'d', unsigned>();
+
+    argparse::ArgumentParser lamp_args("decode-reg lamp");
+    lamp_args.add_parents(parent_args);
+    lamp_args.add_argument("-e").help("enable amplifier for channel").implicit_value(true);
+    lamp_args.add_argument("-c").help("channel number").required().scan<'d', unsigned>();
+    lamp_args.add_argument("-m").help("choose output mode. should be 'none' if using -d").required();
+    lamp_args.add_argument("-k").help("pi_kp value").required().scan<'d', unsigned>();
+    lamp_args.add_argument("-t").help("pi_ti value").required().scan<'d', unsigned>();
+    lamp_args.add_argument("-s").help("pi_sp value").required().scan<'d', unsigned>();
+    lamp_args.add_argument("-d").help("DAC value").scan<'d', unsigned>();
+
+    argparse::ArgumentParser *pargs;
+    if (mode == "decode") {
+        pargs = &decode_args;
+    } else if (mode == "acq") {
+        pargs = &acq_args;
+    } else if (mode == "lamp") {
+        pargs = &lamp_args;
+    } else {
+        fprintf(stderr, "Unsupported type: '%s'\n", mode.c_str());
+        return 1;
+    }
+    argparse::ArgumentParser &args = *pargs;
+
+    try {
+        args.parse_args(argc-1, argv+1);
+    } catch (const std::runtime_error &err) {
+        fprintf(stderr, "argparse error: %s\n", err.what());
+        return 1;
+    }
+
+    auto device_number = args.get<int>("-b");
+    auto address = args.get<size_t>("-a");
+    auto verbose = args.is_used("-v");
 
     pciDriver::PciDevice dev{device_number};
     dev.open();
 
     struct pcie_bars bars = {dev.mapBAR(0), dev.mapBAR(2), dev.mapBAR(4)};
 
-    if (verbose) {
-        fprintf (stdout, "BAR 0 host address = %p\n", bars.bar0);
-        fprintf (stdout, "BAR 4 host address = %p\n", bars.bar4);
+    if (mode == "decode") {
+        auto type = args.get<std::string>("-q");
+        std::unique_ptr<RegisterDecoder> dec;
+        if (type == "acq") {
+            dec = std::make_unique<LnlsBpmAcqCore>();
+        } else if (type == "lamp") {
+            dec = std::make_unique<LnlsRtmLampCore>();
+        } else {
+            fprintf(stderr, "Unknown type: '%s'\n", type.c_str());
+            return 1;
+        }
+        dec->read(&bars, address);
+        dec->print(stdout, verbose);
     }
-
-    if (args.at("-r").asBool()) {
+    if (mode == "acq") {
         LnlsBpmAcqCoreController ctl{&bars, address};
-        ctl.channel = args.at("<channel>").asLong();
-        ctl.pre_samples = args.at("<pre_samples>").asLong();
-        ctl.post_samples = args.at("<post_samples>").asLong();
-        ctl.number_shots = args.at("<shots>").asLong();
-        if (args.at("-t")) ctl.trigger_type = args.at("<trigger>").asString();
-        try_long(ctl.data_trigger_threshold, args, "-e", "<data_trigger_threshold>");
-        ctl.data_trigger_polarity_neg = args.at("-l").asBool();
-        try_long(ctl.data_trigger_sel, args, "-z", "<data_trigger_selection>");
-        try_long(ctl.data_trigger_filt, args, "-i", "<data_trigger_filter>");
-        try_long(ctl.data_trigger_channel, args, "-C", "<data_trigger_channel>");
-        try_long(ctl.trigger_delay, args, "-d", "<trigger_delay>");
+        ctl.channel = args.get<unsigned>("-c");
+        ctl.pre_samples = args.get<unsigned>("-n");
+        try_unsigned(ctl.post_samples, args, "-p");
+        try_unsigned(ctl.number_shots, args, "-s");
+        if (auto v = args.present<std::string>("-t")) ctl.trigger_type = *v;
+
+        try_unsigned(ctl.data_trigger_threshold, args, "-e");
+        ctl.data_trigger_polarity_neg = args.is_used("-l");
+        try_unsigned(ctl.data_trigger_sel, args, "-z");
+        try_unsigned(ctl.data_trigger_filt, args, "-i");
+        try_unsigned(ctl.data_trigger_channel, args, "-C");
+        try_unsigned(ctl.trigger_delay, args, "-d");
 
         ctl.device = &dev;
 
         auto res = std::get<std::vector<int32_t>>(ctl.result(data_sign::d_signed));
         for (auto &v: res)
             fprintf(stdout, "%d\n", (int)v);
-    } else if (args.at("-x").asBool()) {
+    }
+    if (mode == "lamp") {
         LnlsRtmLampController ctl(&bars, address);
+        ctl.amp_enable = args.is_used("-e");
+        ctl.mode = args.get<std::string>("-m");
+        ctl.channel = args.get<unsigned>("-c");
+        ctl.pi_kp = args.get<unsigned>("-p");
+        ctl.pi_ti = args.get<unsigned>("-t");
+        ctl.pi_sp = args.get<unsigned>("-s");
 
-        ctl.amp_enable = args.at("-e").asBool();
-        ctl.mode = args.at("<mode>").asString();
-        ctl.channel = args.at("<channel>").asLong();
-        ctl.pi_kp = args.at("<pi_kp>").asLong();
-        ctl.pi_ti = args.at("<pi_ti>").asLong();
-        ctl.pi_sp = args.at("<pi_sp>").asLong();
-
-        if (args.at("-d").asBool()) {
+        if (auto v = args.present<unsigned>("-d")) {
             ctl.dac_data = true;
-            ctl.dac = args.at("<dac>").asLong();
+            ctl.dac = *v;
         }
 
         ctl.write_params();
-    } else {
-        std::string device_type = args.at("<device_type>").asString();
-
-        std::unique_ptr<RegisterDecoder> dec;
-        if (device_type == "acq") {
-            dec = std::make_unique<LnlsBpmAcqCore>();
-        } else if (device_type == "lamp") {
-            dec = std::make_unique<LnlsRtmLampCore>();
-        } else {
-            fprintf(stderr, "Unknown device: '%s'\n", device_type.c_str());
-            return 1;
-        }
-        dec->read(&bars, address);
-        dec->print(stdout, verbose);
     }
 
     return 0;

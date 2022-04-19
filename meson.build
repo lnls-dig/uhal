@@ -10,10 +10,11 @@ subdir('third_party')
 cc = meson.get_compiler('c')
 pcidevice = cc.find_library('pcidriver', required: true)
 thread_dep = dependency('threads')
+argparse = dependency('argparse', fallback: ['argparse', 'argparse_dep'])
 
 executable(
   'decode-reg',
   ['decode-reg.cc', 'pcie.c', 'decoders.cc', 'printer.cc', 'acq.cc', 'lamp.cc', 'util.cc'],
-  dependencies: [pcidevice, thread_dep, docopt, sdbfs],
+  dependencies: [pcidevice, thread_dep, argparse, sdbfs],
   install: true,
 )
