@@ -13,8 +13,6 @@
 #include <variant>
 #include <vector>
 
-#include <pciDriver/lib/PciDevice.h>
-
 #include "decoders.h"
 #include "wb_acq_core_regs.h"
 
@@ -69,8 +67,6 @@ class LnlsBpmAcqCoreController {
         bars(bars), addr(addr)
     {
     }
-
-    pciDriver::PciDevice *device = nullptr;
 
     unsigned channel = 0;
     unsigned pre_samples = 4;

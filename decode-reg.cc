@@ -12,11 +12,11 @@
 #include <cstring>
 #include <memory>
 
-#include <pciDriver/lib/PciDevice.h>
 #include <argparse/argparse.hpp>
 
 #include "decoders.h"
 #include "pcie.h"
+#include "pcie-open.h"
 #include "acq.h"
 #include "lamp.h"
 
@@ -92,10 +92,7 @@ int main(int argc, char *argv[])
     auto address = args.get<size_t>("-a");
     auto verbose = args.is_used("-v");
 
-    pciDriver::PciDevice dev{device_number};
-    dev.open();
-
-    struct pcie_bars bars = {dev.mapBAR(0), dev.mapBAR(2), dev.mapBAR(4)};
+    struct pcie_bars bars = dev_open(device_number);
 
     if (mode == "decode") {
         auto type = args.get<std::string>("-q");
@@ -125,8 +122,6 @@ int main(int argc, char *argv[])
         try_unsigned(ctl.data_trigger_filt, args, "-i");
         try_unsigned(ctl.data_trigger_channel, args, "-C");
         try_unsigned(ctl.trigger_delay, args, "-d");
-
-        ctl.device = &dev;
 
         auto res = std::get<std::vector<int32_t>>(ctl.result(data_sign::d_signed));
         for (auto &v: res)
