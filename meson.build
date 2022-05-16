@@ -8,13 +8,14 @@ project(
 subdir('third_party')
 
 cc = meson.get_compiler('c')
-pcidevice = cc.find_library('pcidriver', required: true)
 thread_dep = dependency('threads')
 argparse = dependency('argparse', fallback: ['argparse', 'argparse_dep'])
 
+modules = ['acq.cc', 'lamp.cc']
+
 executable(
   'decode-reg',
-  ['decode-reg.cc', 'pcie.c', 'decoders.cc', 'printer.cc', 'acq.cc', 'lamp.cc', 'util.cc'],
-  dependencies: [pcidevice, thread_dep, argparse, sdbfs],
+  ['decode-reg.cc', 'pcie.c', 'decoders.cc', 'printer.cc', 'pcie-open.cc', 'util.cc'] + modules,
+  dependencies: [thread_dep, argparse, sdbfs],
   install: true,
 )
