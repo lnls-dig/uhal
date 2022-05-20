@@ -13,17 +13,23 @@
 #include "util.h"
 #include "lamp.h"
 
+#include "hw/wb_rtmlamp_ohwr_regs_v1.h"
+
 #define MAX_NUM_CHAN 12
 #define REGISTERS_PER_CHAN 6
 static const unsigned max_26bits = 0x3ffffff;
 static const unsigned channel_distance = 4 * REGISTERS_PER_CHAN;
 
-void LnlsRtmLampCore::read(const struct pcie_bars *bars, size_t address)
+LnlsRtmLampCoreV1::LnlsRtmLampCoreV1()
 {
-    bar4_read_v(bars, address, &regs, sizeof regs);
-}
+    read_size = sizeof *regs;
+    regs = std::make_unique<struct rtmlamp_ohwr_regs>();
+    read_dest = regs.get();
 
-void LnlsRtmLampCore::print(FILE *f, bool verbose)
+}
+LnlsRtmLampCoreV1::~LnlsRtmLampCoreV1() = default;
+
+void LnlsRtmLampCoreV1::print(FILE *f, bool verbose)
 {
     static const std::unordered_map<const char *, Printer> printers({
       I("DAC_DATA_FROM_WB", "Use data from WB for DACs", PrinterType::boolean, "DAC data from RTM module input ports", "DAC data from Wishbone"),
@@ -56,11 +62,11 @@ void LnlsRtmLampCore::print(FILE *f, bool verbose)
     };
 
     print_reg("control register", RTMLAMP_OHWR_REGS_CTL);
-    t = regs.ctl;
+    t = regs->ctl;
     print("DAC_DATA_FROM_WB", t & RTMLAMP_OHWR_REGS_CTL_DAC_DATA_FROM_WB);
 
     uint32_t p[MAX_NUM_CHAN * REGISTERS_PER_CHAN];
-    memcpy(p, &regs.ch_0_sta, sizeof p);
+    memcpy(p, &regs->ch_0_sta, sizeof p);
     for (unsigned i = 0; i < MAX_NUM_CHAN; i++) {
         fprintf(f, "channel %u (starting at %02X):\n",
             i, (unsigned)RTMLAMP_OHWR_REGS_CH_0_STA + 4*i*REGISTERS_PER_CHAN);

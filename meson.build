@@ -11,11 +11,15 @@ cc = meson.get_compiler('c')
 thread_dep = dependency('threads')
 argparse = dependency('argparse', fallback: ['argparse', 'argparse_dep'])
 
-modules = ['acq.cc', 'lamp.cc']
+utilities_src = ['decoders.cc', 'pcie.c', 'pcie-open.cc', 'printer.cc', 'util.cc']
+utilities_lib = static_library('utilities', utilities_src, dependencies: [sdbfs])
+utilities_inc = include_directories('.')
+utilities = declare_dependency(link_with: utilities_lib, include_directories: utilities_inc)
+subdir('modules')
 
 executable(
   'decode-reg',
-  ['decode-reg.cc', 'pcie.c', 'decoders.cc', 'printer.cc', 'pcie-open.cc', 'util.cc'] + modules,
-  dependencies: [thread_dep, argparse, sdbfs],
+  ['decode-reg.cc'],
+  dependencies: [thread_dep, argparse, utilities, modules],
   install: true,
 )

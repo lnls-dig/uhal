@@ -8,24 +8,37 @@
 #ifndef LAMP_H
 #define LAMP_H
 
+#include <memory>
 #include <string>
 
 #include "pcie.h"
 #include "util.h"
 
 #include "decoders.h"
-#include "hw/wb_rtmlamp_ohwr_regs_v1.h"
 
 struct channel_registers {
     uint32_t sta, ctl, pi_kp, pi_ti, pi_sp, dac;
 };
 
-class LnlsRtmLampCore: public RegisterDecoder {
-    struct rtmlamp_ohwr_regs regs;
+/* forward declarations to avoid conflicts in headers */
+struct rtmlamp_ohwr_regs;
+struct wb_rtmlamp_ohwr_regs;
+
+class LnlsRtmLampCoreV1: public RegisterDecoder {
+    std::unique_ptr<struct rtmlamp_ohwr_regs> regs;
 
   public:
-    LnlsRtmLampCore() {}
-    void read(const struct pcie_bars *, size_t);
+    LnlsRtmLampCoreV1();
+    ~LnlsRtmLampCoreV1();
+    void print(FILE *, bool);
+};
+
+class LnlsRtmLampCoreV2: public RegisterDecoder {
+    std::unique_ptr<struct wb_rtmlamp_ohwr_regs> regs;
+
+  public:
+    LnlsRtmLampCoreV2();
+    ~LnlsRtmLampCoreV2();
     void print(FILE *, bool);
 };
 
