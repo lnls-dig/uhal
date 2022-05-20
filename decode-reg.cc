@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
         if (type == "acq") {
             dec = std::make_unique<LnlsBpmAcqCore>();
         } else if (type == "lamp") {
-            dec = std::make_unique<LnlsRtmLampCore>();
+            dec = std::make_unique<LnlsRtmLampCoreV1>();
         } else {
             fprintf(stderr, "Unknown type: '%s'\n", type.c_str());
             return 1;
