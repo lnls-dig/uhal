@@ -63,7 +63,7 @@ void LnlsRtmLampCore::print(FILE *f, bool verbose)
     memcpy(p, &regs.ch_0_sta, sizeof p);
     for (unsigned i = 0; i < MAX_NUM_CHAN; i++) {
         fprintf(f, "channel %u (starting at %02X):\n",
-            i, (unsigned)ACQ_CORE_CH0_DESC + 4*i*REGISTERS_PER_CHAN);
+            i, (unsigned)RTMLAMP_OHWR_REGS_CH_0_STA + 4*i*REGISTERS_PER_CHAN);
         indent = 4;
 
         struct channel_registers channel_regs;

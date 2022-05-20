@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "decoders.h"
-#include "wb_acq_core_regs.h"
+#include "hw/wb_acq_core_regs.h"
 
 class LnlsBpmAcqCore: public RegisterDecoder {
     struct acq_core regs;

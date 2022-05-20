@@ -14,7 +14,7 @@
 #include "util.h"
 
 #include "decoders.h"
-#include "wb_rtmlamp_ohwr_regs.h"
+#include "hw/wb_rtmlamp_ohwr_regs_v1.h"
 
 struct channel_registers {
     uint32_t sta, ctl, pi_kp, pi_ti, pi_sp, dac;

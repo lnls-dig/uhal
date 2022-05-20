@@ -11,8 +11,6 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-#include "wb_acq_core_regs.h"
-
 /* PCIe Page constants */
 /* SDRAM is accesses via 32-bit BAR (32-bit addressing) */
 #define PCIE_SDRAM_PG_SHIFT                 0           /* bits */
