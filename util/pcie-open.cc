@@ -42,6 +42,7 @@ struct pcie_bars dev_open(const char *pci_address)
         }
         struct stat st;
         fstat(fd, &st);
+        rv.sizes[i] = st.st_size;
         void *ptr = mmap(NULL, st.st_size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
         close(fd);
         if (ptr == MAP_FAILED) {
@@ -55,4 +56,16 @@ struct pcie_bars dev_open(const char *pci_address)
     }
 
     return rv;
+}
+
+void dev_close(struct pcie_bars &bars)
+{
+    auto unmap = [&bars](auto &p, unsigned i) {
+        munmap(const_cast<void *>(p), bars.sizes[i]);
+        p = 0;
+        bars.sizes[i] = 0;
+    };
+    unmap(bars.bar0, 0);
+    unmap(bars.bar2, 1);
+    unmap(bars.bar4, 2);
 }

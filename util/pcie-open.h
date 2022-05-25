@@ -12,5 +12,6 @@
 
 struct pcie_bars dev_open(int slot);
 struct pcie_bars dev_open(const char *pci_address);
+void dev_close(struct pcie_bars &bars);
 
 #endif

@@ -15,6 +15,7 @@
 #include <argparse/argparse.hpp>
 
 #include "decoders.h"
+#include "defer.h"
 #include "pcie.h"
 #include "pcie-open.h"
 #include "util_sdb.h"
@@ -94,6 +95,7 @@ int main(int argc, char *argv[])
     auto verbose = args.is_used("-v");
 
     struct pcie_bars bars = dev_open(device_number);
+    defer _(nullptr, [&bars](...){dev_close(bars);});
 
     if (verbose) read_sdb(&bars, print_sdb);
 

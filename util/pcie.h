@@ -82,6 +82,8 @@ struct pcie_bars {
     volatile void *bar0;
     volatile void *bar2;
     volatile void *bar4;
+
+    size_t sizes[3];
 };
 
 #ifdef __cplusplus
