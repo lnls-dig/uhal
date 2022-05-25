@@ -23,7 +23,7 @@ class RegisterDecoder {
   public:
     virtual ~RegisterDecoder() {};
     virtual void read(const struct pcie_bars *, size_t);
-    virtual void print(FILE *, bool) { /* dummy */ }
+    virtual void print(FILE *, bool) = 0;
 };
 
 #endif

@@ -38,13 +38,13 @@ int main(int argc, char *argv[])
     argparse::ArgumentParser parent_args("decode-reg", "1.0", argparse::default_arguments::none);
     parent_args.add_argument("-b").help("device number").required().scan<'d', int>();
     parent_args.add_argument("-a").help("base address").required().scan<'x', size_t>().default_value((size_t)0);
-    parent_args.add_argument("-v").help("verbose output").implicit_value(true);
+    parent_args.add_argument("-v").help("verbose output").default_value(false).implicit_value(true);
 
-    argparse::ArgumentParser decode_args("decode-reg decode", "2.0");
+    argparse::ArgumentParser decode_args("decode-reg decode", "1.0", argparse::default_arguments::help);
     decode_args.add_parents(parent_args);
     decode_args.add_argument("-q").help("type of registers").required();
 
-    argparse::ArgumentParser acq_args("decode-reg acq");
+    argparse::ArgumentParser acq_args("decode-reg acq", "1.0", argparse::default_arguments::help);
     acq_args.add_parents(parent_args);
     acq_args.add_argument("-c").help("channel number").required().scan<'d', unsigned>();
     acq_args.add_argument("-n").help("number of pre samples").required().scan<'d', unsigned>();
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     acq_args.add_argument("-C").help("data trigger channel").scan<'d', unsigned>();
     acq_args.add_argument("-d").help("trigger delay").scan<'d', unsigned>();
 
-    argparse::ArgumentParser lamp_args("decode-reg lamp");
+    argparse::ArgumentParser lamp_args("decode-reg lamp", "1.0", argparse::default_arguments::help);
     lamp_args.add_parents(parent_args);
     lamp_args.add_argument("-e").help("enable amplifier for channel").implicit_value(true);
     lamp_args.add_argument("-c").help("channel number").required().scan<'d', unsigned>();

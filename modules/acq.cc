@@ -33,7 +33,7 @@ void LnlsBpmAcqCore::print(FILE *f, bool verbose)
         I("FSM_STATE", "State machine status", PrinterType::custom_function,
             [](FILE *f, bool v, uint32_t value){
                 (void)v;
-                const char *fsm_states[] = {"IDLE", "PRE_TRIG", "WAIT_TRIG", "POST_TRIG", "DECR_SHOT"};
+                static const char *fsm_states[] = {"IDLE", "PRE_TRIG", "WAIT_TRIG", "POST_TRIG", "DECR_SHOT"};
                 switch (value) {
                     case 0: case 6: case 7:
                         fprintf(f, "illegal (%u)", value);
