@@ -16,11 +16,21 @@
 #include "decoders.h"
 #include "hw/wb_acq_core_regs.h"
 
+#define ACQ_DEVID 0x4519a0ad
+inline const device_match_fn device_match_acq =
+    device_match_impl<LNLS_VENDORID, ACQ_DEVID, 2>;
+
 class LnlsBpmAcqCore: public RegisterDecoder {
     struct acq_core regs;
 
   public:
-    LnlsBpmAcqCore();
+    LnlsBpmAcqCore()
+    {
+        read_size = sizeof regs;
+        read_dest = &regs;
+
+        device_match = device_match_acq;
+    }
     void print(FILE *, bool);
 };
 
@@ -67,6 +77,8 @@ class LnlsBpmAcqCoreController {
         bars(bars), addr(addr)
     {
     }
+
+    static inline const device_match_fn device_match = device_match_acq;
 
     unsigned channel = 0;
     unsigned pre_samples = 4;

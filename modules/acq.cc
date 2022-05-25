@@ -20,12 +20,6 @@
 
 static const unsigned ddr3_payload_size = 32;
 
-LnlsBpmAcqCore::LnlsBpmAcqCore()
-{
-    read_size = sizeof regs;
-    read_dest = &regs;
-}
-
 void LnlsBpmAcqCore::print(FILE *f, bool verbose)
 {
     static const std::unordered_map<const char *, Printer> printers({

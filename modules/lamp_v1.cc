@@ -26,6 +26,7 @@ LnlsRtmLampCoreV1::LnlsRtmLampCoreV1()
     regs = std::make_unique<struct rtmlamp_ohwr_regs>();
     read_dest = regs.get();
 
+    device_match = device_match_lamp_v1;
 }
 LnlsRtmLampCoreV1::~LnlsRtmLampCoreV1() = default;
 
