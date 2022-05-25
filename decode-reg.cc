@@ -104,12 +104,22 @@ int main(int argc, char *argv[])
             dec = std::make_unique<LnlsBpmAcqCore>();
         } else if (type == "lamp") {
             dec = std::make_unique<LnlsRtmLampCoreV1>();
+            /* if v1 can't be found, try v2;
+             * assumes only one version of the device will be available */
+            if (!read_sdb(&bars, dec->device_match, address)) {
+                dec = std::make_unique<LnlsRtmLampCoreV2>();
+            }
         } else {
             fprintf(stderr, "Unknown type: '%s'\n", type.c_str());
             return 1;
         }
-        dec->read(&bars, address);
-        dec->print(stdout, verbose);
+        if (auto d = read_sdb(&bars, dec->device_match, address)) {
+            if (verbose) {
+                fprintf(stdout, "Found device in %08jx\n", (uintmax_t)d->start_addr);
+            }
+            dec->read(&bars, d->start_addr);
+            dec->print(stdout, verbose);
+        }
     }
     if (mode == "acq") {
         LnlsBpmAcqCoreController ctl{&bars, address};
