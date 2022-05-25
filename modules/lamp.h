@@ -16,13 +16,20 @@
 
 #include "decoders.h"
 
-struct channel_registers {
-    uint32_t sta, ctl, pi_kp, pi_ti, pi_sp, dac;
-};
+#define LAMP_DEVID 0xa1248bec
+inline const device_match_fn device_match_lamp_v1 =
+    device_match_impl<LNLS_VENDORID, LAMP_DEVID, 1>;
+inline const device_match_fn device_match_lamp_v2 =
+    device_match_impl<LNLS_VENDORID, LAMP_DEVID, 2>;
 
 /* forward declarations to avoid conflicts in headers */
 struct rtmlamp_ohwr_regs;
 struct wb_rtmlamp_ohwr_regs;
+
+/* v1 */
+struct channel_registers {
+    uint32_t sta, ctl, pi_kp, pi_ti, pi_sp, dac;
+};
 
 class LnlsRtmLampCoreV1: public RegisterDecoder {
     std::unique_ptr<struct rtmlamp_ohwr_regs> regs;
@@ -57,6 +64,8 @@ class LnlsRtmLampController {
         bars(bars), addr(addr)
     {
     }
+
+    static inline const device_match_fn device_match = device_match_lamp_v1;
 
     unsigned channel = 0;
     bool dac_data = false;
