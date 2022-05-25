@@ -17,6 +17,7 @@
 #include "decoders.h"
 #include "pcie.h"
 #include "pcie-open.h"
+#include "util_sdb.h"
 #include "acq.h"
 #include "lamp.h"
 
@@ -93,6 +94,8 @@ int main(int argc, char *argv[])
     auto verbose = args.is_used("-v");
 
     struct pcie_bars bars = dev_open(device_number);
+
+    if (verbose) read_sdb(&bars, print_sdb);
 
     if (mode == "decode") {
         auto type = args.get<std::string>("-q");
