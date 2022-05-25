@@ -5,8 +5,6 @@
  * Released according to the GNU GPL, version 3 or any later version.
  */
 
-#include <memory>
-
 #include <endian.h>
 #include <limits.h>
 
@@ -17,10 +15,9 @@ extern "C" {
 #undef this
 }
 
+#include "defer.h"
 #include "pcie.h"
 #include "util_sdb.h"
-
-using defer = std::shared_ptr<void>;
 
 static int read(struct sdbfs *fs, int offset, void *buf, int count)
 {
