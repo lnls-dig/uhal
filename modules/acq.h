@@ -73,7 +73,7 @@ class LnlsBpmAcqCoreController {
     } m_step = acq_step::acq_stop;
 
   public:
-    LnlsBpmAcqCoreController(const struct pcie_bars *bars, size_t addr):
+    LnlsBpmAcqCoreController(const struct pcie_bars *bars, size_t addr=0):
         bars(bars), addr(addr)
     {
     }

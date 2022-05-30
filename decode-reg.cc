@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 
     argparse::ArgumentParser parent_args("decode-reg", "1.0", argparse::default_arguments::none);
     parent_args.add_argument("-b").help("device number").required().scan<'d', int>();
-    parent_args.add_argument("-a").help("base address").required().scan<'x', size_t>().default_value((size_t)0);
+    parent_args.add_argument("-a").help("enumerated position of device").required().scan<'u', unsigned>().default_value((unsigned)0);
     parent_args.add_argument("-v").help("verbose output").default_value(false).implicit_value(true);
 
     argparse::ArgumentParser decode_args("decode-reg decode", "1.0", argparse::default_arguments::help);
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
     }
 
     auto device_number = args.get<int>("-b");
-    auto address = args.get<size_t>("-a");
+    auto dev_index = args.get<unsigned>("-a");
     auto verbose = args.is_used("-v");
 
     struct pcie_bars bars = dev_open(device_number);
@@ -111,14 +111,14 @@ int main(int argc, char *argv[])
             dec = std::make_unique<LnlsRtmLampCoreV1>();
             /* if v1 can't be found, try v2;
              * assumes only one version of the device will be available */
-            if (!read_sdb(&bars, dec->device_match, address)) {
+            if (!read_sdb(&bars, dec->device_match, dev_index)) {
                 dec = std::make_unique<LnlsRtmLampCoreV2>();
             }
         } else {
             fprintf(stderr, "Unknown type: '%s'\n", type.c_str());
             return 1;
         }
-        if (auto d = read_sdb(&bars, dec->device_match, address)) {
+        if (auto d = read_sdb(&bars, dec->device_match, dev_index)) {
             if (verbose) {
                 fprintf(stdout, "Found device in %08jx\n", (uintmax_t)d->start_addr);
             }
@@ -127,7 +127,13 @@ int main(int argc, char *argv[])
         }
     }
     if (mode == "acq") {
-        LnlsBpmAcqCoreController ctl{&bars, address};
+        LnlsBpmAcqCoreController ctl{&bars};
+        if (auto v = read_sdb(&bars, ctl.device_match, dev_index)) {
+            ctl.set_addr(v->start_addr);
+        } else {
+            fprintf(stderr, "Couldn't find acq module index %u\n", dev_index);
+            return 1;
+        }
         ctl.channel = args.get<unsigned>("-c");
         ctl.pre_samples = args.get<unsigned>("-n");
         try_unsigned(ctl.post_samples, args, "-p");
@@ -146,7 +152,17 @@ int main(int argc, char *argv[])
             fprintf(stdout, "%d\n", (int)v);
     }
     if (mode == "lamp") {
-        LnlsRtmLampController ctl(&bars, address);
+        std::unique_ptr<LnlsRtmLampController> ctlp = std::make_unique<LnlsRtmLampControllerV1>(&bars);
+        if (!read_sdb(&bars, ctlp->device_match, dev_index)) {
+            ctlp = std::make_unique<LnlsRtmLampControllerV2>(&bars);
+            if (!read_sdb(&bars, ctlp->device_match, dev_index)) {
+                fprintf(stderr, "Couldn't find lamp module index %u\n", dev_index);
+                return 1;
+            }
+        }
+        LnlsRtmLampController &ctl = *ctlp;
+        ctl.set_addr(read_sdb(&bars, ctl.device_match, dev_index)->start_addr);
+
         ctl.amp_enable = args.is_used("-e");
         ctl.mode = args.get<std::string>("-m");
         ctl.channel = args.get<unsigned>("-c");
