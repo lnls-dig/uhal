@@ -92,9 +92,14 @@ void LnlsRtmLampCoreV1::print(FILE *f, bool verbose)
     }
 }
 
-void LnlsRtmLampController::encode_config()
+void LnlsRtmLampControllerV1::encode_config()
 {
-    insert_bit(ctl, dac_data, RTMLAMP_OHWR_REGS_CTL_DAC_DATA_FROM_WB);
+    if (limit_a || limit_b)
+        throw std::logic_error("LAMP v1 doesn't have limits");
+    if (cnt)
+        throw std::logic_error("LAMP v1 doesn't have cnt");
+
+    insert_bit(ctl, static_cast<bool>(dac), RTMLAMP_OHWR_REGS_CTL_DAC_DATA_FROM_WB);
 
     insert_bit(channel_regs.ctl, amp_enable, RTMLAMP_OHWR_REGS_CH_0_CTL_AMP_EN);
 
@@ -105,32 +110,39 @@ void LnlsRtmLampController::encode_config()
         {"setpoint-square", 2},
     });
 
-    int mode_option = mode_options.at(mode);
+    int mode_option;
+    try {
+        mode_option = mode_options.at(mode);
+    } catch (std::out_of_range &e) {
+        throw std::runtime_error("mode must be one of " + list_of_keys(mode_options));
+    }
     if (mode_option >= 0) {
         /* TODO: figure out when to enable PI controller */
         //insert_bit(channel_regs.ctl, 1, RTMLAMP_OHWR_REGS_CH_0_CTL_PI_ENABLE);
         insert_bit(channel_regs.ctl, 1, RTMLAMP_OHWR_REGS_CH_0_CTL_PI_OL_TRIANG_ENABLE << mode_option);
     }
 
-    if (pi_kp > max_26bits || pi_ti > max_26bits)
-        throw std::logic_error("pi_kp and pi_ti must fit in a number under 26 bits");
+    if (pi_kp && pi_ti && pi_sp) {
+        if (*pi_kp > max_26bits || *pi_ti > max_26bits)
+            throw std::logic_error("pi_kp and pi_ti must fit in a number under 26 bits");
 
-    clear_and_insert(channel_regs.pi_kp, pi_kp, RTMLAMP_OHWR_REGS_CH_0_PI_KP_DATA_MASK, RTMLAMP_OHWR_REGS_CH_0_PI_KP_DATA_SHIFT);
-    clear_and_insert(channel_regs.pi_ti, pi_ti, RTMLAMP_OHWR_REGS_CH_0_PI_TI_DATA_MASK, RTMLAMP_OHWR_REGS_CH_0_PI_TI_DATA_SHIFT);
-    clear_and_insert(channel_regs.pi_sp, (uint16_t)pi_sp, RTMLAMP_OHWR_REGS_CH_0_PI_SP_DATA_MASK, RTMLAMP_OHWR_REGS_CH_0_PI_SP_DATA_SHIFT);
+        clear_and_insert(channel_regs.pi_kp, *pi_kp, RTMLAMP_OHWR_REGS_CH_0_PI_KP_DATA_MASK, RTMLAMP_OHWR_REGS_CH_0_PI_KP_DATA_SHIFT);
+        clear_and_insert(channel_regs.pi_ti, *pi_ti, RTMLAMP_OHWR_REGS_CH_0_PI_TI_DATA_MASK, RTMLAMP_OHWR_REGS_CH_0_PI_TI_DATA_SHIFT);
+        clear_and_insert(channel_regs.pi_sp, (uint16_t)*pi_sp, RTMLAMP_OHWR_REGS_CH_0_PI_SP_DATA_MASK, RTMLAMP_OHWR_REGS_CH_0_PI_SP_DATA_SHIFT);
+    }
 
-    if (dac_data) {
+    if (dac) {
         clear_and_insert(
             channel_regs.dac,
             /* we need the WR bit so the values are actually sent to the DAC */
-            ((uint16_t)dac) | RTMLAMP_OHWR_REGS_CH_0_DAC_WR,
+            ((uint16_t)*dac) | RTMLAMP_OHWR_REGS_CH_0_DAC_WR,
             RTMLAMP_OHWR_REGS_CH_0_DAC_DATA_MASK | RTMLAMP_OHWR_REGS_CH_0_DAC_WR,
             RTMLAMP_OHWR_REGS_CH_0_DAC_DATA_SHIFT
         );
     }
 }
 
-void LnlsRtmLampController::write_params()
+void LnlsRtmLampControllerV1::write_params()
 {
     encode_config();
 

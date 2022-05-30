@@ -64,10 +64,10 @@ int main(int argc, char *argv[])
     lamp_args.add_parents(parent_args);
     lamp_args.add_argument("-e").help("enable amplifier for channel").default_value(false).implicit_value(true);
     lamp_args.add_argument("-c").help("channel number").required().scan<'u', unsigned>();
-    lamp_args.add_argument("-m").help("choose output mode. should be 'none' if using -d").required();
-    lamp_args.add_argument("-k").help("pi_kp value").required().scan<'u', unsigned>();
-    lamp_args.add_argument("-t").help("pi_ti value").required().scan<'u', unsigned>();
-    lamp_args.add_argument("-s").help("pi_sp value").required().scan<'u', unsigned>();
+    lamp_args.add_argument("-m").help("choose output mode. use 'help' to see available options").required();
+    lamp_args.add_argument("-k").help("pi_kp value").scan<'u', unsigned>();
+    lamp_args.add_argument("-t").help("pi_ti value").scan<'u', unsigned>();
+    lamp_args.add_argument("-s").help("pi_sp value").scan<'d', int>();
     lamp_args.add_argument("-d").help("DAC value").scan<'u', unsigned>();
     lamp_args.add_argument("-l").help("Limit A").scan<'d', int>();
     lamp_args.add_argument("-L").help("Limit B").scan<'d', int>();
@@ -150,14 +150,14 @@ int main(int argc, char *argv[])
         ctl.amp_enable = args.is_used("-e");
         ctl.mode = args.get<std::string>("-m");
         ctl.channel = args.get<unsigned>("-c");
-        ctl.pi_kp = args.get<unsigned>("-p");
-        ctl.pi_ti = args.get<unsigned>("-t");
-        ctl.pi_sp = args.get<unsigned>("-s");
+        ctl.pi_kp = args.present<unsigned>("-k");
+        ctl.pi_ti = args.present<unsigned>("-t");
+        ctl.pi_sp = args.present<int>("-s");
 
-        if (auto v = args.present<unsigned>("-d")) {
-            ctl.dac_data = true;
-            ctl.dac = *v;
-        }
+        ctl.dac = args.present<unsigned>("-d");
+        ctl.limit_a = args.present<unsigned>("-l");
+        ctl.limit_b = args.present<unsigned>("-L");
+        ctl.cnt = args.present<unsigned>("-C");
 
         ctl.write_params();
     }
