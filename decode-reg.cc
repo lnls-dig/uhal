@@ -48,27 +48,30 @@ int main(int argc, char *argv[])
 
     argparse::ArgumentParser acq_args("decode-reg acq", "1.0", argparse::default_arguments::help);
     acq_args.add_parents(parent_args);
-    acq_args.add_argument("-c").help("channel number").required().scan<'d', unsigned>();
-    acq_args.add_argument("-n").help("number of pre samples").required().scan<'d', unsigned>();
-    acq_args.add_argument("-p").help("number of post samples").scan<'d', unsigned>();
-    acq_args.add_argument("-s").help("number of shots").scan<'d', unsigned>();
+    acq_args.add_argument("-c").help("channel number").required().scan<'u', unsigned>();
+    acq_args.add_argument("-n").help("number of pre samples").required().scan<'u', unsigned>();
+    acq_args.add_argument("-p").help("number of post samples").scan<'u', unsigned>();
+    acq_args.add_argument("-s").help("number of shots").scan<'u', unsigned>();
     acq_args.add_argument("-t").help("trigger type");
-    acq_args.add_argument("-e").help("data trigger threshold").scan<'d', unsigned>();
-    acq_args.add_argument("-l").help("use negative edge data trigger").implicit_value(true);
-    acq_args.add_argument("-z").help("data trigger selection").scan<'d', unsigned>();
-    acq_args.add_argument("-i").help("data trigger filter").scan<'d', unsigned>();
-    acq_args.add_argument("-C").help("data trigger channel").scan<'d', unsigned>();
-    acq_args.add_argument("-d").help("trigger delay").scan<'d', unsigned>();
+    acq_args.add_argument("-e").help("data trigger threshold").scan<'u', unsigned>();
+    acq_args.add_argument("-l").help("use negative edge data trigger").default_value(false).implicit_value(true);
+    acq_args.add_argument("-z").help("data trigger selection").scan<'u', unsigned>();
+    acq_args.add_argument("-i").help("data trigger filter").scan<'u', unsigned>();
+    acq_args.add_argument("-C").help("data trigger channel").scan<'u', unsigned>();
+    acq_args.add_argument("-d").help("trigger delay").scan<'u', unsigned>();
 
     argparse::ArgumentParser lamp_args("decode-reg lamp", "1.0", argparse::default_arguments::help);
     lamp_args.add_parents(parent_args);
-    lamp_args.add_argument("-e").help("enable amplifier for channel").implicit_value(true);
-    lamp_args.add_argument("-c").help("channel number").required().scan<'d', unsigned>();
+    lamp_args.add_argument("-e").help("enable amplifier for channel").default_value(false).implicit_value(true);
+    lamp_args.add_argument("-c").help("channel number").required().scan<'u', unsigned>();
     lamp_args.add_argument("-m").help("choose output mode. should be 'none' if using -d").required();
-    lamp_args.add_argument("-k").help("pi_kp value").required().scan<'d', unsigned>();
-    lamp_args.add_argument("-t").help("pi_ti value").required().scan<'d', unsigned>();
-    lamp_args.add_argument("-s").help("pi_sp value").required().scan<'d', unsigned>();
-    lamp_args.add_argument("-d").help("DAC value").scan<'d', unsigned>();
+    lamp_args.add_argument("-k").help("pi_kp value").required().scan<'u', unsigned>();
+    lamp_args.add_argument("-t").help("pi_ti value").required().scan<'u', unsigned>();
+    lamp_args.add_argument("-s").help("pi_sp value").required().scan<'u', unsigned>();
+    lamp_args.add_argument("-d").help("DAC value").scan<'u', unsigned>();
+    lamp_args.add_argument("-l").help("Limit A").scan<'d', int>();
+    lamp_args.add_argument("-L").help("Limit B").scan<'d', int>();
+    lamp_args.add_argument("-C").help("Count value").scan<'u', unsigned>();
 
     argparse::ArgumentParser *pargs;
     if (mode == "decode") {
