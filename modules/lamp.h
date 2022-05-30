@@ -9,6 +9,7 @@
 #define LAMP_H
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "pcie.h"
@@ -30,6 +31,8 @@ struct wb_rtmlamp_ohwr_regs;
 struct channel_registers {
     uint32_t sta, ctl, pi_kp, pi_ti, pi_sp, dac;
 };
+/* v2 forward declaration */
+typedef struct channel_registers_v2_impl channel_registers_v2;
 
 class LnlsRtmLampCoreV1: public RegisterDecoder {
     std::unique_ptr<struct rtmlamp_ohwr_regs> regs;
@@ -50,9 +53,37 @@ class LnlsRtmLampCoreV2: public RegisterDecoder {
 };
 
 class LnlsRtmLampController {
+  protected:
     const struct pcie_bars *bars;
     size_t addr;
 
+    virtual void encode_config() = 0;
+
+  public:
+    LnlsRtmLampController(const struct pcie_bars *bars, size_t addr, device_match_fn device_match):
+        bars(bars), addr(addr), device_match(device_match)
+    {
+    }
+    virtual ~LnlsRtmLampController() = default;
+
+    const device_match_fn device_match;
+
+    unsigned channel = 0;
+    /* per channel properties */
+    bool amp_enable = true;
+    std::string mode = "none";
+    std::optional<uint32_t> pi_kp, pi_ti; /* are actually 26-bit */
+    std::optional<int16_t> pi_sp;
+    std::optional<uint16_t> dac;
+    std::optional<int16_t> limit_a, limit_b;
+    std::optional<uint32_t> cnt;
+
+    void set_addr(size_t naddr) { addr = naddr; }
+
+    virtual void write_params() = 0;
+};
+
+class LnlsRtmLampControllerV1: public LnlsRtmLampController {
     /* control registers */
     uint32_t ctl = 0;
     struct channel_registers channel_regs{};
@@ -60,20 +91,23 @@ class LnlsRtmLampController {
     void encode_config();
 
   public:
-    LnlsRtmLampController(const struct pcie_bars *bars, size_t addr):
-        bars(bars), addr(addr)
+    LnlsRtmLampControllerV1(const struct pcie_bars *bars, size_t addr):
+        LnlsRtmLampController(bars, addr, device_match_lamp_v1)
     {
     }
 
-    static inline const device_match_fn device_match = device_match_lamp_v1;
+    void write_params();
+};
 
-    unsigned channel = 0;
-    bool dac_data = false;
-    /* per channel properties */
-    bool amp_enable = true;
-    std::string mode = "none";
-    uint32_t pi_kp = 0, pi_ti = 0; /* are actually 26-bit */
-    int16_t pi_sp = 0, dac = 0;
+class LnlsRtmLampControllerV2: public LnlsRtmLampController {
+    /* control registers */
+    std::unique_ptr<channel_registers_v2> channel_regs;
+
+    void encode_config();
+
+  public:
+    LnlsRtmLampControllerV2(const struct pcie_bars *bars, size_t addr);
+    ~LnlsRtmLampControllerV2();
 
     void write_params();
 };

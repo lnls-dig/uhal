@@ -5,6 +5,7 @@
  * Released according to the GNU GPL, version 3 or any later version.
  */
 
+#include <numeric>
 #include <stdexcept>
 
 #include "util.h"
@@ -54,4 +55,11 @@ sign_extension_fn &sign_extend_function(unsigned width)
         default:
             throw std::logic_error("invalid width should have been caught elsewhere");
     }
+}
+
+std::string list_of_keys(const std::unordered_map<std::string, int> &m)
+{
+    auto b = m.begin();
+    return std::accumulate(std::next(b), m.end(), b->first,
+        [](std::string a, std::pair<std::string, int> b) {return a + ", " + b.first;});
 }

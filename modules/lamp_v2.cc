@@ -10,12 +10,15 @@
 
 #include "printer.h"
 #include "util.h"
-#include "lamp.h"
 
 #include "hw/wb_rtmlamp_ohwr_regs_v2.h"
 
+#define channel_registers_v2_impl wb_rtmlamp_ohwr_regs::ch
+#include "lamp.h"
+
 static const unsigned max_26bits = 0x3ffffff;
-static const unsigned registers_per_chan = 8;
+static const unsigned max_22bits = 0x3fffff;
+static const unsigned channel_distance = sizeof(channel_registers_v2_impl);
 
 LnlsRtmLampCoreV2::LnlsRtmLampCoreV2()
 {
@@ -98,4 +101,70 @@ void LnlsRtmLampCoreV2::print(FILE *f, bool verbose)
 
         print("CNT", (channel_regs.cnt & WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_SHIFT);
     }
+}
+
+LnlsRtmLampControllerV2::LnlsRtmLampControllerV2(const struct pcie_bars *bars, size_t addr):
+    LnlsRtmLampController(bars, addr, device_match_lamp_v2)
+{
+    channel_regs = std::make_unique<channel_registers_v2>();
+}
+LnlsRtmLampControllerV2::~LnlsRtmLampControllerV2() = default;
+
+void LnlsRtmLampControllerV2::encode_config()
+{
+    static const std::unordered_map<std::string, int> mode_options({
+        {"open-loop-dac", 0},
+        {"open-loop-square", 1},
+        {"closed-loop-pi_sp", 2},
+        {"closed-loop-square", 3},
+        {"closed-loop-external", 4},
+    });
+
+    int mode_option;
+    try {
+        mode_option = mode_options.at(mode);
+    } catch (std::out_of_range &e) {
+        throw std::runtime_error("mode must be one of " + list_of_keys(mode_options));
+    }
+    clear_and_insert(channel_regs->ctl, mode_option, WB_RTMLAMP_OHWR_REGS_CH_CTL_MODE_MASK, WB_RTMLAMP_OHWR_REGS_CH_CTL_MODE_SHIFT);
+    insert_bit(channel_regs->ctl, amp_enable, WB_RTMLAMP_OHWR_REGS_CH_CTL_AMP_EN);
+
+    bool closed_loop = mode.rfind("closed-loop", 0) == 0;
+
+    if (closed_loop && !(pi_kp && pi_ti && pi_sp))
+        throw std::logic_error("pi_kp, pi_ti and pi_sp must be set for closed-loop operation");
+
+    if (*pi_kp > max_26bits || *pi_ti > max_26bits)
+        throw std::logic_error("pi_kp and pi_ti must fit in a number under 26 bits");
+
+    if (closed_loop) {
+        clear_and_insert(channel_regs->pi_kp, *pi_kp, WB_RTMLAMP_OHWR_REGS_CH_PI_KP_DATA_MASK, WB_RTMLAMP_OHWR_REGS_CH_PI_KP_DATA_SHIFT);
+        clear_and_insert(channel_regs->pi_ti, *pi_ti, WB_RTMLAMP_OHWR_REGS_CH_PI_TI_DATA_MASK, WB_RTMLAMP_OHWR_REGS_CH_PI_TI_DATA_SHIFT);
+        clear_and_insert(channel_regs->pi_sp, (uint16_t)*pi_sp, WB_RTMLAMP_OHWR_REGS_CH_PI_SP_DATA_MASK, WB_RTMLAMP_OHWR_REGS_CH_PI_SP_DATA_SHIFT);
+    }
+
+    if ((mode == "open-loop-square" || mode == "closed-loop-square") && !(limit_a && limit_b && cnt))
+        throw std::runtime_error("limits A and B and cnt must be specified for square wave operation");
+
+    if (dac) {
+        if (mode != "open-loop-dac")
+            throw std::runtime_error("DAC can't receive values when not being used");
+        clear_and_insert(channel_regs->dac, *dac, WB_RTMLAMP_OHWR_REGS_CH_DAC_DATA_MASK, WB_RTMLAMP_OHWR_REGS_CH_DAC_DATA_SHIFT);
+    }
+
+    if (limit_a) clear_and_insert(channel_regs->lim, (uint16_t)*limit_a, WB_RTMLAMP_OHWR_REGS_CH_LIM_A_MASK, WB_RTMLAMP_OHWR_REGS_CH_LIM_A_SHIFT);
+    if (limit_b) clear_and_insert(channel_regs->lim, (uint16_t)*limit_b, WB_RTMLAMP_OHWR_REGS_CH_LIM_B_MASK, WB_RTMLAMP_OHWR_REGS_CH_LIM_B_SHIFT);
+
+    if (cnt) {
+        if (*cnt > max_22bits)
+            throw std::logic_error("cnt must fit in a number under 22 bits");
+        clear_and_insert(channel_regs->cnt, *cnt, WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_MASK, WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_SHIFT);
+    }
+}
+
+void LnlsRtmLampControllerV2::write_params()
+{
+    encode_config();
+
+    bar4_write_v(bars, addr + WB_RTMLAMP_OHWR_REGS_CH + channel * channel_distance, channel_regs.get(), sizeof *channel_regs);
 }
