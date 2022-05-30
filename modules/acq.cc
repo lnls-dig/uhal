@@ -171,6 +171,11 @@ void LnlsBpmAcqCore::print(FILE *f, bool verbose)
     }
 }
 
+void LnlsBpmAcqCoreController::set_addr(uint64_t naddr)
+{
+    addr = naddr;
+}
+
 void LnlsBpmAcqCoreController::get_internal_values()
 {
     uint32_t channel_desc = bar4_read(bars, addr + ACQ_CORE_CH0_DESC + 8*channel);
@@ -182,7 +187,7 @@ void LnlsBpmAcqCoreController::get_internal_values()
      */
     sample_size = (int_width / 8) * num_coalesce;
 
-    alignment = (ddr3_payload_size < sample_size) ? ddr3_payload_size / sample_size : 1;
+    alignment = (ddr3_payload_size > sample_size) ? ddr3_payload_size / sample_size : 1;
 
     uint32_t channel_atom_desc = bar4_read(bars, addr + ACQ_CORE_CH0_ATOM_DESC + 8*channel);
     channel_atom_width = (channel_atom_desc & ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_MASK) >> ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_SHIFT;
@@ -231,9 +236,9 @@ void LnlsBpmAcqCoreController::write_config()
 
 void LnlsBpmAcqCoreController::start_acquisition()
 {
+    /* FIXME: hardcoded memory size */ bar4_write(bars, addr + ACQ_CORE_DDR3_END_ADDR, 0x0FFFFFE0);
     insert_bit(regs.ctl, true, ACQ_CORE_CTL_FSM_START_ACQ);
     bar4_write(bars, addr + ACQ_CORE_CTL, regs.ctl);
-    /* FIXME: hardcoded memory size */ bar4_write(bars, addr + ACQ_CORE_DDR3_END_ADDR, 0x0FFFFFE0);
 }
 
 #define ACQ_CORE_STA_FSM_IDLE (1 << ACQ_CORE_STA_FSM_STATE_SHIFT)
