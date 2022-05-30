@@ -91,7 +91,7 @@ class LnlsRtmLampControllerV1: public LnlsRtmLampController {
     void encode_config();
 
   public:
-    LnlsRtmLampControllerV1(const struct pcie_bars *bars, size_t addr):
+    LnlsRtmLampControllerV1(const struct pcie_bars *bars, size_t addr=0):
         LnlsRtmLampController(bars, addr, device_match_lamp_v1)
     {
     }
@@ -106,7 +106,7 @@ class LnlsRtmLampControllerV2: public LnlsRtmLampController {
     void encode_config();
 
   public:
-    LnlsRtmLampControllerV2(const struct pcie_bars *bars, size_t addr);
+    LnlsRtmLampControllerV2(const struct pcie_bars *bars, size_t addr=0);
     ~LnlsRtmLampControllerV2();
 
     void write_params();
