@@ -52,14 +52,15 @@ void LnlsRtmLampCoreV2::print(FILE *f, bool verbose)
               };
 
               fputs(modes[value], f);
+              fputc('\n', f);
           }
       ),
       I("PI_KP", "PI KP Coefficient", PrinterType::value),
       I("PI_TI", "PI TI Coefficient", PrinterType::value),
       I("PI_SP", "PI Setpoint", PrinterType::value),
       I("DAC", "DAC Data For Channel", PrinterType::value),
-      I("Limit A", "Signed limit 'a')", PrinterType::value),
-      I("Limit B", "Signed limit 'b')", PrinterType::value),
+      I("Limit A", "Signed limit 'a'", PrinterType::value),
+      I("Limit B", "Signed limit 'b'", PrinterType::value),
       I("CNT", "Test mode period, in clock ticks", PrinterType::value),
     });
 
@@ -73,9 +74,7 @@ void LnlsRtmLampCoreV2::print(FILE *f, bool verbose)
 
     unsigned i = 0;
     for (const auto &channel_regs: regs->ch) {
-        i++;
-
-        fprintf(f, "channel %u:\n", i);
+        fprintf(f, "channel %u:\n", i++);
         indent = 4;
 
         t = channel_regs.sta;
