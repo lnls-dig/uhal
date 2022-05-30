@@ -77,6 +77,7 @@ class LnlsBpmAcqCoreController {
         bars(bars), addr(addr)
     {
     }
+    void set_addr(uint64_t addr);
 
     static inline const device_match_fn device_match = device_match_acq;
 
