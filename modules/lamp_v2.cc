@@ -18,7 +18,7 @@
 
 static const unsigned max_26bits = 0x3ffffff;
 static const unsigned max_22bits = 0x3fffff;
-static const unsigned channel_distance = sizeof(channel_registers_v2_impl);
+static const unsigned channel_distance = sizeof(channel_registers_v2);
 
 LnlsRtmLampCoreV2::LnlsRtmLampCoreV2()
 {
@@ -166,5 +166,5 @@ void LnlsRtmLampControllerV2::write_params()
 {
     encode_config();
 
-    bar4_write_v(bars, addr + WB_RTMLAMP_OHWR_REGS_CH + channel * channel_distance, channel_regs.get(), sizeof *channel_regs);
+    bar4_write_v(bars, addr + WB_RTMLAMP_OHWR_REGS_CH + channel * channel_distance, channel_regs.get(), channel_distance);
 }
