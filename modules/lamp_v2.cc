@@ -60,10 +60,10 @@ void LnlsRtmLampCoreV2::print(FILE *f, bool verbose)
       ),
       I("PI_KP", "PI KP Coefficient", PrinterType::value),
       I("PI_TI", "PI TI Coefficient", PrinterType::value),
-      I("PI_SP", "PI Setpoint", PrinterType::value_2c),
+      I("PI_SP", "PI Setpoint", PrinterType::value),
       I("DAC", "DAC Data For Channel", PrinterType::value),
-      I("Limit A", "Signed limit 'a'", PrinterType::value_2c),
-      I("Limit B", "Signed limit 'b'", PrinterType::value_2c),
+      I("Limit A", "Signed limit 'a'", PrinterType::value),
+      I("Limit B", "Signed limit 'b'", PrinterType::value),
       I("CNT", "Test mode period, in clock ticks", PrinterType::value),
     });
 
@@ -71,7 +71,7 @@ void LnlsRtmLampCoreV2::print(FILE *f, bool verbose)
     unsigned indent = 0;
     uint32_t t;
 
-    auto print = [f, v, &indent](const char *name, uint32_t value) {
+    auto print = [f, v, &indent](const char *name, auto value) {
         printers.at(name).print(f, v, indent, value);
     };
 
@@ -92,12 +92,12 @@ void LnlsRtmLampCoreV2::print(FILE *f, bool verbose)
 
         print("PI_KP", (channel_regs.pi_kp & WB_RTMLAMP_OHWR_REGS_CH_PI_KP_DATA_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_PI_KP_DATA_SHIFT);
         print("PI_TI", (channel_regs.pi_ti & WB_RTMLAMP_OHWR_REGS_CH_PI_TI_DATA_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_PI_TI_DATA_SHIFT);
-        print("PI_SP", (int32_t)(int16_t)((channel_regs.pi_sp & WB_RTMLAMP_OHWR_REGS_CH_PI_SP_DATA_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_PI_SP_DATA_SHIFT));
+        print("PI_SP", (int16_t)((channel_regs.pi_sp & WB_RTMLAMP_OHWR_REGS_CH_PI_SP_DATA_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_PI_SP_DATA_SHIFT));
         print("DAC", (channel_regs.dac & WB_RTMLAMP_OHWR_REGS_CH_DAC_DATA_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_DAC_DATA_SHIFT);
 
         t = channel_regs.lim;
-        print("Limit A", (int32_t)(int16_t)((t & WB_RTMLAMP_OHWR_REGS_CH_LIM_A_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_LIM_A_SHIFT));
-        print("Limit B", (int32_t)(int16_t)((t & WB_RTMLAMP_OHWR_REGS_CH_LIM_B_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_LIM_B_SHIFT));
+        print("Limit A", (int16_t)((t & WB_RTMLAMP_OHWR_REGS_CH_LIM_A_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_LIM_A_SHIFT));
+        print("Limit B", (int16_t)((t & WB_RTMLAMP_OHWR_REGS_CH_LIM_B_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_LIM_B_SHIFT));
 
         print("CNT", (channel_regs.cnt & WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_SHIFT);
     }

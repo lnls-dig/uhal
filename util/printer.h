@@ -20,9 +20,8 @@ enum class PrinterType {
     progress,
     enable,
     /* directly print value */
-    value,
+    value, /* generic, so we don't need signed or unsigned versions */
     value_hex,
-    value_2c, /* 2's complement */
     /* allow it to print its own value */
     custom_function,
 };
@@ -81,7 +80,8 @@ class Printer {
         }
     }
 
-    void print(FILE *, bool, unsigned, uint32_t) const;
+    template<typename T>
+    void print(FILE *, bool, unsigned, T) const;
 };
 
 /* helper for defining std::unordered_map<const char *, Printer> */

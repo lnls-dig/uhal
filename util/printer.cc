@@ -5,11 +5,13 @@
  * Released according to the GNU GPL, version 3 or any later version.
  */
 
+#include <charconv>
 #include <string>
 
 #include "printer.h"
 
-void Printer::print(FILE *f, bool verbose, unsigned indent, uint32_t value) const
+template<typename T>
+void Printer::print(FILE *f, bool verbose, unsigned indent, T value) const
 {
     while (indent--) fputc(' ', f);
 
@@ -32,13 +34,15 @@ void Printer::print(FILE *f, bool verbose, unsigned indent, uint32_t value) cons
             fprintf(f, "%s: %s\n", final_name, value ? boolean_names.truth : boolean_names.not_truth);
             break;
         case PrinterType::value:
-            fprintf(f, "%s: %u\n", final_name, (unsigned)value);
+            {
+                char tmp[32];
+                auto r = std::to_chars(tmp, tmp + sizeof tmp, value);
+                *r.ptr = '\0';
+                fprintf(f, "%s: %s\n", final_name, tmp);
+            }
             break;
         case PrinterType::value_hex:
             fprintf(f, "%s: %08X\n", final_name, (unsigned)value);
-            break;
-        case PrinterType::value_2c:
-            fprintf(f, "%s: %d\n", final_name, (int)(int32_t)value);
             break;
         case PrinterType::custom_function:
             fprintf(f, "%s: ", final_name);
@@ -46,6 +50,11 @@ void Printer::print(FILE *f, bool verbose, unsigned indent, uint32_t value) cons
             break;
     }
 }
+template void Printer::print(FILE *, bool, unsigned, uint64_t) const; /* masks are specified as xxxUL */
+template void Printer::print(FILE *, bool, unsigned, uint32_t) const; /* most values fall under this category */
+template void Printer::print(FILE *, bool, unsigned, uint16_t) const;
+template void Printer::print(FILE *, bool, unsigned, int32_t) const;
+template void Printer::print(FILE *, bool, unsigned, int16_t) const;
 
 void print_reg_impl(FILE *f, bool v, unsigned &indent, const char *reg, unsigned offset)
 {

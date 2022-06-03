@@ -50,7 +50,7 @@ void LnlsBpmAcqCore::print(FILE *f, bool verbose)
         I("SW_TRIG_EN", "Software trigger enable", PrinterType::enable),
         I("INT_TRIG_SEL", "Atom selection for internal trigger", PrinterType::value),
         I("THRES_FILT", "Internal trigger threshold glitch filter", PrinterType::value),
-        I("TRIG_DATA_THRES", "Threshold for internal trigger", PrinterType::value_2c),
+        I("TRIG_DATA_THRES", "Threshold for internal trigger", PrinterType::value),
         I("TRIG_DLY", "Trigger delay value", PrinterType::value),
         I("NB", "Number of shots required in multi-shot mode, one if in single-shot mode", PrinterType::value),
         I("MULTISHOT_RAM_SIZE_IMPL", "MultiShot RAM size reg implemented", PrinterType::boolean),
@@ -78,7 +78,7 @@ void LnlsBpmAcqCore::print(FILE *f, bool verbose)
     auto print_reg = [f, v, &indent](const char *reg, unsigned offset) {
         print_reg_impl(f, v, indent, reg, offset);
     };
-    auto print = [f, v, &indent](const char *name, uint32_t value) {
+    auto print = [f, v, &indent](const char *name, auto value) {
         printers.at(name).print(f, v, indent, value);
     };
 
@@ -113,7 +113,7 @@ void LnlsBpmAcqCore::print(FILE *f, bool verbose)
 
     /* trigger */
     print_reg("trigger data threshold", ACQ_CORE_TRIG_DATA_THRES);
-    print("TRIG_DATA_THRES", regs.trig_data_thres);
+    print("TRIG_DATA_THRES", (int32_t)regs.trig_data_thres);
     print_reg("trigger delay", ACQ_CORE_TRIG_DLY);
     print("TRIG_DLY", regs.trig_dly);
 
