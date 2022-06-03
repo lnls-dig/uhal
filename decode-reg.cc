@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     std::string mode = argv[1];
 
     argparse::ArgumentParser parent_args("decode-reg", "1.0", argparse::default_arguments::none);
-    parent_args.add_argument("-b").help("device number").required().scan<'d', int>();
+    parent_args.add_argument("-b").help("device identifier").required();
     parent_args.add_argument("-a").help("enumerated position of device").required().scan<'u', unsigned>().default_value((unsigned)0);
     parent_args.add_argument("-v").help("verbose output").default_value(false).implicit_value(true);
 
@@ -93,11 +93,11 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    auto device_number = args.get<int>("-b");
+    auto device_number = args.get<std::string>("-b");
     auto dev_index = args.get<unsigned>("-a");
     auto verbose = args.is_used("-v");
 
-    struct pcie_bars bars = dev_open(device_number);
+    struct pcie_bars bars = dev_open_slot(device_number.c_str());
     defer _(nullptr, [&bars](...){dev_close(bars);});
 
     if (verbose) read_sdb(&bars, print_sdb);
