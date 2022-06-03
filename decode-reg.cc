@@ -148,8 +148,7 @@ int main(int argc, char *argv[])
         try_unsigned(ctl.trigger_delay, args, "-d");
 
         auto res = std::get<std::vector<int32_t>>(ctl.result(data_sign::d_signed));
-        for (auto &v: res)
-            fprintf(stdout, "%d\n", (int)v);
+        ctl.print_csv(stdout, res);
     }
     if (mode == "lamp") {
         std::unique_ptr<LnlsRtmLampController> ctlp = std::make_unique<LnlsRtmLampControllerV1>(&bars);
