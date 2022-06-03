@@ -65,6 +65,9 @@ void LnlsRtmLampCoreV2::print(FILE *f, bool verbose)
       I("Limit A", "Signed limit 'a'", PrinterType::value),
       I("Limit B", "Signed limit 'b'", PrinterType::value),
       I("CNT", "Test mode period, in clock ticks", PrinterType::value),
+      I("ADC_INST", "ADC instantaneous measurement", PrinterType::value),
+      I("DAC_EFF", "DAC effective measurement - actual value sent to DAC", PrinterType::value),
+      I("SP_EFF", "Set point instantaneous effective data", PrinterType::value),
     });
 
     bool v = verbose;
@@ -100,6 +103,12 @@ void LnlsRtmLampCoreV2::print(FILE *f, bool verbose)
         print("Limit B", (int16_t)((t & WB_RTMLAMP_OHWR_REGS_CH_LIM_B_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_LIM_B_SHIFT));
 
         print("CNT", (channel_regs.cnt & WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_SHIFT);
+
+        t = channel_regs.adc_dac_eff;
+        print("ADC_INST", (int16_t)((t & WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_ADC_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_ADC_SHIFT));
+        print("DAC_EFF", (int16_t)((t & WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_DAC_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_DAC_SHIFT));
+
+        print("SP_EFF", (int16_t)((channel_regs.sp_eff & WB_RTMLAMP_OHWR_REGS_CH_SP_EFF_SP_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_SP_EFF_SP_SHIFT));
     }
 }
 
