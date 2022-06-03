@@ -5,6 +5,7 @@
  * Released according to the GNU GPL, version 3 or any later version.
  */
 
+#include <charconv>
 #include <cstdio>
 #include <fstream>
 #include <string>
@@ -17,10 +18,18 @@
 
 #include "pcie-open.h"
 
-struct pcie_bars dev_open(int slot)
+struct pcie_bars dev_open_slot(int slot)
+{
+    char slot_chars[64];
+    auto r = std::to_chars(slot_chars, slot_chars + sizeof slot_chars, slot);
+    *r.ptr = '\0';
+    return dev_open_slot(slot_chars);
+}
+
+struct pcie_bars dev_open_slot(const char *slot)
 {
     char slot_path[64];
-    snprintf(slot_path, sizeof slot_path, "/sys/bus/pci/slots/%d/address", slot);
+    snprintf(slot_path, sizeof slot_path, "/sys/bus/pci/slots/%s/address", slot);
     std::ifstream fslot{slot_path};
     std::string pci_address;
     fslot >> pci_address;
@@ -30,15 +39,19 @@ struct pcie_bars dev_open(int slot)
 struct pcie_bars dev_open(const char *pci_address)
 {
     const char resource_path_fmt[] = "/sys/bus/pci/devices/%s.0/resource%d";
+    const char wc_resource_path_fmt[] = "/sys/bus/pci/devices/%s.0/resource%d_wc";
     char resource_path[sizeof resource_path_fmt + 32];
 
     struct pcie_bars rv{};
     for (unsigned i = 0; i < 3; i++) {
         unsigned bar = i * 2; // bars 0, 2, 4
-        snprintf(resource_path, sizeof resource_path, resource_path_fmt, pci_address, bar);
+        snprintf(resource_path, sizeof resource_path, wc_resource_path_fmt, pci_address, bar);
         int fd = open(resource_path, O_RDWR);
         if (fd < 0) {
-            throw std::runtime_error(std::string("couldn't open resource file: ") + pci_address);
+            snprintf(resource_path, sizeof resource_path, resource_path_fmt, pci_address, bar);
+            fd = open(resource_path, O_RDWR);
+            if (fd < 0)
+                throw std::runtime_error(std::string("couldn't open resource file: ") + pci_address);
         }
         struct stat st;
         fstat(fd, &st);
