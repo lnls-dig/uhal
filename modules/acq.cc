@@ -6,6 +6,7 @@
  */
 
 #include <array>
+#include <charconv>
 #include <cstring>
 #include <stdexcept>
 #include <unordered_map>
@@ -371,3 +372,20 @@ acq_result LnlsBpmAcqCoreController::result_async(data_sign sign)
 
     throw std::logic_error("should be unreachable");
 }
+
+template<typename T>
+void LnlsBpmAcqCoreController::print_csv(FILE *f, std::vector<T> &res)
+{
+    for (unsigned i = 0; i < (pre_samples + post_samples); i++) {
+        for (unsigned j = 0; j < channel_num_atoms; j++) {
+            char tmp[32];
+            auto r = std::to_chars(tmp, tmp + sizeof tmp, res[i * channel_num_atoms + j]);
+            *r.ptr = '\0';
+            fputs(tmp, f);
+            fputc(',', f);
+        }
+        fputc('\n', f);
+    }
+}
+template void LnlsBpmAcqCoreController::print_csv<int32_t>(FILE *, std::vector<int32_t> &);
+template void LnlsBpmAcqCoreController::print_csv<uint32_t>(FILE *, std::vector<uint32_t> &);
