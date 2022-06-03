@@ -8,6 +8,15 @@
 #include <assert.h>
 #include <stdio.h>
 
+#if defined(__x86_64__) && defined(__SSE4_1__)
+# define INCLUDE_IMMINTRIN
+# define USE_SSE41
+#endif
+
+#ifdef INCLUDE_IMMINTRIN
+# include <immintrin.h>
+#endif
+
 #include "pcie.h"
 
 static void bar_generic_read_v(const struct pcie_bars *bars, size_t addr, void *dest, size_t n,
@@ -50,29 +59,81 @@ static void set_wb_pg(const struct pcie_bars *bars, int num)
     SET_PG(bar0, PCIE_CFG_REG_WB_PG, num);
 }
 
-static size_t bar2_access_offset(const struct pcie_bars *bars, size_t addr)
+static inline volatile uint32_t *bar2_get_u32p_small(const struct pcie_bars *bars, size_t addr, unsigned index)
 {
-    uint32_t pg_num = PCIE_ADDR_SDRAM_PG (addr);
-
-    /* set sdram page in bar0, all accesses need to do this */
-    set_sdram_pg(bars, pg_num);
-
-    return PCIE_ADDR_SDRAM_PG_OFFS (addr);
-}
-
-static volatile uint32_t *bar2_get_u32p(const struct pcie_bars *bars, size_t addr)
-{
-    return (volatile void *)((unsigned char *)bars->bar2 + bar2_access_offset(bars, addr));
-}
-
-static uint32_t bar2_read(const struct pcie_bars *bars, size_t addr)
-{
-    return *bar2_get_u32p(bars, addr);
+    return (volatile uint32_t *)((unsigned char *)bars->bar2 + addr) + index;
 }
 
 void bar2_read_v(const struct pcie_bars *bars, size_t addr, void *dest, size_t n)
 {
-    bar_generic_read_v(bars, addr, dest, n, bar2_read);
+    size_t sz = bars->sizes[1];
+
+#ifdef USE_SSE41
+    __m128i scratch[256] __attribute__((aligned(64)));
+#endif
+
+    while (n) {
+        const size_t addr_now = PCIE_ADDR_SDRAM_PG_OFFS(addr);
+        const size_t can_read = sz - addr_now;
+        const size_t to_read = can_read < n ? can_read : n;
+
+        set_sdram_pg(bars, PCIE_ADDR_SDRAM_PG(addr));
+
+#ifdef USE_SSE41
+        /* stores number of uint32_t's written */
+        size_t i = 0;
+        const size_t alignment = 64, read_size = 1024;
+
+        size_t head = addr_now % alignment;
+        head = head ? alignment - head : 0;
+        for (size_t j = head; i < to_read/4 && j; i++, j-=4)
+            ((uint32_t *)dest)[i] = *bar2_get_u32p_small(bars, addr_now, i);
+
+        for (; i + (read_size-1) < to_read/4; i += read_size) {
+            __m128i a, b, c, d;
+
+            _mm_mfence();
+            for (size_t j = 0; j < 64; j++) {
+                size_t base = i + j * 16;
+                a = _mm_stream_load_si128((__m128i *)bar2_get_u32p_small(bars, addr_now, base));
+                b = _mm_stream_load_si128((__m128i *)bar2_get_u32p_small(bars, addr_now, base+4));
+                c = _mm_stream_load_si128((__m128i *)bar2_get_u32p_small(bars, addr_now, base+8));
+                d = _mm_stream_load_si128((__m128i *)bar2_get_u32p_small(bars, addr_now, base+12));
+
+                base = j * 4;
+                _mm_store_si128(scratch + base, a);
+                _mm_store_si128(scratch + base + 1, b);
+                _mm_store_si128(scratch + base + 2, c);
+                _mm_store_si128(scratch + base + 3, d);
+            }
+
+            _mm_mfence();
+            for (size_t j = 0; j < 64; j++) {
+                size_t base = j * 4;
+                a = _mm_load_si128(scratch + base);
+                b = _mm_load_si128(scratch + base + 1);
+                c = _mm_load_si128(scratch + base + 2);
+                d = _mm_load_si128(scratch + base + 3);
+
+                base = i + j * 16;
+                _mm_stream_si128((__m128i *)((uint32_t *)dest + base), a);
+                _mm_stream_si128((__m128i *)((uint32_t *)dest + base+4), b);
+                _mm_stream_si128((__m128i *)((uint32_t *)dest + base+8), c);
+                _mm_stream_si128((__m128i *)((uint32_t *)dest + base+12), d);
+            }
+        }
+
+        for (; i < to_read/4; i++)
+            ((uint32_t *)dest)[i] = *bar2_get_u32p_small(bars, addr_now, i);
+#else
+        for (size_t i = 0; i < to_read/4; i++)
+            ((uint32_t *)dest)[i] = *bar2_get_u32p_small(bars, addr_now, i);
+#endif
+
+        n -= to_read;
+        addr += to_read;
+        dest = (unsigned char *)dest + to_read;
+    }
 }
 
 void bar2_read_dma(const struct pcie_bars *bars, size_t addr, unsigned bar, unsigned long physical_address, size_t n)
