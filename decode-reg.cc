@@ -171,8 +171,8 @@ int main(int argc, char *argv[])
         ctl.pi_sp = args.present<int>("-s");
 
         ctl.dac = args.present<unsigned>("-d");
-        ctl.limit_a = args.present<unsigned>("-l");
-        ctl.limit_b = args.present<unsigned>("-L");
+        ctl.limit_a = args.present<int>("-l");
+        ctl.limit_b = args.present<int>("-L");
         ctl.cnt = args.present<unsigned>("-C");
 
         ctl.write_params();
