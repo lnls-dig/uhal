@@ -99,6 +99,9 @@ class LnlsBpmAcqCoreController {
     acq_result result(data_sign sign, std::chrono::milliseconds wait_time);
     [[nodiscard]]
     acq_result result_async(data_sign sign);
+
+    template<typename T>
+    void print_csv(FILE *f, std::vector<T> &res);
 };
 
 #endif
