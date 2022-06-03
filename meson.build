@@ -13,10 +13,4 @@ argparse = dependency('argparse', fallback: ['argparse', 'argparse_dep'])
 
 subdir('util')
 subdir('modules')
-
-executable(
-  'decode-reg',
-  ['decode-reg.cc'],
-  dependencies: [thread_dep, argparse, utilities, modules],
-  install: true,
-)
+subdir('app')
