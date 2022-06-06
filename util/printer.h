@@ -40,45 +40,9 @@ class Printer {
     printing_function custom_fn;
 
   public:
-    Printer(const char *name, const char *description, PrinterType type):
-        type(type), name(name), description(description)
-    {
-        switch (type) {
-            case PrinterType::boolean:
-                boolean_names.truth = "true";
-                boolean_names.not_truth = "false";
-                break;
-            case PrinterType::progress:
-                boolean_names.truth = "completed";
-                boolean_names.not_truth = "in progress";
-                break;
-            case PrinterType::enable:
-                boolean_names.truth = "enabled";
-                boolean_names.not_truth = "disabled";
-                break;
-            case PrinterType::custom_function:
-                throw std::invalid_argument("this constructor shouldn't be used for PrinterType::custom_function");
-                break;
-            default:
-                break;
-        }
-    }
-
-    Printer(const char *name, const char *description, PrinterType type, printing_function custom_fn):
-        type(type), name(name), description(description), custom_fn(custom_fn)
-    {
-        if (type != PrinterType::custom_function) {
-            throw std::invalid_argument("this constructor should only be used for PrinterType::custom_function");
-        }
-    }
-
-    Printer(const char *name, const char *description, PrinterType type, const char *truth, const char *not_truth):
-        type(type), name(name), description(description), boolean_names{truth, not_truth}
-    {
-        if (type != PrinterType::boolean) {
-            throw std::invalid_argument("this constructor should only be used for PrinterType::boolean");
-        }
-    }
+    Printer(const char *name, const char *description, PrinterType type);
+    Printer(const char *name, const char *description, PrinterType type, printing_function custom_fn);
+    Printer(const char *name, const char *description, PrinterType type, const char *truth, const char *not_truth);
 
     template<typename T>
     void print(FILE *, bool, unsigned, T) const;
