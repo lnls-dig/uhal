@@ -74,7 +74,7 @@ class LnlsRtmLampController {
     std::string mode = "none";
     std::optional<uint32_t> pi_kp, pi_ti; /* are actually 26-bit */
     std::optional<int16_t> pi_sp;
-    std::optional<uint16_t> dac;
+    std::optional<int16_t> dac;
     std::optional<int16_t> limit_a, limit_b;
     std::optional<uint32_t> cnt;
 
