@@ -16,8 +16,6 @@
 #define channel_registers_v2_impl wb_rtmlamp_ohwr_regs::ch
 #include "lamp.h"
 
-static const unsigned max_26bits = 0x3ffffff;
-static const unsigned max_22bits = 0x3fffff;
 static const unsigned channel_distance = sizeof(channel_registers_v2);
 
 LnlsRtmLampCoreV2::LnlsRtmLampCoreV2()
@@ -136,28 +134,22 @@ void LnlsRtmLampControllerV2::encode_config()
         throw std::runtime_error("mode must be one of " + list_of_keys(mode_options));
     }
 
-    if ((pi_kp && *pi_kp > max_26bits) || (pi_ti && *pi_ti > max_26bits))
-        throw std::logic_error("pi_kp and pi_ti must fit in 26 bits");
-
-    if (cnt && *cnt > max_22bits)
-        throw std::logic_error("cnt must fit in 22 bits");
 
     bar4_read_v(bars, addr + WB_RTMLAMP_OHWR_REGS_CH + channel * channel_distance, channel_regs.get(), channel_distance);
 
-    clear_and_insert(channel_regs->ctl, mode_option, WB_RTMLAMP_OHWR_REGS_CH_CTL_MODE_MASK, WB_RTMLAMP_OHWR_REGS_CH_CTL_MODE_SHIFT);
+    clear_and_insert(channel_regs->ctl, mode_option, WB_RTMLAMP_OHWR_REGS_CH_CTL_MODE_MASK);
     insert_bit(channel_regs->ctl, amp_enable, WB_RTMLAMP_OHWR_REGS_CH_CTL_AMP_EN);
 
-    if (pi_kp) clear_and_insert(channel_regs->pi_kp, *pi_kp, WB_RTMLAMP_OHWR_REGS_CH_PI_KP_DATA_MASK, WB_RTMLAMP_OHWR_REGS_CH_PI_KP_DATA_SHIFT);
-    if (pi_ti) clear_and_insert(channel_regs->pi_ti, *pi_ti, WB_RTMLAMP_OHWR_REGS_CH_PI_TI_DATA_MASK, WB_RTMLAMP_OHWR_REGS_CH_PI_TI_DATA_SHIFT);
-    if (pi_sp) clear_and_insert(channel_regs->pi_sp, (uint16_t)*pi_sp,
-        WB_RTMLAMP_OHWR_REGS_CH_PI_SP_DATA_MASK, WB_RTMLAMP_OHWR_REGS_CH_PI_SP_DATA_SHIFT);
+    if (pi_kp) clear_and_insert(channel_regs->pi_kp, *pi_kp, WB_RTMLAMP_OHWR_REGS_CH_PI_KP_DATA_MASK);
+    if (pi_ti) clear_and_insert(channel_regs->pi_ti, *pi_ti, WB_RTMLAMP_OHWR_REGS_CH_PI_TI_DATA_MASK);
+    if (pi_sp) clear_and_insert(channel_regs->pi_sp, (uint16_t)*pi_sp, WB_RTMLAMP_OHWR_REGS_CH_PI_SP_DATA_MASK);
 
-    if (dac) clear_and_insert(channel_regs->dac, *dac, WB_RTMLAMP_OHWR_REGS_CH_DAC_DATA_MASK, WB_RTMLAMP_OHWR_REGS_CH_DAC_DATA_SHIFT);
+    if (dac) clear_and_insert(channel_regs->dac, (uint16_t)*dac, WB_RTMLAMP_OHWR_REGS_CH_DAC_DATA_MASK);
 
-    if (limit_a) clear_and_insert(channel_regs->lim, (uint16_t)*limit_a, WB_RTMLAMP_OHWR_REGS_CH_LIM_A_MASK, WB_RTMLAMP_OHWR_REGS_CH_LIM_A_SHIFT);
-    if (limit_b) clear_and_insert(channel_regs->lim, (uint16_t)*limit_b, WB_RTMLAMP_OHWR_REGS_CH_LIM_B_MASK, WB_RTMLAMP_OHWR_REGS_CH_LIM_B_SHIFT);
+    if (limit_a) clear_and_insert(channel_regs->lim, (uint16_t)*limit_a, WB_RTMLAMP_OHWR_REGS_CH_LIM_A_MASK);
+    if (limit_b) clear_and_insert(channel_regs->lim, (uint16_t)*limit_b, WB_RTMLAMP_OHWR_REGS_CH_LIM_B_MASK);
 
-    if (cnt) clear_and_insert(channel_regs->cnt, *cnt, WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_MASK, WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_SHIFT);
+    if (cnt) clear_and_insert(channel_regs->cnt, *cnt, WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_MASK);
 }
 
 void LnlsRtmLampControllerV2::write_params()

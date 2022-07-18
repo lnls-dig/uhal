@@ -126,19 +126,15 @@ void LnlsRtmLampControllerV1::encode_config()
         if (*pi_kp > max_26bits || *pi_ti > max_26bits)
             throw std::logic_error("pi_kp and pi_ti must fit in a number under 26 bits");
 
-        clear_and_insert(channel_regs.pi_kp, *pi_kp, RTMLAMP_OHWR_REGS_CH_0_PI_KP_DATA_MASK, RTMLAMP_OHWR_REGS_CH_0_PI_KP_DATA_SHIFT);
-        clear_and_insert(channel_regs.pi_ti, *pi_ti, RTMLAMP_OHWR_REGS_CH_0_PI_TI_DATA_MASK, RTMLAMP_OHWR_REGS_CH_0_PI_TI_DATA_SHIFT);
-        clear_and_insert(channel_regs.pi_sp, (uint16_t)*pi_sp, RTMLAMP_OHWR_REGS_CH_0_PI_SP_DATA_MASK, RTMLAMP_OHWR_REGS_CH_0_PI_SP_DATA_SHIFT);
+        clear_and_insert(channel_regs.pi_kp, *pi_kp, RTMLAMP_OHWR_REGS_CH_0_PI_KP_DATA_MASK);
+        clear_and_insert(channel_regs.pi_ti, *pi_ti, RTMLAMP_OHWR_REGS_CH_0_PI_TI_DATA_MASK);
+        clear_and_insert(channel_regs.pi_sp, (uint16_t)*pi_sp, RTMLAMP_OHWR_REGS_CH_0_PI_SP_DATA_MASK);
     }
 
     if (dac) {
-        clear_and_insert(
-            channel_regs.dac,
-            /* we need the WR bit so the values are actually sent to the DAC */
-            ((uint16_t)*dac) | RTMLAMP_OHWR_REGS_CH_0_DAC_WR,
-            RTMLAMP_OHWR_REGS_CH_0_DAC_DATA_MASK | RTMLAMP_OHWR_REGS_CH_0_DAC_WR,
-            RTMLAMP_OHWR_REGS_CH_0_DAC_DATA_SHIFT
-        );
+        clear_and_insert(channel_regs.dac, (uint16_t)*dac, RTMLAMP_OHWR_REGS_CH_0_DAC_DATA_MASK);
+        /* we need the WR bit so the values are actually sent to the DAC */
+        insert_bit(channel_regs.dac, 1, RTMLAMP_OHWR_REGS_CH_0_DAC_WR);
     }
 }
 
