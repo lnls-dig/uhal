@@ -7,6 +7,7 @@
 
 #include <numeric>
 #include <stdexcept>
+#include <type_traits>
 
 #include "util.h"
 
@@ -33,15 +34,16 @@ unsigned align_extend(unsigned value, unsigned alignment)
         return value;
 }
 
-template<typename Signed, typename Unsigned>
+template<typename Signed>
 int32_t sign_extend(uint32_t v)
 {
-    return ((Signed)(Unsigned)v);
+    typedef typename std::make_unsigned<Signed>::type Unsigned;
+    return (Signed)(Unsigned)v;
 }
 
-static sign_extension_fn sign_extend_8 = sign_extend<int8_t, uint8_t>;
-static sign_extension_fn sign_extend_16 = sign_extend<int16_t, uint16_t>;
-static sign_extension_fn sign_extend_32 = sign_extend<int32_t, uint32_t>;
+static sign_extension_fn sign_extend_8 = sign_extend<int8_t>;
+static sign_extension_fn sign_extend_16 = sign_extend<int16_t>;
+static sign_extension_fn sign_extend_32 = sign_extend<int32_t>;
 
 sign_extension_fn &sign_extend_function(unsigned width)
 {
