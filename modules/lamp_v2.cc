@@ -134,6 +134,8 @@ void LnlsRtmLampControllerV2::encode_config()
         throw std::runtime_error("mode must be one of " + list_of_keys(mode_options));
     }
 
+    if (channel > 11)
+        throw std::runtime_error("there are only 12 channels");
 
     bar4_read_v(bars, addr + WB_RTMLAMP_OHWR_REGS_CH + channel * channel_distance, channel_regs.get(), channel_distance);
 
