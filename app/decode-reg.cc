@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     lamp_args.add_argument("-k").help("pi_kp value").scan<'u', unsigned>();
     lamp_args.add_argument("-t").help("pi_ti value").scan<'u', unsigned>();
     lamp_args.add_argument("-s").help("pi_sp value").scan<'d', int>();
-    lamp_args.add_argument("-d").help("DAC value").scan<'u', unsigned>();
+    lamp_args.add_argument("-d").help("DAC value").scan<'d', int>();
     lamp_args.add_argument("-l").help("Limit A").scan<'d', int>();
     lamp_args.add_argument("-L").help("Limit B").scan<'d', int>();
     lamp_args.add_argument("-C").help("Count value").scan<'u', unsigned>();
@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
         ctl.pi_ti = args.present<unsigned>("-t");
         ctl.pi_sp = args.present<int>("-s");
 
-        ctl.dac = args.present<unsigned>("-d");
+        ctl.dac = args.present<int>("-d");
         ctl.limit_a = args.present<int>("-l");
         ctl.limit_b = args.present<int>("-L");
         ctl.cnt = args.present<unsigned>("-C");
