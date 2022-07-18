@@ -13,7 +13,7 @@
 #include <string>
 #include <unordered_map>
 
-void clear_and_insert(uint32_t &dest, unsigned value, uint32_t mask, unsigned shift);
+void clear_and_insert(uint32_t &dest, unsigned value, uint32_t mask);
 void insert_bit(uint32_t &dest, bool value, uint32_t mask);
 unsigned align_extend(unsigned value, unsigned alignment);
 

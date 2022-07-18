@@ -199,12 +199,12 @@ void LnlsBpmAcqCoreController::encode_config()
 {
     get_internal_values();
 
-    clear_and_insert(regs.acq_chan_ctl, channel, ACQ_CORE_ACQ_CHAN_CTL_WHICH_MASK, ACQ_CORE_ACQ_CHAN_CTL_WHICH_SHIFT);
+    clear_and_insert(regs.acq_chan_ctl, channel, ACQ_CORE_ACQ_CHAN_CTL_WHICH_MASK);
 
     regs.pre_samples = align_extend(pre_samples, alignment);
     regs.post_samples = align_extend(post_samples, alignment);
 
-    clear_and_insert(regs.shots, number_shots, ACQ_CORE_SHOTS_NB_MASK, ACQ_CORE_SHOTS_NB_SHIFT);
+    clear_and_insert(regs.shots, number_shots, ACQ_CORE_SHOTS_NB_MASK);
 
     const static std::unordered_map<std::string, std::array<bool, 4>> trigger_types({
         /* CTL_FSM_ACQ_NOW, TRIG_CFG_HW_TRIG_EN, TRIG_CFG_SW_TRIG_EN, TRIG_CFG_HW_TRIG_SEL */
@@ -221,9 +221,9 @@ void LnlsBpmAcqCoreController::encode_config()
 
     regs.trig_data_thres = data_trigger_threshold;
     insert_bit(regs.trig_cfg, data_trigger_polarity_neg, ACQ_CORE_TRIG_CFG_HW_TRIG_POL);
-    clear_and_insert(regs.trig_cfg, data_trigger_sel, ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_MASK, ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_SHIFT);
-    clear_and_insert(regs.trig_data_cfg, data_trigger_filt, ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_MASK, ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_SHIFT);
-    clear_and_insert(regs.ctl, data_trigger_channel, ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_MASK, ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_SHIFT);
+    clear_and_insert(regs.trig_cfg, data_trigger_sel, ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_MASK);
+    clear_and_insert(regs.trig_data_cfg, data_trigger_filt, ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_MASK);
+    clear_and_insert(regs.ctl, data_trigger_channel, ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_MASK);
     regs.trig_dly = trigger_delay;
 }
 

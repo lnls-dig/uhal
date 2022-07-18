@@ -9,16 +9,55 @@
 #include <stdexcept>
 #include <type_traits>
 
+#include <cassert>
+#include <strings.h>
+
 #include "util.h"
 
-void clear_and_insert(uint32_t &dest, unsigned value, uint32_t mask, unsigned shift)
+/* XXX: replace with C++20's <bit> */
+
+static inline unsigned bit_popcount(uint32_t x)
 {
+#ifdef __GNUC__
+    return __builtin_popcount(x);
+#else
+    /* From: https://graphics.stanford.edu/~seander/bithacks.html */
+    uint32_t v = x;
+    unsigned c;
+    for (c = 0; v; c++)
+        v &= v - 1; /* clear the least significant bit set */
+    return c;
+#endif
+}
+
+static inline unsigned bit_countr_zero(uint32_t x)
+{
+    return ffs(x) - 1;
+}
+
+static void clear_and_insert(uint32_t &dest, unsigned value, uint32_t mask, unsigned shift, uint32_t max, uint32_t min)
+{
+    if (value < min)
+        throw std::runtime_error("value " + std::to_string(value) + " less than min (" + std::to_string(min) + ")");
+    if (value > max)
+        throw std::runtime_error("value " + std::to_string(value) + " greater than max (" + std::to_string(max) + ")");
+
     dest &= UINT32_MAX & ~mask;
     dest |= (value << shift) & mask;
 }
 
+/* TODO: template this as well */
+void clear_and_insert(uint32_t &dest, unsigned value, uint32_t mask)
+{
+    uint32_t max = (1 << bit_popcount(mask)) - 1;
+    unsigned shift = bit_countr_zero(mask);
+
+    clear_and_insert(dest, value, mask, shift, max, 0);
+}
+
 void insert_bit(uint32_t &dest, bool value, uint32_t mask)
 {
+    assert(bit_popcount(mask) == 1);
     if (value)
         dest |= mask;
     else
