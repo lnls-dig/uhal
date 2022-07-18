@@ -73,6 +73,24 @@ unsigned align_extend(unsigned value, unsigned alignment)
         return value;
 }
 
+template<typename T>
+T extract_value(uint32_t value, uint32_t mask)
+{
+    unsigned shift = bit_countr_zero(mask);
+    uint32_t intermediary = (value & mask) >> shift;
+
+    if constexpr (std::is_signed<T>()) {
+        typedef typename std::make_unsigned<T>::type U;
+        return (T)(U)intermediary;
+    } else {
+        return (T)intermediary;
+    }
+}
+template int32_t extract_value(uint32_t, uint32_t);
+template int16_t extract_value(uint32_t, uint32_t);
+template uint32_t extract_value(uint32_t, uint32_t);
+template uint16_t extract_value(uint32_t, uint32_t);
+
 template<typename Signed>
 int32_t sign_extend(uint32_t v)
 {

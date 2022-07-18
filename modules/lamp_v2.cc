@@ -89,24 +89,24 @@ void LnlsRtmLampCoreV2::print(FILE *f, bool verbose)
 
         t = channel_regs.ctl;
         print("AMP_EN", t & WB_RTMLAMP_OHWR_REGS_CH_CTL_AMP_EN);
-        print("MODE", (t & WB_RTMLAMP_OHWR_REGS_CH_CTL_MODE_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_CTL_MODE_SHIFT);
+        print("MODE", extract_value<uint32_t>(t, WB_RTMLAMP_OHWR_REGS_CH_CTL_MODE_MASK));
 
-        print("PI_KP", (channel_regs.pi_kp & WB_RTMLAMP_OHWR_REGS_CH_PI_KP_DATA_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_PI_KP_DATA_SHIFT);
-        print("PI_TI", (channel_regs.pi_ti & WB_RTMLAMP_OHWR_REGS_CH_PI_TI_DATA_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_PI_TI_DATA_SHIFT);
-        print("PI_SP", (int16_t)((channel_regs.pi_sp & WB_RTMLAMP_OHWR_REGS_CH_PI_SP_DATA_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_PI_SP_DATA_SHIFT));
-        print("DAC", (channel_regs.dac & WB_RTMLAMP_OHWR_REGS_CH_DAC_DATA_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_DAC_DATA_SHIFT);
+        print("PI_KP", extract_value<uint32_t>(channel_regs.pi_kp, WB_RTMLAMP_OHWR_REGS_CH_PI_KP_DATA_MASK));
+        print("PI_TI", extract_value<uint32_t>(channel_regs.pi_ti, WB_RTMLAMP_OHWR_REGS_CH_PI_TI_DATA_MASK));
+        print("PI_SP", extract_value<int16_t>(channel_regs.pi_sp, WB_RTMLAMP_OHWR_REGS_CH_PI_SP_DATA_MASK));
+        print("DAC", extract_value<int16_t>(channel_regs.dac, WB_RTMLAMP_OHWR_REGS_CH_DAC_DATA_MASK));
 
         t = channel_regs.lim;
-        print("Limit A", (int16_t)((t & WB_RTMLAMP_OHWR_REGS_CH_LIM_A_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_LIM_A_SHIFT));
-        print("Limit B", (int16_t)((t & WB_RTMLAMP_OHWR_REGS_CH_LIM_B_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_LIM_B_SHIFT));
+        print("Limit A", extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_LIM_A_MASK));
+        print("Limit B", extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_LIM_B_MASK));
 
-        print("CNT", (channel_regs.cnt & WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_SHIFT);
+        print("CNT", extract_value<uint32_t>(channel_regs.cnt, WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_MASK));
 
         t = channel_regs.adc_dac_eff;
-        print("ADC_INST", (int16_t)((t & WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_ADC_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_ADC_SHIFT));
-        print("DAC_EFF", (int16_t)((t & WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_DAC_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_DAC_SHIFT));
+        print("ADC_INST", extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_ADC_MASK));
+        print("DAC_EFF", extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_DAC_MASK));
 
-        print("SP_EFF", (int16_t)((channel_regs.sp_eff & WB_RTMLAMP_OHWR_REGS_CH_SP_EFF_SP_MASK) >> WB_RTMLAMP_OHWR_REGS_CH_SP_EFF_SP_SHIFT));
+        print("SP_EFF", extract_value<int16_t>(channel_regs.sp_eff, WB_RTMLAMP_OHWR_REGS_CH_SP_EFF_SP_MASK));
     }
 }
 

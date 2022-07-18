@@ -17,6 +17,9 @@ void clear_and_insert(uint32_t &dest, unsigned value, uint32_t mask);
 void insert_bit(uint32_t &dest, bool value, uint32_t mask);
 unsigned align_extend(unsigned value, unsigned alignment);
 
+template<typename T>
+T extract_value(uint32_t value, uint32_t mask);
+
 typedef std::function<int32_t(uint32_t)> sign_extension_fn;
 sign_extension_fn &sign_extend_function(unsigned width);
 
