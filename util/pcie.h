@@ -17,6 +17,9 @@ struct pcie_bars {
     volatile void *bar4;
 
     size_t sizes[3];
+
+    /* private fields */
+    uint32_t last_bar4_page;
 };
 
 #ifdef __cplusplus

@@ -234,8 +234,13 @@ static size_t bar4_access_offset(struct pcie_bars *bars, size_t addr)
 {
     uint32_t pg_num = PCIE_ADDR_WB_PG (addr);
 
-    /* set memory page in bar0, all accesses need to do this */
-    set_wb_pg(bars, pg_num);
+    /* set memory page in bar0, all accesses need this set to the correct value.
+     * since access to each bar is exclusive, save on writes to bar0 by checking
+     * the value that was previously set */
+    if (pg_num != bars->last_bar4_page) {
+        set_wb_pg(bars, pg_num);
+        bars->last_bar4_page = pg_num;
+    }
 
     /* the offset defined in the SBC is aligned to 8 (3 LSB are 0),
      * but for encoding purposes the value is shifted right,
