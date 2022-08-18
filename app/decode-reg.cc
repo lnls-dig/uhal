@@ -20,6 +20,7 @@
 #include "pcie-open.h"
 #include "util_sdb.h"
 #include "acq.h"
+#include "fofb_processing.h"
 #include "lamp.h"
 
 static void try_unsigned(unsigned &dest, const argparse::ArgumentParser &args, const char *flag)
@@ -32,7 +33,11 @@ int main(int argc, char *argv[])
 {
     /* argparse doesn't support subcommands, so we simulate them here */
     if (argc < 2) {
-        fputs("Usage: decode-reg mode <mode specific options>\n\nPositional arguments:\nmode      mode of operation ('decode', 'acq' or 'lamp')\n", stderr);
+        fputs(
+            "Usage: decode-reg mode <mode specific options>\n\n"
+            "Positional arguments:\n"
+            "mode      mode of operation ('decode', 'acq', 'lamp' or 'fofb_processing')\n",
+            stderr);
         return 1;
     }
     std::string mode = argv[1];
@@ -73,6 +78,11 @@ int main(int argc, char *argv[])
     lamp_args.add_argument("-L").help("Limit B").scan<'d', int>();
     lamp_args.add_argument("-C").help("Count value").scan<'u', unsigned>();
 
+    argparse::ArgumentParser fofb_processing_args("decode-reg fofb_processing", "1.0", argparse::default_arguments::help);
+    fofb_processing_args.add_parents(parent_args);
+    fofb_processing_args.add_argument("-c").help("ram bank channel number").required().scan<'u', unsigned>();
+    fofb_processing_args.add_argument("-C").help("constant value to be written").required().scan<'f', float>();
+
     argparse::ArgumentParser *pargs;
     if (mode == "decode") {
         pargs = &decode_args;
@@ -80,6 +90,8 @@ int main(int argc, char *argv[])
         pargs = &acq_args;
     } else if (mode == "lamp") {
         pargs = &lamp_args;
+    } else if (mode == "fofb_processing") {
+        pargs = &fofb_processing_args;
     } else {
         fprintf(stderr, "Unsupported type: '%s'\n", mode.c_str());
         return 1;
@@ -114,10 +126,13 @@ int main(int argc, char *argv[])
             if (!read_sdb(&bars, dec->device_match, dev_index)) {
                 dec = std::make_unique<LnlsRtmLampCoreV2>();
             }
+        } else if (type == "fofb_processing") {
+            dec = std::make_unique<LnlsFofbProcessing>();
         } else {
             fprintf(stderr, "Unknown type: '%s'\n", type.c_str());
             return 1;
         }
+
         if (auto d = read_sdb(&bars, dec->device_match, dev_index)) {
             if (verbose) {
                 fprintf(stdout, "Found device in %08jx\n", (uintmax_t)d->start_addr);
@@ -173,6 +188,25 @@ int main(int argc, char *argv[])
         ctl.limit_a = args.present<int>("-l");
         ctl.limit_b = args.present<int>("-L");
         ctl.cnt = args.present<unsigned>("-C");
+
+        ctl.write_params();
+    }
+    if (mode == "fofb_processing") {
+        uint64_t addr;
+        if (auto v = read_sdb(&bars, LnlsFofbProcessingController::device_match, dev_index)) {
+            addr = v->start_addr;
+        } else {
+            fprintf(stderr, "Couldn't find fofb_processing module index %u\n", dev_index);
+            return 1;
+        }
+
+        LnlsFofbProcessingController ctl{&bars, addr};
+
+        ctl.channel = args.get<unsigned>("-c");
+
+        if (auto con_value = args.present<float>("-C")) {
+            ctl.ram_bank_values.fill(*con_value);
+        }
 
         ctl.write_params();
     }

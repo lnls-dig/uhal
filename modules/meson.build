@@ -1,4 +1,4 @@
-modules_src = ['acq.cc', 'lamp_v1.cc', 'lamp_v2.cc']
+modules_src = ['acq.cc', 'lamp_v1.cc', 'lamp_v2.cc', 'fofb_processing.cc']
 modules_lib = static_library('modules', modules_src, dependencies: [utilities])
 modules_inc = include_directories('.')
 
