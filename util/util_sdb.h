@@ -23,8 +23,8 @@ struct sdb_device_info {
 
 typedef std::function<bool(const struct sdb_device_info &)> device_match_fn;
 
-std::optional<struct sdb_device_info> read_sdb(const struct pcie_bars *, device_match_fn);
-std::optional<struct sdb_device_info> read_sdb(const struct pcie_bars *, device_match_fn, unsigned);
+std::optional<struct sdb_device_info> read_sdb(struct pcie_bars *, device_match_fn);
+std::optional<struct sdb_device_info> read_sdb(struct pcie_bars *, device_match_fn, unsigned);
 
 bool print_sdb(const struct sdb_device_info &);
 
