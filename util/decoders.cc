@@ -7,7 +7,7 @@
 
 #include "decoders.h"
 
-void RegisterDecoder::read(const struct pcie_bars *bars, size_t address)
+void RegisterDecoder::read(struct pcie_bars *bars, size_t address)
 {
     bar4_read_v(bars, address, read_dest, read_size);
 }

@@ -47,7 +47,7 @@ enum class acq_status {
 typedef std::variant<acq_status, std::vector<uint32_t>, std::vector<int32_t>> acq_result;
 
 class LnlsBpmAcqCoreController {
-    const struct pcie_bars *bars;
+    struct pcie_bars *bars;
     size_t addr;
     unsigned sample_size, alignment;
     /* current channel variables */
@@ -73,7 +73,7 @@ class LnlsBpmAcqCoreController {
     } m_step = acq_step::acq_stop;
 
   public:
-    LnlsBpmAcqCoreController(const struct pcie_bars *bars, size_t addr=0):
+    LnlsBpmAcqCoreController(struct pcie_bars *bars, size_t addr=0):
         bars(bars), addr(addr)
     {
     }

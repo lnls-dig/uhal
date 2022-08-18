@@ -32,7 +32,7 @@ class RegisterDecoder {
 
   public:
     virtual ~RegisterDecoder() {};
-    virtual void read(const struct pcie_bars *, size_t);
+    virtual void read(struct pcie_bars *, size_t);
     virtual void print(FILE *, bool) = 0;
 
     device_match_fn device_match;

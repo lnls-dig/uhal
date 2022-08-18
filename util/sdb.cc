@@ -21,17 +21,17 @@ extern "C" {
 
 static int read(struct sdbfs *fs, int offset, void *buf, int count)
 {
-    const auto *bars = static_cast<const struct pcie_bars *>(fs->drvdata);
+    auto *bars = static_cast<struct pcie_bars *>(fs->drvdata);
 
     bar4_read_v(bars, offset, buf, count);
     return count;
 }
 
-static struct sdbfs sdbfs_init(const struct pcie_bars *bars)
+static struct sdbfs sdbfs_init(struct pcie_bars *bars)
 {
     struct sdbfs fs{};
     fs.name = "sdb-area";
-    fs.drvdata = const_cast<struct pcie_bars *>(bars);
+    fs.drvdata = bars;
     fs.blocksize = 4;
     fs.entrypoint = 0;
     fs.read = read;
@@ -43,12 +43,12 @@ static struct sdbfs sdbfs_init(const struct pcie_bars *bars)
     return fs;
 }
 
-std::optional<struct sdb_device_info> read_sdb(const struct pcie_bars *bars, device_match_fn device_match)
+std::optional<struct sdb_device_info> read_sdb(struct pcie_bars *bars, device_match_fn device_match)
 {
     return read_sdb(bars, device_match, UINT_MAX);
 }
 
-std::optional<struct sdb_device_info> read_sdb(const struct pcie_bars *bars, device_match_fn device_match, unsigned pos)
+std::optional<struct sdb_device_info> read_sdb(struct pcie_bars *bars, device_match_fn device_match, unsigned pos)
 {
     struct sdbfs fs = sdbfs_init(bars);
     defer _(nullptr, [&fs](...){sdbfs_dev_destroy(&fs);});

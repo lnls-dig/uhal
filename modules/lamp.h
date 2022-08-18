@@ -54,13 +54,13 @@ class LnlsRtmLampCoreV2: public RegisterDecoder {
 
 class LnlsRtmLampController {
   protected:
-    const struct pcie_bars *bars;
+    struct pcie_bars *bars;
     size_t addr;
 
     virtual void encode_config() = 0;
 
   public:
-    LnlsRtmLampController(const struct pcie_bars *bars, size_t addr, device_match_fn device_match):
+    LnlsRtmLampController(struct pcie_bars *bars, size_t addr, device_match_fn device_match):
         bars(bars), addr(addr), device_match(device_match)
     {
     }
@@ -91,7 +91,7 @@ class LnlsRtmLampControllerV1: public LnlsRtmLampController {
     void encode_config();
 
   public:
-    LnlsRtmLampControllerV1(const struct pcie_bars *bars, size_t addr=0):
+    LnlsRtmLampControllerV1(struct pcie_bars *bars, size_t addr=0):
         LnlsRtmLampController(bars, addr, device_match_lamp_v1)
     {
     }
@@ -106,7 +106,7 @@ class LnlsRtmLampControllerV2: public LnlsRtmLampController {
     void encode_config();
 
   public:
-    LnlsRtmLampControllerV2(const struct pcie_bars *bars, size_t addr=0);
+    LnlsRtmLampControllerV2(struct pcie_bars *bars, size_t addr=0);
     ~LnlsRtmLampControllerV2();
 
     void write_params();
