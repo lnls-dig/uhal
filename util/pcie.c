@@ -108,6 +108,9 @@ static uint32_t bar0_read(const struct pcie_bars *bars, size_t addr)
 static void bar0_write(const struct pcie_bars *bars, size_t addr, uint32_t value)
 {
     *bar0_get_u32p(bars, addr) = value;
+
+    /* generate a read to flush writes; see bar4_write */
+    *bar0_get_u32p(bars, addr);
 }
 
 static void set_sdram_pg(const struct pcie_bars *bars, int num)
@@ -248,6 +251,13 @@ static volatile uint32_t *bar4_get_u32p(const struct pcie_bars *bars, size_t add
 void bar4_write(const struct pcie_bars *bars, size_t addr, uint32_t value)
 {
     *bar4_get_u32p(bars, addr) = value;
+
+    /* generate a read so the write is flushed;
+     * corruption / wishbone timeouts have been observed when writing too many
+     * words at once into bar4.
+     * if desired, we can add a check for the read being equal to 0xffffffff to detect
+     * timeouts in this layer. */
+    *bar4_get_u32p(bars, addr);
 }
 
 void bar4_write_v(const struct pcie_bars *bars, size_t addr, const void *src, size_t n)
