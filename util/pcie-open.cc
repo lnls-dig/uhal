@@ -68,6 +68,9 @@ struct pcie_bars dev_open(const char *pci_address)
         }
     }
 
+    /* set -1 so it's always different on the first run */
+    rv.last_bar4_page = -1;
+
     return rv;
 }
 
