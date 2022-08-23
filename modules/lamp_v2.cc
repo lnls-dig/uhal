@@ -110,8 +110,8 @@ void LnlsRtmLampCoreV2::print(FILE *f, bool verbose)
     }
 }
 
-LnlsRtmLampControllerV2::LnlsRtmLampControllerV2(struct pcie_bars *bars, size_t addr):
-    LnlsRtmLampController(bars, addr, device_match_lamp_v2)
+LnlsRtmLampControllerV2::LnlsRtmLampControllerV2(struct pcie_bars *bars):
+    LnlsRtmLampController(bars, device_match_lamp_v2)
 {
     channel_regs = std::make_unique<channel_registers_v2>();
 }
