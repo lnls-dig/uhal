@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <optional>
 
 #include <sys/types.h>
 
@@ -39,6 +40,8 @@ class RegisterDecoder {
     void set_devinfo(const struct sdb_device_info &);
 
     device_match_fn device_match;
+
+    std::optional<unsigned> channel;
 };
 
 #endif

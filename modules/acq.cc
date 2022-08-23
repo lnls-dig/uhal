@@ -161,6 +161,8 @@ void LnlsBpmAcqCore::print(FILE *f, bool verbose)
     uint32_t p[MAX_NUM_CHAN * REGISTERS_PER_CHAN];
     memcpy(p, &regs.ch0_desc, sizeof p);
     for (unsigned i = 0; i < num_chan; i++) {
+        if (channel && *channel != i) continue;
+
         uint32_t desc = p[i*REGISTERS_PER_CHAN], adesc = p[i*REGISTERS_PER_CHAN + 1];
         fprintf(f, "channel %u description and atom description (%02X and %02X):\n",
             i, (unsigned)ACQ_CORE_CH0_DESC + 8*i, (unsigned)ACQ_CORE_CH0_ATOM_DESC + 8*i);
