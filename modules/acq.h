@@ -14,6 +14,7 @@
 #include <variant>
 #include <vector>
 
+#include "controllers.h"
 #include "decoders.h"
 
 #define ACQ_DEVID 0x4519a0ad
@@ -45,9 +46,8 @@ enum class acq_status {
 };
 typedef std::variant<acq_status, std::vector<uint32_t>, std::vector<int32_t>> acq_result;
 
-class LnlsBpmAcqCoreController {
+class LnlsBpmAcqCoreController: public RegisterController {
     struct pcie_bars *bars;
-    size_t addr;
     unsigned sample_size, alignment;
     /* current channel variables */
     unsigned channel_atom_width, channel_num_atoms;
@@ -73,9 +73,8 @@ class LnlsBpmAcqCoreController {
     } m_step = acq_step::acq_stop;
 
   public:
-    LnlsBpmAcqCoreController(struct pcie_bars *, size_t addr=0);
+    LnlsBpmAcqCoreController(struct pcie_bars *);
     ~LnlsBpmAcqCoreController();
-    void set_addr(uint64_t addr);
 
     static inline const device_match_fn device_match = device_match_acq;
 

@@ -16,6 +16,7 @@
 #include "util_sdb.h"
 #include "util.h"
 
+#include "controllers.h"
 #include "decoders.h"
 
 #define LAMP_DEVID 0xa1248bec
@@ -53,11 +54,9 @@ class LnlsRtmLampCoreV2: public RegisterDecoder {
     void print(FILE *, bool);
 };
 
-class LnlsRtmLampController {
+class LnlsRtmLampController: public RegisterController {
   protected:
     struct pcie_bars *bars;
-    struct sdb_device_info devinfo;
-    size_t addr;
 
     virtual void encode_config() = 0;
 
@@ -80,12 +79,6 @@ class LnlsRtmLampController {
     std::optional<int16_t> dac;
     std::optional<int16_t> limit_a, limit_b;
     std::optional<uint32_t> cnt;
-
-    void set_devinfo(const struct sdb_device_info &new_devinfo)
-    {
-        devinfo = new_devinfo;
-        addr = devinfo.start_addr;
-    }
 
     virtual void write_params() = 0;
 };

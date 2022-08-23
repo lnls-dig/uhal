@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
     if (mode == "acq") {
         LnlsBpmAcqCoreController ctl{&bars};
         if (auto v = read_sdb(&bars, ctl.device_match, dev_index)) {
-            ctl.set_addr(v->start_addr);
+            ctl.set_devinfo(*v);
         } else {
             fprintf(stderr, "Couldn't find acq module index %u\n", dev_index);
             return 1;
@@ -202,15 +202,14 @@ int main(int argc, char *argv[])
         ctl.write_params();
     }
     if (mode == "fofb_processing") {
-        uint64_t addr;
+        LnlsFofbProcessingController ctl{&bars};
+
         if (auto v = read_sdb(&bars, LnlsFofbProcessingController::device_match, dev_index)) {
-            addr = v->start_addr;
+            ctl.set_devinfo(*v);
         } else {
             fprintf(stderr, "Couldn't find fofb_processing module index %u\n", dev_index);
             return 1;
         }
-
-        LnlsFofbProcessingController ctl{&bars, addr};
 
         ctl.channel = args.get<unsigned>("-c");
 
