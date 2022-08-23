@@ -28,6 +28,7 @@
 #define WB_RTMLAMP_OHWR_REGS_CH_CTL_AMP_EN 0x1UL
 #define WB_RTMLAMP_OHWR_REGS_CH_CTL_MODE_MASK 0xeUL
 #define WB_RTMLAMP_OHWR_REGS_CH_CTL_MODE_SHIFT 1
+#define WB_RTMLAMP_OHWR_REGS_CH_CTL_TRIG_EN 0x20UL
 
 /* PI KP parameter */
 #define WB_RTMLAMP_OHWR_REGS_CH_PI_KP 0x8UL
@@ -57,13 +58,13 @@
 #define WB_RTMLAMP_OHWR_REGS_CH_LIM_B_SHIFT 16
 
 /* Test mode period, in clock ticks.
- */
+ *  */
 #define WB_RTMLAMP_OHWR_REGS_CH_CNT 0x1cUL
 #define WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_MASK 0x3fffffUL
 #define WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_SHIFT 0
 
 /* ADC and DAC instantaneous value (2's complement)
- */
+ *  */
 #define WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF 0x20UL
 #define WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_ADC_MASK 0xffffUL
 #define WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_ADC_SHIFT 0
@@ -71,7 +72,7 @@
 #define WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_DAC_SHIFT 16
 
 /* Set point instantaneous value (2's complement)
- */
+ *  */
 #define WB_RTMLAMP_OHWR_REGS_CH_SP_EFF 0x24UL
 #define WB_RTMLAMP_OHWR_REGS_CH_SP_EFF_SP_MASK 0xffffUL
 #define WB_RTMLAMP_OHWR_REGS_CH_SP_EFF_SP_SHIFT 0
@@ -110,15 +111,15 @@ struct wb_rtmlamp_ohwr_regs {
     uint32_t lim;
 
     /* [0x1c]: REG (rw) Test mode period, in clock ticks.
- */
+  */
     uint32_t cnt;
 
     /* [0x20]: REG (ro) ADC and DAC instantaneous value (2's complement)
- */
+  */
     uint32_t adc_dac_eff;
 
     /* [0x24]: REG (ro) Set point instantaneous value (2's complement)
- */
+  */
     uint32_t sp_eff;
 
     /* padding to: 9 words */

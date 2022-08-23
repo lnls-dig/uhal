@@ -77,6 +77,7 @@ int main(int argc, char *argv[])
     lamp_args.add_argument("-l").help("Limit A").scan<'d', int>();
     lamp_args.add_argument("-L").help("Limit B").scan<'d', int>();
     lamp_args.add_argument("-C").help("Count value").scan<'u', unsigned>();
+    lamp_args.add_argument("-T").help("Trigger enable").scan<'u', unsigned>();
 
     argparse::ArgumentParser fofb_processing_args("decode-reg fofb_processing", "1.0", argparse::default_arguments::help);
     fofb_processing_args.add_parents(parent_args);
@@ -189,6 +190,10 @@ int main(int argc, char *argv[])
         ctl.limit_a = args.present<int>("-l");
         ctl.limit_b = args.present<int>("-L");
         ctl.cnt = args.present<unsigned>("-C");
+
+        if (auto trigger_enable = args.present<unsigned>("-T")) {
+            ctl.trigger_enable = *trigger_enable;
+        }
 
         ctl.write_params();
     }

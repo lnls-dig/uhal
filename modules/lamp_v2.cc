@@ -18,6 +18,8 @@
 
 static const unsigned channel_distance = sizeof(channel_registers_v2);
 
+static const unsigned TRIGGER_ENABLE_VERSION = 1;
+
 LnlsRtmLampCoreV2::LnlsRtmLampCoreV2()
 {
     read_size = sizeof *regs;
@@ -56,6 +58,7 @@ void LnlsRtmLampCoreV2::print(FILE *f, bool verbose)
               fputc('\n', f);
           }
       ),
+      I("TRIG_EN", "Trigger enable", PrinterType::enable),
       I("PI_KP", "PI KP Coefficient", PrinterType::value),
       I("PI_TI", "PI TI Coefficient", PrinterType::value),
       I("PI_SP", "PI Setpoint", PrinterType::value),
@@ -90,6 +93,9 @@ void LnlsRtmLampCoreV2::print(FILE *f, bool verbose)
         t = channel_regs.ctl;
         print("AMP_EN", t & WB_RTMLAMP_OHWR_REGS_CH_CTL_AMP_EN);
         print("MODE", extract_value<uint32_t>(t, WB_RTMLAMP_OHWR_REGS_CH_CTL_MODE_MASK));
+        if (devinfo.abi_ver_minor >= TRIGGER_ENABLE_VERSION) {
+            print("TRIG_EN", t & WB_RTMLAMP_OHWR_REGS_CH_CTL_TRIG_EN);
+        }
 
         print("PI_KP", extract_value<uint32_t>(channel_regs.pi_kp, WB_RTMLAMP_OHWR_REGS_CH_PI_KP_DATA_MASK));
         print("PI_TI", extract_value<uint32_t>(channel_regs.pi_ti, WB_RTMLAMP_OHWR_REGS_CH_PI_TI_DATA_MASK));
@@ -141,6 +147,13 @@ void LnlsRtmLampControllerV2::encode_config()
 
     clear_and_insert(channel_regs->ctl, mode_option, WB_RTMLAMP_OHWR_REGS_CH_CTL_MODE_MASK);
     insert_bit(channel_regs->ctl, amp_enable, WB_RTMLAMP_OHWR_REGS_CH_CTL_AMP_EN);
+
+    if (trigger_enable) {
+        if (devinfo.abi_ver_minor >= TRIGGER_ENABLE_VERSION)
+            insert_bit(channel_regs->ctl, *trigger_enable, WB_RTMLAMP_OHWR_REGS_CH_CTL_TRIG_EN);
+        else
+            throw std::runtime_error("this core doesn't support trigger_enable");
+    }
 
     if (pi_kp) clear_and_insert(channel_regs->pi_kp, *pi_kp, WB_RTMLAMP_OHWR_REGS_CH_PI_KP_DATA_MASK);
     if (pi_ti) clear_and_insert(channel_regs->pi_ti, *pi_ti, WB_RTMLAMP_OHWR_REGS_CH_PI_TI_DATA_MASK);
