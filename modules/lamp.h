@@ -74,6 +74,7 @@ class LnlsRtmLampController {
     /* per channel properties */
     bool amp_enable = true;
     std::string mode = "none";
+    std::optional<bool> trigger_enable;
     std::optional<uint32_t> pi_kp, pi_ti; /* are actually 26-bit */
     std::optional<int16_t> pi_sp;
     std::optional<int16_t> dac;
