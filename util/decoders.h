@@ -30,10 +30,13 @@ class RegisterDecoder {
     size_t read_size;
     void *read_dest;
 
+    struct sdb_device_info devinfo;
+
   public:
     virtual ~RegisterDecoder() {};
-    virtual void read(struct pcie_bars *, size_t);
+    virtual void read(struct pcie_bars *);
     virtual void print(FILE *, bool) = 0;
+    void set_devinfo(const struct sdb_device_info &);
 
     device_match_fn device_match;
 };
