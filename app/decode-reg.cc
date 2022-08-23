@@ -50,6 +50,7 @@ int main(int argc, char *argv[])
     argparse::ArgumentParser decode_args("decode-reg decode", "1.0", argparse::default_arguments::help);
     decode_args.add_parents(parent_args);
     decode_args.add_argument("-q").help("type of registers").required();
+    decode_args.add_argument("-c").help("channel number").scan<'u', unsigned>();
 
     argparse::ArgumentParser acq_args("decode-reg acq", "1.0", argparse::default_arguments::help);
     acq_args.add_parents(parent_args);
@@ -133,6 +134,8 @@ int main(int argc, char *argv[])
             fprintf(stderr, "Unknown type: '%s'\n", type.c_str());
             return 1;
         }
+
+        dec->channel = args.present<unsigned>("-c");
 
         if (auto d = read_sdb(&bars, dec->device_match, dev_index)) {
             if (verbose) {

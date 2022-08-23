@@ -81,6 +81,10 @@ void LnlsRtmLampCoreV2::print(FILE *f, bool verbose)
 
     unsigned i = 0;
     for (const auto &channel_regs: regs->ch) {
+        if (channel && *channel != i) {
+            i++;
+            continue;
+        }
         fprintf(f, "channel %u:\n", i++);
         indent = 4;
 

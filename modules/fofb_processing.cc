@@ -34,9 +34,25 @@ void LnlsFofbProcessing::print(FILE *f, bool verbose)
         return (double)(int32_t)value / (1 << fixed_point);
     };
 
-    /* FIXME: only does channel 0 for now */
-    for (auto v: regs.ram_bank_0) {
-        fprintf(f, "%f\n", convert_fixed_point(v.data));
+    auto read_bank = [f, &convert_fixed_point](const auto &ram_bank) {
+        for (auto v: ram_bank)
+            fprintf(f, "%f\n", convert_fixed_point(v.data));
+    };
+
+    if (channel) switch (*channel) {
+        case 0: read_bank(regs.ram_bank_0); return;
+        case 1: read_bank(regs.ram_bank_1); return;
+        case 2: read_bank(regs.ram_bank_2); return;
+        case 3: read_bank(regs.ram_bank_3); return;
+        case 4: read_bank(regs.ram_bank_4); return;
+        case 5: read_bank(regs.ram_bank_5); return;
+        case 6: read_bank(regs.ram_bank_6); return;
+        case 7: read_bank(regs.ram_bank_7); return;
+        case 8: read_bank(regs.ram_bank_8); return;
+        case 9: read_bank(regs.ram_bank_9); return;
+        case 10: read_bank(regs.ram_bank_10); return;
+        case 11: read_bank(regs.ram_bank_11); return;
+        default: throw std::runtime_error("there are only 12 RAM banks");
     }
 }
 
@@ -52,9 +68,8 @@ void LnlsFofbProcessingController::encode_config()
 
     /* use a templated lambda here, because the type for each bank is different */
     auto set_bank = [fixed_point = fixed_point, &ram_bank_values = ram_bank_values](auto &ram_bank) {
-        for (unsigned i = 0; i < ram_bank_values.size(); i++) {
+        for (unsigned i = 0; i < ram_bank_values.size(); i++)
             ram_bank[i].data = round((double)ram_bank_values[i] * (1 << fixed_point));
-        }
     };
 
     switch (channel) {
