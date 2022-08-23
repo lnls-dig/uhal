@@ -7,7 +7,12 @@
 
 #include "decoders.h"
 
-void RegisterDecoder::read(struct pcie_bars *bars, size_t address)
+void RegisterDecoder::set_devinfo(const struct sdb_device_info &new_devinfo)
 {
-    bar4_read_v(bars, address, read_dest, read_size);
+    devinfo = new_devinfo;
+}
+
+void RegisterDecoder::read(struct pcie_bars *bars)
+{
+    bar4_read_v(bars, devinfo.start_addr, read_dest, read_size);
 }

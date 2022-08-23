@@ -137,7 +137,8 @@ int main(int argc, char *argv[])
             if (verbose) {
                 fprintf(stdout, "Found device in %08jx\n", (uintmax_t)d->start_addr);
             }
-            dec->read(&bars, d->start_addr);
+            dec->set_devinfo(*d);
+            dec->read(&bars);
             dec->print(stdout, verbose);
         }
     }
