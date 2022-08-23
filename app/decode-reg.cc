@@ -7,6 +7,7 @@
 
 #include <inttypes.h>
 
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -214,7 +215,7 @@ int main(int argc, char *argv[])
         ctl.channel = args.get<unsigned>("-c");
 
         if (auto con_value = args.present<float>("-C")) {
-            ctl.ram_bank_values.fill(*con_value);
+            std::fill(ctl.ram_bank_values.begin(), ctl.ram_bank_values.end(), *con_value);
         }
 
         ctl.write_params();

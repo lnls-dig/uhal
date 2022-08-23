@@ -15,11 +15,23 @@
 #include "printer.h"
 #include "util.h"
 #include "acq.h"
+#include "hw/wb_acq_core_regs.h"
 
 #define MAX_NUM_CHAN 24
 #define REGISTERS_PER_CHAN 2
 
 static const unsigned ddr3_payload_size = 32;
+
+LnlsBpmAcqCore::LnlsBpmAcqCore():
+    regs_storage(new struct acq_core),
+    regs(*regs_storage)
+{
+    read_size = sizeof regs;
+    read_dest = &regs;
+
+    device_match = device_match_acq;
+}
+LnlsBpmAcqCore::~LnlsBpmAcqCore() = default;
 
 void LnlsBpmAcqCore::print(FILE *f, bool verbose)
 {
@@ -173,6 +185,14 @@ void LnlsBpmAcqCore::print(FILE *f, bool verbose)
         print("ATOM_WIDTH", (adesc & ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_MASK) >> ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_SHIFT);
     }
 }
+
+LnlsBpmAcqCoreController::LnlsBpmAcqCoreController(struct pcie_bars *bars, size_t addr):
+    bars(bars), addr(addr),
+    regs_storage(new struct acq_core),
+    regs(*regs_storage)
+{
+}
+LnlsBpmAcqCoreController::~LnlsBpmAcqCoreController() = default;
 
 void LnlsBpmAcqCoreController::set_addr(uint64_t naddr)
 {
