@@ -9,28 +9,27 @@
 #define ACQ_H
 
 #include <chrono>
+#include <memory>
 #include <string>
 #include <variant>
 #include <vector>
 
 #include "decoders.h"
-#include "hw/wb_acq_core_regs.h"
 
 #define ACQ_DEVID 0x4519a0ad
 inline const device_match_fn device_match_acq =
     device_match_impl<LNLS_VENDORID, ACQ_DEVID, 2>;
 
+/* forward declaration */
+struct acq_core;
+
 class LnlsBpmAcqCore: public RegisterDecoder {
-    struct acq_core regs;
+    std::unique_ptr<struct acq_core> regs_storage;
+    struct acq_core &regs;
 
   public:
-    LnlsBpmAcqCore()
-    {
-        read_size = sizeof regs;
-        read_dest = &regs;
-
-        device_match = device_match_acq;
-    }
+    LnlsBpmAcqCore();
+    ~LnlsBpmAcqCore();
     void print(FILE *, bool);
 };
 
@@ -53,7 +52,8 @@ class LnlsBpmAcqCoreController {
     /* current channel variables */
     unsigned channel_atom_width, channel_num_atoms;
 
-    struct acq_core regs{};
+    std::unique_ptr<struct acq_core> regs_storage;
+    struct acq_core &regs;
 
     void get_internal_values();
     void encode_config();
@@ -73,10 +73,8 @@ class LnlsBpmAcqCoreController {
     } m_step = acq_step::acq_stop;
 
   public:
-    LnlsBpmAcqCoreController(struct pcie_bars *bars, size_t addr=0):
-        bars(bars), addr(addr)
-    {
-    }
+    LnlsBpmAcqCoreController(struct pcie_bars *, size_t addr=0);
+    ~LnlsBpmAcqCoreController();
     void set_addr(uint64_t addr);
 
     static inline const device_match_fn device_match = device_match_acq;

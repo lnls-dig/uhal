@@ -12,6 +12,20 @@
 #include "printer.h"
 #include "util.h"
 #include "fofb_processing.h"
+#include "hw/wb_fofb_processing_regs.h"
+
+#define FOFB_PROCESSING_RAM_BANK_SIZE (WB_FOFB_PROCESSING_REGS_RAM_BANK_1 - WB_FOFB_PROCESSING_REGS_RAM_BANK_0)
+
+LnlsFofbProcessing::LnlsFofbProcessing():
+    regs_storage(new struct wb_fofb_processing_regs),
+    regs(*regs_storage)
+{
+    read_size = sizeof regs;
+    read_dest = &regs;
+
+    device_match = device_match_fofb_processing;
+}
+LnlsFofbProcessing::~LnlsFofbProcessing() = default;
 
 void LnlsFofbProcessing::print(FILE *f, bool verbose)
 {
@@ -55,6 +69,15 @@ void LnlsFofbProcessing::print(FILE *f, bool verbose)
         default: throw std::runtime_error("there are only 12 RAM banks");
     }
 }
+
+LnlsFofbProcessingController::LnlsFofbProcessingController(struct pcie_bars *bars, size_t addr):
+    bars(bars), addr(addr),
+    regs_storage(new struct wb_fofb_processing_regs),
+    regs(*regs_storage),
+    ram_bank_values(FOFB_PROCESSING_RAM_BANK_SIZE / sizeof(float))
+{
+}
+LnlsFofbProcessingController::~LnlsFofbProcessingController() = default;
 
 void LnlsFofbProcessingController::get_internal_values()
 {
