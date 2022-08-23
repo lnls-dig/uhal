@@ -11,6 +11,7 @@
 #include <memory>
 #include <vector>
 
+#include "controllers.h"
 #include "decoders.h"
 
 #define FOFB_PROCESSING_DEVID 0x49681ca6
@@ -30,10 +31,9 @@ class LnlsFofbProcessing: public RegisterDecoder {
     void print(FILE *, bool);
 };
 
-class LnlsFofbProcessingController {
+class LnlsFofbProcessingController: public RegisterController {
   protected:
     struct pcie_bars *bars;
-    size_t addr;
 
     uint32_t fixed_point;
 
@@ -44,7 +44,7 @@ class LnlsFofbProcessingController {
     void encode_config();
 
   public:
-    LnlsFofbProcessingController(struct pcie_bars *, size_t);
+    LnlsFofbProcessingController(struct pcie_bars *);
     ~LnlsFofbProcessingController();
 
     static inline const device_match_fn device_match = device_match_fofb_processing;

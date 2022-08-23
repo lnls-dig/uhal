@@ -186,18 +186,13 @@ void LnlsBpmAcqCore::print(FILE *f, bool verbose)
     }
 }
 
-LnlsBpmAcqCoreController::LnlsBpmAcqCoreController(struct pcie_bars *bars, size_t addr):
-    bars(bars), addr(addr),
+LnlsBpmAcqCoreController::LnlsBpmAcqCoreController(struct pcie_bars *bars):
+    bars(bars),
     regs_storage(new struct acq_core),
     regs(*regs_storage)
 {
 }
 LnlsBpmAcqCoreController::~LnlsBpmAcqCoreController() = default;
-
-void LnlsBpmAcqCoreController::set_addr(uint64_t naddr)
-{
-    addr = naddr;
-}
 
 void LnlsBpmAcqCoreController::get_internal_values()
 {
