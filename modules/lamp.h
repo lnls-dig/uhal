@@ -13,6 +13,7 @@
 #include <string>
 
 #include "pcie.h"
+#include "util_sdb.h"
 #include "util.h"
 
 #include "decoders.h"
@@ -55,13 +56,14 @@ class LnlsRtmLampCoreV2: public RegisterDecoder {
 class LnlsRtmLampController {
   protected:
     struct pcie_bars *bars;
+    struct sdb_device_info devinfo;
     size_t addr;
 
     virtual void encode_config() = 0;
 
   public:
-    LnlsRtmLampController(struct pcie_bars *bars, size_t addr, device_match_fn device_match):
-        bars(bars), addr(addr), device_match(device_match)
+    LnlsRtmLampController(struct pcie_bars *bars, device_match_fn device_match):
+        bars(bars), device_match(device_match)
     {
     }
     virtual ~LnlsRtmLampController() = default;
@@ -78,7 +80,11 @@ class LnlsRtmLampController {
     std::optional<int16_t> limit_a, limit_b;
     std::optional<uint32_t> cnt;
 
-    void set_addr(size_t naddr) { addr = naddr; }
+    void set_devinfo(const struct sdb_device_info &new_devinfo)
+    {
+        devinfo = new_devinfo;
+        addr = devinfo.start_addr;
+    }
 
     virtual void write_params() = 0;
 };
@@ -91,8 +97,8 @@ class LnlsRtmLampControllerV1: public LnlsRtmLampController {
     void encode_config();
 
   public:
-    LnlsRtmLampControllerV1(struct pcie_bars *bars, size_t addr=0):
-        LnlsRtmLampController(bars, addr, device_match_lamp_v1)
+    LnlsRtmLampControllerV1(struct pcie_bars *bars):
+        LnlsRtmLampController(bars, device_match_lamp_v1)
     {
     }
 
@@ -106,7 +112,7 @@ class LnlsRtmLampControllerV2: public LnlsRtmLampController {
     void encode_config();
 
   public:
-    LnlsRtmLampControllerV2(struct pcie_bars *bars, size_t addr=0);
+    LnlsRtmLampControllerV2(struct pcie_bars *bars);
     ~LnlsRtmLampControllerV2();
 
     void write_params();

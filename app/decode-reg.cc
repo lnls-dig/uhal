@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
             }
         }
         LnlsRtmLampController &ctl = *ctlp;
-        ctl.set_addr(read_sdb(&bars, ctl.device_match, dev_index)->start_addr);
+        ctl.set_devinfo(*read_sdb(&bars, ctl.device_match, dev_index));
 
         ctl.amp_enable = args.is_used("-e");
         ctl.mode = args.get<std::string>("-m");
