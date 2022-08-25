@@ -128,8 +128,10 @@ static inline volatile uint32_t *bar2_get_u32p_small(const struct pcie_bars *bar
     return (volatile uint32_t *)((unsigned char *)bars->bar2 + addr) + index;
 }
 
-void bar2_read_v(const struct pcie_bars *bars, size_t addr, void *dest, size_t n)
+void bar2_read_v(struct pcie_bars *bars, size_t addr, void *dest, size_t n)
 {
+    pthread_mutex_lock(&bars->locks[BAR2]);
+
     size_t sz = bars->sizes[1];
 
 #ifdef USE_SSE41
@@ -198,6 +200,8 @@ void bar2_read_v(const struct pcie_bars *bars, size_t addr, void *dest, size_t n
         addr += to_read;
         dest = (unsigned char *)dest + to_read;
     }
+
+    pthread_mutex_unlock(&bars->locks[BAR2]);
 }
 
 void bar2_read_dma(const struct pcie_bars *bars, size_t addr, unsigned bar, unsigned long physical_address, size_t n)
@@ -255,6 +259,8 @@ static volatile uint32_t *bar4_get_u32p(struct pcie_bars *bars, size_t addr)
 
 void bar4_write(struct pcie_bars *bars, size_t addr, uint32_t value)
 {
+    pthread_mutex_lock(&bars->locks[BAR4]);
+
     *bar4_get_u32p(bars, addr) = value;
 
     /* generate a read so the write is flushed;
@@ -263,22 +269,38 @@ void bar4_write(struct pcie_bars *bars, size_t addr, uint32_t value)
      * if desired, we can add a check for the read being equal to 0xffffffff to detect
      * timeouts in this layer. */
     *bar4_get_u32p(bars, addr);
+
+    pthread_mutex_unlock(&bars->locks[BAR4]);
 }
 
 void bar4_write_v(struct pcie_bars *bars, size_t addr, const void *src, size_t n)
 {
+    pthread_mutex_lock(&bars->locks[BAR4]);
+
     const uint32_t *srcp = src;
     for (size_t i = 0; i < n; i += 4) {
         bar4_write(bars, addr + i, srcp[i/4]);
     }
+
+    pthread_mutex_unlock(&bars->locks[BAR4]);
 }
 
 uint32_t bar4_read(struct pcie_bars *bars, size_t addr)
 {
-    return *bar4_get_u32p(bars, addr);
+    pthread_mutex_lock(&bars->locks[BAR4]);
+
+    uint32_t rv = *bar4_get_u32p(bars, addr);
+
+    pthread_mutex_unlock(&bars->locks[BAR4]);
+
+    return rv;
 }
 
 void bar4_read_v(struct pcie_bars *bars, size_t addr, void *dest, size_t n)
 {
+    pthread_mutex_lock(&bars->locks[BAR4]);
+
     bar_generic_read_v(bars, addr, dest, n, bar4_read);
+
+    pthread_mutex_unlock(&bars->locks[BAR4]);
 }

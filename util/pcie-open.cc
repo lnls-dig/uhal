@@ -71,6 +71,16 @@ struct pcie_bars dev_open(const char *pci_address)
     /* set -1 so it's always different on the first run */
     rv.last_bar4_page = -1;
 
+    pthread_mutexattr_t mattr;
+    if (pthread_mutexattr_init(&mattr) ||
+        pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE))
+        throw std::runtime_error("couldn't set mutexattr as recursive");
+
+    for (auto &lock: rv.locks) {
+        if (pthread_mutex_init(&lock, &mattr))
+            throw std::runtime_error("couldn't initialize mutex");
+    }
+
     return rv;
 }
 
