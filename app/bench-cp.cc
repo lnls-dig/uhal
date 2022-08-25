@@ -25,7 +25,8 @@ int main(int argc, char *argv[])
     args.parse_args(argc, argv);
 
     auto device_number = args.get<std::string>("-b");
-    struct pcie_bars bars = dev_open_slot(device_number.c_str());
+    struct pcie_bars bars;
+    dev_open_slot(bars, device_number.c_str());
     defer _(nullptr, [&bars](...){dev_close(bars);});
 
     const size_t s = 32UL << 20; // MB

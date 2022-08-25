@@ -112,7 +112,8 @@ int main(int argc, char *argv[])
     auto dev_index = args.get<unsigned>("-a");
     auto verbose = args.is_used("-v");
 
-    struct pcie_bars bars = dev_open_slot(device_number.c_str());
+    struct pcie_bars bars;
+    dev_open_slot(bars, device_number.c_str());
     defer _(nullptr, [&bars](...){dev_close(bars);});
 
     if (verbose) read_sdb(&bars, print_sdb);
