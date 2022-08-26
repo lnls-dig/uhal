@@ -138,7 +138,8 @@ void LnlsRtmLampControllerV2::encode_config()
     });
 
     int mode_option;
-    try {
+    if (mode_numeric) mode_option = *mode_numeric;
+    else try {
         mode_option = mode_options.at(mode);
     } catch (std::out_of_range &e) {
         throw std::runtime_error("mode must be one of " + list_of_keys(mode_options));
