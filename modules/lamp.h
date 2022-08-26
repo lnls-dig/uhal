@@ -18,10 +18,13 @@
 #include "controllers.h"
 #include "decoders.h"
 
-#define LAMP_DEVID 0xa1248bec
-inline const device_match_fn device_match_lamp_v1 =
+namespace lamp {
+
+constexpr unsigned LAMP_DEVID = 0xa1248bec;
+
+inline const device_match_fn device_match_v1 =
     device_match_impl<LNLS_VENDORID, LAMP_DEVID, 1>;
-inline const device_match_fn device_match_lamp_v2 =
+inline const device_match_fn device_match_v2 =
     device_match_impl<LNLS_VENDORID, LAMP_DEVID, 2>;
 
 /* forward declarations to avoid conflicts in headers */
@@ -92,7 +95,7 @@ class LnlsRtmLampControllerV1: public LnlsRtmLampController {
 
   public:
     LnlsRtmLampControllerV1(struct pcie_bars *bars):
-        LnlsRtmLampController(bars, device_match_lamp_v1)
+        LnlsRtmLampController(bars, device_match_v1)
     {
     }
 
@@ -111,5 +114,7 @@ class LnlsRtmLampControllerV2: public LnlsRtmLampController {
 
     void write_params();
 };
+
+}
 
 #endif
