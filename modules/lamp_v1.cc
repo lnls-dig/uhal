@@ -13,12 +13,14 @@
 #include "util.h"
 #include "lamp.h"
 
+namespace lamp {
+
 #include "hw/wb_rtmlamp_ohwr_regs_v1.h"
 
-#define MAX_NUM_CHAN 12
-#define REGISTERS_PER_CHAN 6
-static const unsigned max_26bits = 0x3ffffff;
-static const unsigned channel_distance = 4 * REGISTERS_PER_CHAN;
+static constexpr unsigned MAX_NUM_CHAN = 12;
+static constexpr unsigned REGISTERS_PER_CHAN = 6;
+static constexpr unsigned CHANNEL_DISTANCE = 4 * REGISTERS_PER_CHAN;
+static constexpr unsigned MAX_26BITS = 0x3ffffff;
 
 LnlsRtmLampCoreV1::LnlsRtmLampCoreV1()
 {
@@ -26,7 +28,7 @@ LnlsRtmLampCoreV1::LnlsRtmLampCoreV1()
     regs = std::make_unique<struct rtmlamp_ohwr_regs>();
     read_dest = regs.get();
 
-    device_match = device_match_lamp_v1;
+    device_match = device_match_v1;
 }
 LnlsRtmLampCoreV1::~LnlsRtmLampCoreV1() = default;
 
@@ -123,7 +125,7 @@ void LnlsRtmLampControllerV1::encode_config()
     }
 
     if (pi_kp && pi_ti && pi_sp) {
-        if (*pi_kp > max_26bits || *pi_ti > max_26bits)
+        if (*pi_kp > MAX_26BITS || *pi_ti > MAX_26BITS)
             throw std::logic_error("pi_kp and pi_ti must fit in a number under 26 bits");
 
         clear_and_insert(channel_regs.pi_kp, *pi_kp, RTMLAMP_OHWR_REGS_CH_0_PI_KP_DATA_MASK);
@@ -143,5 +145,7 @@ void LnlsRtmLampControllerV1::write_params()
     encode_config();
 
     bar4_write(bars, addr + RTMLAMP_OHWR_REGS_CTL, ctl);
-    bar4_write_v(bars, addr + RTMLAMP_OHWR_REGS_CH_0_STA + channel * channel_distance, &channel_regs, sizeof channel_regs);
+    bar4_write_v(bars, addr + RTMLAMP_OHWR_REGS_CH_0_STA + channel * CHANNEL_DISTANCE, &channel_regs, sizeof channel_regs);
+}
+
 }

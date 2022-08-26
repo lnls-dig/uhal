@@ -11,14 +11,17 @@
 #include "printer.h"
 #include "util.h"
 
+namespace lamp {
 #include "hw/wb_rtmlamp_ohwr_regs_v2.h"
+}
 
 #define channel_registers_v2_impl wb_rtmlamp_ohwr_regs::ch
 #include "lamp.h"
 
-static const unsigned channel_distance = sizeof(channel_registers_v2);
+namespace lamp {
 
-static const unsigned TRIGGER_ENABLE_VERSION = 1;
+static constexpr unsigned CHANNEL_DISTANCE = sizeof(channel_registers_v2);
+static constexpr unsigned TRIGGER_ENABLE_VERSION = 1;
 
 LnlsRtmLampCoreV2::LnlsRtmLampCoreV2()
 {
@@ -26,7 +29,7 @@ LnlsRtmLampCoreV2::LnlsRtmLampCoreV2()
     regs = std::make_unique<struct wb_rtmlamp_ohwr_regs>();
     read_dest = regs.get();
 
-    device_match = device_match_lamp_v2;
+    device_match = device_match_v2;
 }
 LnlsRtmLampCoreV2::~LnlsRtmLampCoreV2() = default;
 
@@ -121,7 +124,7 @@ void LnlsRtmLampCoreV2::print(FILE *f, bool verbose)
 }
 
 LnlsRtmLampControllerV2::LnlsRtmLampControllerV2(struct pcie_bars *bars):
-    LnlsRtmLampController(bars, device_match_lamp_v2)
+    LnlsRtmLampController(bars, device_match_v2)
 {
     channel_regs = std::make_unique<channel_registers_v2>();
 }
@@ -148,7 +151,7 @@ void LnlsRtmLampControllerV2::encode_config()
     if (channel > 11)
         throw std::runtime_error("there are only 12 channels");
 
-    bar4_read_v(bars, addr + WB_RTMLAMP_OHWR_REGS_CH + channel * channel_distance, channel_regs.get(), channel_distance);
+    bar4_read_v(bars, addr + WB_RTMLAMP_OHWR_REGS_CH + channel * CHANNEL_DISTANCE, channel_regs.get(), CHANNEL_DISTANCE);
 
     clear_and_insert(channel_regs->ctl, mode_option, WB_RTMLAMP_OHWR_REGS_CH_CTL_MODE_MASK);
     insert_bit(channel_regs->ctl, amp_enable, WB_RTMLAMP_OHWR_REGS_CH_CTL_AMP_EN);
@@ -176,5 +179,7 @@ void LnlsRtmLampControllerV2::write_params()
 {
     encode_config();
 
-    bar4_write_v(bars, addr + WB_RTMLAMP_OHWR_REGS_CH + channel * channel_distance, channel_regs.get(), channel_distance);
+    bar4_write_v(bars, addr + WB_RTMLAMP_OHWR_REGS_CH + channel * CHANNEL_DISTANCE, channel_regs.get(), CHANNEL_DISTANCE);
+}
+
 }
