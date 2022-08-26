@@ -23,7 +23,7 @@ void dev_open_slot(struct pcie_bars &bars, int slot)
     char slot_chars[64];
     auto r = std::to_chars(slot_chars, slot_chars + sizeof slot_chars, slot);
     *r.ptr = '\0';
-    return dev_open_slot(bars, slot_chars);
+    dev_open_slot(bars, slot_chars);
 }
 
 void dev_open_slot(struct pcie_bars &bars, const char *slot)
@@ -33,7 +33,7 @@ void dev_open_slot(struct pcie_bars &bars, const char *slot)
     std::ifstream fslot{slot_path};
     std::string pci_address;
     fslot >> pci_address;
-    return dev_open(bars, pci_address.c_str());
+    dev_open(bars, pci_address.c_str());
 }
 
 void dev_open(struct pcie_bars &bars, const char *pci_address)
