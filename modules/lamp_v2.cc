@@ -23,7 +23,7 @@ namespace lamp {
 static constexpr unsigned CHANNEL_DISTANCE = sizeof(channel_registers_v2);
 static constexpr unsigned TRIGGER_ENABLE_VERSION = 1;
 
-LnlsRtmLampCoreV2::LnlsRtmLampCoreV2()
+CoreV2::CoreV2()
 {
     read_size = sizeof *regs;
     regs = std::make_unique<struct wb_rtmlamp_ohwr_regs>();
@@ -31,9 +31,9 @@ LnlsRtmLampCoreV2::LnlsRtmLampCoreV2()
 
     device_match = device_match_v2;
 }
-LnlsRtmLampCoreV2::~LnlsRtmLampCoreV2() = default;
+CoreV2::~CoreV2() = default;
 
-void LnlsRtmLampCoreV2::print(FILE *f, bool verbose)
+void CoreV2::print(FILE *f, bool verbose)
 {
     static const std::unordered_map<const char *, Printer> printers({
       /* per channel info */
@@ -123,14 +123,14 @@ void LnlsRtmLampCoreV2::print(FILE *f, bool verbose)
     }
 }
 
-LnlsRtmLampControllerV2::LnlsRtmLampControllerV2(struct pcie_bars *bars):
-    LnlsRtmLampController(bars, device_match_v2)
+ControllerV2::ControllerV2(struct pcie_bars *bars):
+    Controller(bars, device_match_v2)
 {
     channel_regs = std::make_unique<channel_registers_v2>();
 }
-LnlsRtmLampControllerV2::~LnlsRtmLampControllerV2() = default;
+ControllerV2::~ControllerV2() = default;
 
-void LnlsRtmLampControllerV2::encode_config()
+void ControllerV2::encode_config()
 {
     static const std::unordered_map<std::string, int> mode_options({
         {"open-loop-dac", 0},
@@ -175,7 +175,7 @@ void LnlsRtmLampControllerV2::encode_config()
     if (cnt) clear_and_insert(channel_regs->cnt, *cnt, WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_MASK);
 }
 
-void LnlsRtmLampControllerV2::write_params()
+void ControllerV2::write_params()
 {
     encode_config();
 

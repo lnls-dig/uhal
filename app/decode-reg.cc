@@ -124,11 +124,11 @@ int main(int argc, char *argv[])
         if (type == "acq") {
             dec = std::make_unique<LnlsBpmAcqCore>();
         } else if (type == "lamp") {
-            dec = std::make_unique<LnlsRtmLampCoreV1>();
+            dec = std::make_unique<lamp::CoreV1>();
             /* if v1 can't be found, try v2;
              * assumes only one version of the device will be available */
             if (!read_sdb(&bars, dec->device_match, dev_index)) {
-                dec = std::make_unique<LnlsRtmLampCoreV2>();
+                dec = std::make_unique<lamp::CoreV2>();
             }
         } else if (type == "fofb_processing") {
             dec = std::make_unique<LnlsFofbProcessing>();
@@ -173,15 +173,15 @@ int main(int argc, char *argv[])
         ctl.print_csv(stdout, res);
     }
     if (mode == "lamp") {
-        std::unique_ptr<LnlsRtmLampController> ctlp = std::make_unique<LnlsRtmLampControllerV1>(&bars);
+        std::unique_ptr<lamp::Controller> ctlp = std::make_unique<lamp::ControllerV1>(&bars);
         if (!read_sdb(&bars, ctlp->device_match, dev_index)) {
-            ctlp = std::make_unique<LnlsRtmLampControllerV2>(&bars);
+            ctlp = std::make_unique<lamp::ControllerV2>(&bars);
             if (!read_sdb(&bars, ctlp->device_match, dev_index)) {
                 fprintf(stderr, "Couldn't find lamp module index %u\n", dev_index);
                 return 1;
             }
         }
-        LnlsRtmLampController &ctl = *ctlp;
+	lamp::Controller &ctl = *ctlp;
         ctl.set_devinfo(*read_sdb(&bars, ctl.device_match, dev_index));
 
         ctl.amp_enable = args.is_used("-e");

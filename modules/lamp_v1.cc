@@ -22,7 +22,7 @@ static constexpr unsigned REGISTERS_PER_CHAN = 6;
 static constexpr unsigned CHANNEL_DISTANCE = 4 * REGISTERS_PER_CHAN;
 static constexpr unsigned MAX_26BITS = 0x3ffffff;
 
-LnlsRtmLampCoreV1::LnlsRtmLampCoreV1()
+CoreV1::CoreV1()
 {
     read_size = sizeof *regs;
     regs = std::make_unique<struct rtmlamp_ohwr_regs>();
@@ -30,9 +30,9 @@ LnlsRtmLampCoreV1::LnlsRtmLampCoreV1()
 
     device_match = device_match_v1;
 }
-LnlsRtmLampCoreV1::~LnlsRtmLampCoreV1() = default;
+CoreV1::~CoreV1() = default;
 
-void LnlsRtmLampCoreV1::print(FILE *f, bool verbose)
+void CoreV1::print(FILE *f, bool verbose)
 {
     static const std::unordered_map<const char *, Printer> printers({
       I("DAC_DATA_FROM_WB", "Use data from WB for DACs", PrinterType::boolean, "DAC data from RTM module input ports", "DAC data from Wishbone"),
@@ -94,7 +94,7 @@ void LnlsRtmLampCoreV1::print(FILE *f, bool verbose)
     }
 }
 
-void LnlsRtmLampControllerV1::encode_config()
+void ControllerV1::encode_config()
 {
     if (limit_a || limit_b)
         throw std::logic_error("LAMP v1 doesn't have limits");
@@ -140,7 +140,7 @@ void LnlsRtmLampControllerV1::encode_config()
     }
 }
 
-void LnlsRtmLampControllerV1::write_params()
+void ControllerV1::write_params()
 {
     encode_config();
 
