@@ -38,36 +38,36 @@ struct channel_registers {
 /* v2 forward declaration */
 typedef struct channel_registers_v2_impl channel_registers_v2;
 
-class LnlsRtmLampCoreV1: public RegisterDecoder {
+class CoreV1: public RegisterDecoder {
     std::unique_ptr<struct rtmlamp_ohwr_regs> regs;
 
   public:
-    LnlsRtmLampCoreV1();
-    ~LnlsRtmLampCoreV1();
+    CoreV1();
+    ~CoreV1();
     void print(FILE *, bool);
 };
 
-class LnlsRtmLampCoreV2: public RegisterDecoder {
+class CoreV2: public RegisterDecoder {
     std::unique_ptr<struct wb_rtmlamp_ohwr_regs> regs;
 
   public:
-    LnlsRtmLampCoreV2();
-    ~LnlsRtmLampCoreV2();
+    CoreV2();
+    ~CoreV2();
     void print(FILE *, bool);
 };
 
-class LnlsRtmLampController: public RegisterController {
+class Controller: public RegisterController {
   protected:
     struct pcie_bars *bars;
 
     virtual void encode_config() = 0;
 
   public:
-    LnlsRtmLampController(struct pcie_bars *bars, device_match_fn device_match):
+    Controller(struct pcie_bars *bars, device_match_fn device_match):
         bars(bars), device_match(device_match)
     {
     }
-    virtual ~LnlsRtmLampController() = default;
+    virtual ~Controller() = default;
 
     const device_match_fn device_match;
 
@@ -86,7 +86,7 @@ class LnlsRtmLampController: public RegisterController {
     virtual void write_params() = 0;
 };
 
-class LnlsRtmLampControllerV1: public LnlsRtmLampController {
+class ControllerV1: public Controller {
     /* control registers */
     uint32_t ctl = 0;
     struct channel_registers channel_regs{};
@@ -94,23 +94,23 @@ class LnlsRtmLampControllerV1: public LnlsRtmLampController {
     void encode_config();
 
   public:
-    LnlsRtmLampControllerV1(struct pcie_bars *bars):
-        LnlsRtmLampController(bars, device_match_v1)
+    ControllerV1(struct pcie_bars *bars):
+        Controller(bars, device_match_v1)
     {
     }
 
     void write_params();
 };
 
-class LnlsRtmLampControllerV2: public LnlsRtmLampController {
+class ControllerV2: public Controller {
     /* control registers */
     std::unique_ptr<channel_registers_v2> channel_regs;
 
     void encode_config();
 
   public:
-    LnlsRtmLampControllerV2(struct pcie_bars *bars);
-    ~LnlsRtmLampControllerV2();
+    ControllerV2(struct pcie_bars *bars);
+    ~ControllerV2();
 
     void write_params();
 };
