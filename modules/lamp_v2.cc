@@ -162,7 +162,7 @@ void ControllerV2::encode_config()
     if (trigger_enable) {
         if (devinfo.abi_ver_minor >= TRIGGER_ENABLE_VERSION)
             insert_bit(channel_regs->ctl, *trigger_enable, WB_RTMLAMP_OHWR_REGS_CH_CTL_TRIG_EN);
-        else
+        else if (*trigger_enable)
             throw std::runtime_error("this core doesn't support trigger_enable");
     }
 
