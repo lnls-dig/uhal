@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
         fputs(
             "Usage: decode-reg mode <mode specific options>\n\n"
             "Positional arguments:\n"
-            "mode      mode of operation ('decode', 'acq', 'lamp' or 'fofb_processing')\n",
+            "mode      mode of operation ('reset', 'decode', 'acq', 'lamp' or 'fofb_processing')\n",
             stderr);
         return 1;
     }
@@ -87,7 +87,9 @@ int main(int argc, char *argv[])
     fofb_processing_args.add_argument("-C").help("constant value to be written").required().scan<'f', float>();
 
     argparse::ArgumentParser *pargs;
-    if (mode == "decode") {
+    if (mode == "reset") {
+        pargs = &parent_args;
+    } else if (mode == "decode") {
         pargs = &decode_args;
     } else if (mode == "acq") {
         pargs = &acq_args;
@@ -115,6 +117,11 @@ int main(int argc, char *argv[])
     struct pcie_bars bars;
     dev_open_slot(bars, device_number.c_str());
     defer _(nullptr, [&bars](...){dev_close(bars);});
+
+    if (mode == "reset") {
+        device_reset(&bars);
+        return 0;
+    }
 
     if (verbose) read_sdb(&bars, print_sdb);
 
