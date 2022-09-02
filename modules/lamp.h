@@ -53,7 +53,7 @@ class CoreV2: public RegisterDecoder {
   public:
     CoreV2();
     ~CoreV2();
-    void print(FILE *, bool);
+    void decode();
 };
 
 class Controller: public RegisterController {

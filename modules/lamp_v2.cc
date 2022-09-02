@@ -23,7 +23,44 @@ namespace lamp {
 static constexpr unsigned CHANNEL_DISTANCE = sizeof(channel_registers_v2);
 static constexpr unsigned TRIGGER_ENABLE_VERSION = 1;
 
-CoreV2::CoreV2()
+CoreV2::CoreV2():
+    RegisterDecoder({
+        I("AMP_IFLAG_L", "Amplifier Left Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
+        I("AMP_TFLAG_L", "Amplifier Left Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),
+        I("AMP_IFLAG_R", "Amplifier Right Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
+        I("AMP_TFLAG_R", "Amplifier Right Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),
+        I("AMP_EN", "Amplifier Enable", PrinterType::boolean),
+        /* TODO: add test mode when it becomes a single value */
+        I("MODE", "Power supply operation mode", PrinterType::custom_function,
+            [](FILE *f, bool v, uint32_t value){
+                (void)v;
+                static const char *modes[8] = {
+                    "Open loop (voltage) manual control via dac",
+                    "Open loop (voltage) test square wave",
+                    "Closed loop (current) manual control via pi_sp",
+                    "Closed loop (current) test square wave",
+                    "Closed loop (current) external control",
+                    "reserved",
+                    "reserved",
+                    "reserved"
+                };
+
+                fputs(modes[value], f);
+                fputc('\n', f);
+            }
+        ),
+        I("TRIG_EN", "Trigger enable", PrinterType::enable),
+        I("PI_KP", "PI KP Coefficient", PrinterType::value),
+        I("PI_TI", "PI TI Coefficient", PrinterType::value),
+        I("PI_SP", "PI Setpoint", PrinterType::value),
+        I("DAC", "DAC Data For Channel", PrinterType::value),
+        I("LIMIT_A", "Signed limit 'a'", PrinterType::value),
+        I("LIMIT_B", "Signed limit 'b'", PrinterType::value),
+        I("CNT", "Test mode period, in clock ticks", PrinterType::value),
+        I("ADC_INST", "ADC instantaneous measurement", PrinterType::value),
+        I("DAC_EFF", "DAC effective measurement - actual value sent to DAC", PrinterType::value),
+        I("SP_EFF", "Set point instantaneous effective data", PrinterType::value),
+    })
 {
     read_size = sizeof *regs;
     regs = std::make_unique<struct wb_rtmlamp_ohwr_regs>();
@@ -33,94 +70,60 @@ CoreV2::CoreV2()
 }
 CoreV2::~CoreV2() = default;
 
-void CoreV2::print(FILE *f, bool verbose)
+void CoreV2::decode()
 {
-    static const std::unordered_map<const char *, Printer> printers({
-      /* per channel info */
-      I("AMP_IFLAG_L", "Amplifier Left Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
-      I("AMP_TFLAG_L", "Amplifier Left Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),
-      I("AMP_IFLAG_R", "Amplifier Right Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
-      I("AMP_TFLAG_R", "Amplifier Right Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),
-      I("AMP_EN", "Amplifier Enable", PrinterType::boolean),
-      /* TODO: add test mode when it becomes a single value */
-      I("MODE", "Power supply operation mode", PrinterType::custom_function,
-          [](FILE *f, bool v, uint32_t value){
-              (void)v;
-              static const char *modes[8] = {
-                  "Open loop (voltage) manual control via dac",
-                  "Open loop (voltage) test square wave",
-                  "Closed loop (current) manual control via pi_sp",
-                  "Closed loop (current) test square wave",
-                  "Closed loop (current) external control",
-                  "reserved",
-                  "reserved",
-                  "reserved"
-              };
-
-              fputs(modes[value], f);
-              fputc('\n', f);
-          }
-      ),
-      I("TRIG_EN", "Trigger enable", PrinterType::enable),
-      I("PI_KP", "PI KP Coefficient", PrinterType::value),
-      I("PI_TI", "PI TI Coefficient", PrinterType::value),
-      I("PI_SP", "PI Setpoint", PrinterType::value),
-      I("DAC", "DAC Data For Channel", PrinterType::value),
-      I("Limit A", "Signed limit 'a'", PrinterType::value),
-      I("Limit B", "Signed limit 'b'", PrinterType::value),
-      I("CNT", "Test mode period, in clock ticks", PrinterType::value),
-      I("ADC_INST", "ADC instantaneous measurement", PrinterType::value),
-      I("DAC_EFF", "DAC effective measurement - actual value sent to DAC", PrinterType::value),
-      I("SP_EFF", "Set point instantaneous effective data", PrinterType::value),
-    });
-
-    bool v = verbose;
-    unsigned indent = 0;
     uint32_t t;
 
-    auto print = [f, v, &indent](const char *name, auto value) {
-        printers.at(name).print(f, v, indent, value);
-    };
+    /* add printer if this value ever gets flags;
+     * this is being done for IOC compatibility */
+    general_data["PS_STATUS"] = regs->sta;
 
     unsigned i = 0;
-    for (const auto &channel_regs: regs->ch) {
-        if (channel && *channel != i) {
-            i++;
-            continue;
-        }
-        fprintf(f, "channel %u:\n", i++);
-        indent = 4;
+    auto add_channel = [this, &i](const char *name, auto value, bool skip=false) {
+        channel_data[name].insert(channel_data[name].begin() + i, (int32_t)value);
+        if (!data_order_done && !skip)
+            channel_data_order.push_back(name);
+    };
 
+    for (const auto &channel_regs: regs->ch) {
         t = channel_regs.sta;
-        print("AMP_IFLAG_L", t & WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_L);
-        print("AMP_TFLAG_L", t & WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_L);
-        print("AMP_IFLAG_R", t & WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_R);
-        print("AMP_TFLAG_R", t & WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_R);
+        add_channel("AMP_IFLAG_L", t & WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_L);
+        add_channel("AMP_TFLAG_L", t & WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_L);
+        add_channel("AMP_IFLAG_R", t & WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_R);
+        add_channel("AMP_TFLAG_R", t & WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_R);
 
         t = channel_regs.ctl;
-        print("AMP_EN", t & WB_RTMLAMP_OHWR_REGS_CH_CTL_AMP_EN);
-        print("MODE", extract_value<uint32_t>(t, WB_RTMLAMP_OHWR_REGS_CH_CTL_MODE_MASK));
+        add_channel("AMP_EN", t & WB_RTMLAMP_OHWR_REGS_CH_CTL_AMP_EN);
+        add_channel("MODE", extract_value<uint32_t>(t, WB_RTMLAMP_OHWR_REGS_CH_CTL_MODE_MASK));
         if (devinfo.abi_ver_minor >= TRIGGER_ENABLE_VERSION) {
-            print("TRIG_EN", t & WB_RTMLAMP_OHWR_REGS_CH_CTL_TRIG_EN);
+            add_channel("TRIG_EN", t & WB_RTMLAMP_OHWR_REGS_CH_CTL_TRIG_EN);
+        } else {
+            add_channel("TRIG_EN", 0, true);
         }
 
-        print("PI_KP", extract_value<uint32_t>(channel_regs.pi_kp, WB_RTMLAMP_OHWR_REGS_CH_PI_KP_DATA_MASK));
-        print("PI_TI", extract_value<uint32_t>(channel_regs.pi_ti, WB_RTMLAMP_OHWR_REGS_CH_PI_TI_DATA_MASK));
-        print("PI_SP", extract_value<int16_t>(channel_regs.pi_sp, WB_RTMLAMP_OHWR_REGS_CH_PI_SP_DATA_MASK));
-        print("DAC", extract_value<int16_t>(channel_regs.dac, WB_RTMLAMP_OHWR_REGS_CH_DAC_DATA_MASK));
+        add_channel("PI_KP", extract_value<uint32_t>(channel_regs.pi_kp, WB_RTMLAMP_OHWR_REGS_CH_PI_KP_DATA_MASK));
+        add_channel("PI_TI", extract_value<uint32_t>(channel_regs.pi_ti, WB_RTMLAMP_OHWR_REGS_CH_PI_TI_DATA_MASK));
+        add_channel("PI_SP", extract_value<int16_t>(channel_regs.pi_sp, WB_RTMLAMP_OHWR_REGS_CH_PI_SP_DATA_MASK));
+        add_channel("DAC", extract_value<int16_t>(channel_regs.dac, WB_RTMLAMP_OHWR_REGS_CH_DAC_DATA_MASK));
 
         t = channel_regs.lim;
-        print("Limit A", extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_LIM_A_MASK));
-        print("Limit B", extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_LIM_B_MASK));
+        add_channel("LIMIT_A", extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_LIM_A_MASK));
+        add_channel("LIMIT_B", extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_LIM_B_MASK));
 
-        print("CNT", extract_value<uint32_t>(channel_regs.cnt, WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_MASK));
+        add_channel("CNT", extract_value<uint32_t>(channel_regs.cnt, WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_MASK));
 
         t = channel_regs.adc_dac_eff;
-        print("ADC_INST", extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_ADC_MASK));
-        print("DAC_EFF", extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_DAC_MASK));
+        add_channel("ADC_INST", extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_ADC_MASK));
+        add_channel("DAC_EFF", extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_DAC_MASK));
 
-        print("SP_EFF", extract_value<int16_t>(channel_regs.sp_eff, WB_RTMLAMP_OHWR_REGS_CH_SP_EFF_SP_MASK));
+        add_channel("SP_EFF", extract_value<int16_t>(channel_regs.sp_eff, WB_RTMLAMP_OHWR_REGS_CH_SP_EFF_SP_MASK));
+
+        /* after the first iteration, we are done adding things to the vector */
+        data_order_done = true;
+
+        i++;
     }
+    number_of_channels = i;
 }
 
 ControllerV2::ControllerV2(struct pcie_bars *bars):
