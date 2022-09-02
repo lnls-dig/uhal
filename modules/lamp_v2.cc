@@ -21,6 +21,7 @@ namespace lamp {
 namespace lamp {
 
 static constexpr unsigned CHANNEL_DISTANCE = sizeof(channel_registers_v2);
+static constexpr unsigned NUM_CHAN = 12;
 static constexpr unsigned TRIGGER_ENABLE_VERSION = 1;
 
 CoreV2::CoreV2():
@@ -78,9 +79,12 @@ void CoreV2::decode()
      * this is being done for IOC compatibility */
     general_data["PS_STATUS"] = regs->sta;
 
+    number_of_channels = NUM_CHAN;
+
     unsigned i = 0;
     auto add_channel = [this, &i](const char *name, auto value, bool skip=false) {
-        channel_data[name].insert(channel_data[name].begin() + i, (int32_t)value);
+        channel_data[name].resize(*number_of_channels);
+        channel_data[name][i] = value;
         if (!data_order_done && !skip)
             channel_data_order.push_back(name);
     };
@@ -123,7 +127,6 @@ void CoreV2::decode()
 
         i++;
     }
-    number_of_channels = i;
 }
 
 ControllerV2::ControllerV2(struct pcie_bars *bars):
@@ -151,7 +154,7 @@ void ControllerV2::encode_config()
         throw std::runtime_error("mode must be one of " + list_of_keys(mode_options));
     }
 
-    if (channel > 11)
+    if (channel > NUM_CHAN-1)
         throw std::runtime_error("there are only 12 channels");
 
     bar4_read_v(bars, addr + WB_RTMLAMP_OHWR_REGS_CH + channel * CHANNEL_DISTANCE, channel_regs.get(), CHANNEL_DISTANCE);
