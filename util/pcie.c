@@ -79,6 +79,7 @@
 #define PCIE_CFG_DMA_STA_TIMEOUT (1 << 4)
 
 /* Other registers and values */
+#define PCIE_CFG_REG_TX_CTRL                (30 << WB_DWORD_ACC)
 #define PCIE_CFG_REG_EB_STACON              (36 << WB_DWORD_ACC)
 #define PCIE_CFG_TX_CTRL_CHANNEL_RST 0x0A
 
@@ -303,4 +304,15 @@ void bar4_read_v(struct pcie_bars *bars, size_t addr, void *dest, size_t n)
     bar_generic_read_v(bars, addr, dest, n, bar4_read);
 
     pthread_mutex_unlock(&bars->locks[BAR4]);
+}
+
+static void bar4_reset(const struct pcie_bars *bars)
+{
+    bar0_write(bars, PCIE_CFG_REG_TX_CTRL, PCIE_CFG_TX_CTRL_CHANNEL_RST);
+}
+
+void device_reset(const struct pcie_bars *bars)
+{
+    bar0_write(bars, PCIE_CFG_REG_EB_STACON, PCIE_CFG_TX_CTRL_CHANNEL_RST);
+    bar4_reset(bars);
 }
