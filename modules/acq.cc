@@ -23,19 +23,7 @@
 static const unsigned ddr3_payload_size = 32;
 
 LnlsBpmAcqCore::LnlsBpmAcqCore():
-    regs_storage(new struct acq_core),
-    regs(*regs_storage)
-{
-    read_size = sizeof regs;
-    read_dest = &regs;
-
-    device_match = device_match_acq;
-}
-LnlsBpmAcqCore::~LnlsBpmAcqCore() = default;
-
-void LnlsBpmAcqCore::print(FILE *f, bool verbose)
-{
-    static const std::unordered_map<const char *, Printer> printers({
+    RegisterDecoder({
         I("FSQ_ACQ_NOW", "Acquire data immediately and don't wait for any trigger", PrinterType::boolean, "acquire immediately", "wait on trigger"),
         I("FSM_STATE", "State machine status", PrinterType::custom_function,
             [](FILE *f, bool v, uint32_t value){
@@ -81,108 +69,108 @@ void LnlsBpmAcqCore::print(FILE *f, bool verbose)
         I("NUM_COALESCE", "Number of coalescing words", PrinterType::value),
         I("NUM_ATOMS", "Number of atoms inside the complete data word", PrinterType::value),
         I("ATOM_WIDTH", "Atom width in bits", PrinterType::value),
-    });
+    }),
+    regs_storage(new struct acq_core),
+    regs(*regs_storage)
+{
+    read_size = sizeof regs;
+    read_dest = &regs;
 
-    bool v = verbose;
-    unsigned indent = 0;
+    device_match = device_match_acq;
+}
+LnlsBpmAcqCore::~LnlsBpmAcqCore() = default;
+
+void LnlsBpmAcqCore::decode()
+{
     uint32_t t;
 
-    auto print_reg = [f, v, &indent](const char *reg, unsigned offset) {
-        print_reg_impl(f, v, indent, reg, offset);
-    };
-    auto print = [f, v, &indent](const char *name, auto value) {
-        printers.at(name).print(f, v, indent, value);
+    auto add_general = [this](const char *name, auto value) {
+        general_data[name] = value;
+        if (!data_order_done)
+            general_data_order.push_back(name);
     };
 
     /* control register */
-    print_reg("control register", ACQ_CORE_CTL);
     t = regs.ctl;
-    print("FSQ_ACQ_NOW", t & ACQ_CORE_CTL_FSM_ACQ_NOW);
+    add_general("FSQ_ACQ_NOW", t & ACQ_CORE_CTL_FSM_ACQ_NOW);
 
     /* status register */
-    print_reg("status register", ACQ_CORE_STA);
     t = regs.sta;
 
-    print("FSM_STATE", (t & ACQ_CORE_STA_FSM_STATE_MASK) >> ACQ_CORE_STA_FSM_STATE_SHIFT);
-    print("FSM_ACQ_DONE", t & ACQ_CORE_STA_FSM_ACQ_DONE);
-    print("FC_TRANS_DONE", t & ACQ_CORE_STA_FC_TRANS_DONE);
-    print("FC_FULL", t & ACQ_CORE_STA_FC_FULL);
-    print("DDR3_TRANS_DONE", t & ACQ_CORE_STA_DDR3_TRANS_DONE);
+    add_general("FSM_STATE", (t & ACQ_CORE_STA_FSM_STATE_MASK) >> ACQ_CORE_STA_FSM_STATE_SHIFT);
+    add_general("FSM_ACQ_DONE", t & ACQ_CORE_STA_FSM_ACQ_DONE);
+    add_general("FC_TRANS_DONE", t & ACQ_CORE_STA_FC_TRANS_DONE);
+    add_general("FC_FULL", t & ACQ_CORE_STA_FC_FULL);
+    add_general("DDR3_TRANS_DONE", t & ACQ_CORE_STA_DDR3_TRANS_DONE);
 
     /* trigger configuration */
-    print_reg("trigger configuration", ACQ_CORE_TRIG_CFG);
     t = regs.trig_cfg;
-    print("HW_TRIG_SEL", t & ACQ_CORE_TRIG_CFG_HW_TRIG_SEL);
-    print("HW_TRIG_POL", t & ACQ_CORE_TRIG_CFG_HW_TRIG_POL);
-    print("HW_TRIG_EN", t & ACQ_CORE_TRIG_CFG_HW_TRIG_EN);
-    print("SW_TRIG_EN", t & ACQ_CORE_TRIG_CFG_SW_TRIG_EN);
-    print("INT_TRIG_SEL", ((t & ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_MASK) >> ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_SHIFT) + 1);
+    add_general("HW_TRIG_SEL", t & ACQ_CORE_TRIG_CFG_HW_TRIG_SEL);
+    add_general("HW_TRIG_POL", t & ACQ_CORE_TRIG_CFG_HW_TRIG_POL);
+    add_general("HW_TRIG_EN", t & ACQ_CORE_TRIG_CFG_HW_TRIG_EN);
+    add_general("SW_TRIG_EN", t & ACQ_CORE_TRIG_CFG_SW_TRIG_EN);
+    add_general("INT_TRIG_SEL", ((t & ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_MASK) >> ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_SHIFT) + 1);
 
     /* trigger data config thresold */
-    print_reg("trigger data config threshold", ACQ_CORE_TRIG_DATA_CFG);
     t = regs.trig_data_cfg;
-    print("THRES_FILT", (t & ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_MASK) >> ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_SHIFT);
+    add_general("THRES_FILT", (t & ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_MASK) >> ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_SHIFT);
 
     /* trigger */
-    print_reg("trigger data threshold", ACQ_CORE_TRIG_DATA_THRES);
-    print("TRIG_DATA_THRES", (int32_t)regs.trig_data_thres);
-    print_reg("trigger delay", ACQ_CORE_TRIG_DLY);
-    print("TRIG_DLY", regs.trig_dly);
+    add_general("TRIG_DATA_THRES", (int32_t)regs.trig_data_thres);
+    add_general("TRIG_DLY", regs.trig_dly);
 
     /* number of shots */
-    print_reg("number of shots", ACQ_CORE_SHOTS);
     t = regs.shots;
-    print("NB", (t & ACQ_CORE_SHOTS_NB_MASK) >> ACQ_CORE_SHOTS_NB_SHIFT);
-    print("MULTISHOT_RAM_SIZE_IMPL", t & ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_IMPL);
-    print("MULTISHOT_RAM_SIZE", (t & ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_MASK) >> ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_SHIFT);
+    add_general("NB", (t & ACQ_CORE_SHOTS_NB_MASK) >> ACQ_CORE_SHOTS_NB_SHIFT);
+    add_general("MULTISHOT_RAM_SIZE_IMPL", t & ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_IMPL);
+    add_general("MULTISHOT_RAM_SIZE", (t & ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_MASK) >> ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_SHIFT);
 
     /* trigger address register */
-    print_reg("trigger address register", ACQ_CORE_TRIG_POS);
-    print("TRIG_POS", regs.trig_pos);
+    add_general("TRIG_POS", regs.trig_pos);
 
     /* samples */
-    print_reg("pre-trigger samples", ACQ_CORE_PRE_SAMPLES);
-    print("PRE_SAMPLES", regs.pre_samples);
-    print_reg("post-trigger samples", ACQ_CORE_POST_SAMPLES);
-    print("POST_SAMPLES", regs.post_samples);
-    print_reg("sample counter", ACQ_CORE_SAMPLES_CNT);
-    print("SAMPLES_CNT", regs.samples_cnt);
+    add_general("PRE_SAMPLES", regs.pre_samples);
+    add_general("POST_SAMPLES", regs.post_samples);
+    add_general("SAMPLES_CNT", regs.samples_cnt);
 
     /* ddr3 addresses */
-    print_reg("DDR3 Start Address", ACQ_CORE_DDR3_START_ADDR);
-    print("DDR3_START_ADDR", regs.ddr3_start_addr);
-    print_reg("DDR3 End Address", ACQ_CORE_DDR3_END_ADDR);
-    print("DDR3_END_ADDR", regs.ddr3_end_addr);
+    add_general("DDR3_START_ADDR", regs.ddr3_start_addr);
+    add_general("DDR3_END_ADDR", regs.ddr3_end_addr);
 
     /* acquisition channel control */
-    print_reg("acquisition channel control", ACQ_CORE_ACQ_CHAN_CTL);
     t = regs.acq_chan_ctl;
     /* will be used to determine how many channels to show in the next block */
     unsigned num_chan = (t & ACQ_CORE_ACQ_CHAN_CTL_NUM_CHAN_MASK) >> ACQ_CORE_ACQ_CHAN_CTL_NUM_CHAN_SHIFT;
-    print("WHICH", (t & ACQ_CORE_ACQ_CHAN_CTL_WHICH_MASK) >> ACQ_CORE_ACQ_CHAN_CTL_WHICH_SHIFT);
-    print("DTRIG_WHICH", (t & ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_MASK) >> ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_SHIFT);
-    print("NUM_CHAN", num_chan);
+    add_general("WHICH", (t & ACQ_CORE_ACQ_CHAN_CTL_WHICH_MASK) >> ACQ_CORE_ACQ_CHAN_CTL_WHICH_SHIFT);
+    add_general("DTRIG_WHICH", (t & ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_MASK) >> ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_SHIFT);
+    add_general("NUM_CHAN", num_chan);
 
     if (num_chan > MAX_NUM_CHAN) {
-        fprintf(f, "ERROR: max number of supported channels is %d, received %u\n", MAX_NUM_CHAN, num_chan);
-        return;
+        throw std::runtime_error("max number of supported channels is 12, received " + std::to_string(num_chan) + "\n");
     }
+    number_of_channels = num_chan;
 
     /* channel description and atom description - 24 channels maximum (0-23).
      * the loop being used depends on the struct having no padding and elements in a set order */
     uint32_t p[MAX_NUM_CHAN * REGISTERS_PER_CHAN];
     memcpy(p, &regs.ch0_desc, sizeof p);
-    for (unsigned i = 0; i < num_chan; i++) {
-        if (channel && *channel != i) continue;
 
+    unsigned i;
+    auto add_channel = [this, &i](const char *name, auto value) {
+        channel_data[name].resize(*number_of_channels);
+        channel_data[name][i] = value;
+        if (!data_order_done)
+            channel_data_order.push_back(name);
+    };
+
+    for (i = 0; i < num_chan; i++) {
         uint32_t desc = p[i*REGISTERS_PER_CHAN], adesc = p[i*REGISTERS_PER_CHAN + 1];
-        fprintf(f, "channel %u description and atom description (%02X and %02X):\n",
-            i, (unsigned)ACQ_CORE_CH0_DESC + 8*i, (unsigned)ACQ_CORE_CH0_ATOM_DESC + 8*i);
-        indent = 4;
-        print("INT_WIDTH", (desc & ACQ_CORE_CH0_DESC_INT_WIDTH_MASK) >> ACQ_CORE_CH0_DESC_INT_WIDTH_SHIFT);
-        print("NUM_COALESCE", (desc & ACQ_CORE_CH0_DESC_NUM_COALESCE_MASK) >> ACQ_CORE_CH0_DESC_NUM_COALESCE_SHIFT);
-        print("NUM_ATOMS", (adesc & ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_MASK) >> ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_SHIFT);
-        print("ATOM_WIDTH", (adesc & ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_MASK) >> ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_SHIFT);
+        add_channel("INT_WIDTH", (desc & ACQ_CORE_CH0_DESC_INT_WIDTH_MASK) >> ACQ_CORE_CH0_DESC_INT_WIDTH_SHIFT);
+        add_channel("NUM_COALESCE", (desc & ACQ_CORE_CH0_DESC_NUM_COALESCE_MASK) >> ACQ_CORE_CH0_DESC_NUM_COALESCE_SHIFT);
+        add_channel("NUM_ATOMS", (adesc & ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_MASK) >> ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_SHIFT);
+        add_channel("ATOM_WIDTH", (adesc & ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_MASK) >> ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_SHIFT);
+
+        data_order_done = true;
     }
 }
 

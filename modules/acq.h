@@ -31,7 +31,7 @@ class LnlsBpmAcqCore: public RegisterDecoder {
   public:
     LnlsBpmAcqCore();
     ~LnlsBpmAcqCore();
-    void print(FILE *, bool);
+    void decode();
 };
 
 enum class data_sign {
