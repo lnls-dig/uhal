@@ -58,13 +58,12 @@ class CoreV2: public RegisterDecoder {
 
 class Controller: public RegisterController {
   protected:
-    struct pcie_bars *bars;
-
     virtual void encode_config() = 0;
 
   public:
     Controller(struct pcie_bars *bars, device_match_fn device_match):
-        bars(bars), device_match(device_match)
+        RegisterController(bars),
+        device_match(device_match)
     {
     }
     virtual ~Controller() = default;
@@ -94,10 +93,7 @@ class ControllerV1: public Controller {
     void encode_config();
 
   public:
-    ControllerV1(struct pcie_bars *bars):
-        Controller(bars, device_match_v1)
-    {
-    }
+    ControllerV1(struct pcie_bars *);
 
     void write_params();
 };
@@ -109,7 +105,7 @@ class ControllerV2: public Controller {
     void encode_config();
 
   public:
-    ControllerV2(struct pcie_bars *bars);
+    ControllerV2(struct pcie_bars *);
     ~ControllerV2();
 
     void write_params();

@@ -47,7 +47,6 @@ enum class acq_status {
 typedef std::variant<acq_status, std::vector<uint32_t>, std::vector<int32_t>> acq_result;
 
 class LnlsBpmAcqCoreController: public RegisterController {
-    struct pcie_bars *bars;
     unsigned sample_size, alignment;
     /* current channel variables */
     unsigned channel_atom_width, channel_num_atoms;
