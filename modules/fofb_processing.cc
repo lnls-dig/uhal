@@ -71,7 +71,7 @@ void LnlsFofbProcessing::print(FILE *f, bool verbose)
 }
 
 LnlsFofbProcessingController::LnlsFofbProcessingController(struct pcie_bars *bars):
-    bars(bars),
+    RegisterController(bars),
     regs_storage(new struct wb_fofb_processing_regs),
     regs(*regs_storage),
     ram_bank_values(FOFB_PROCESSING_RAM_BANK_SIZE / sizeof(float))

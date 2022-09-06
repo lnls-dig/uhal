@@ -175,7 +175,7 @@ void LnlsBpmAcqCore::decode()
 }
 
 LnlsBpmAcqCoreController::LnlsBpmAcqCoreController(struct pcie_bars *bars):
-    bars(bars),
+    RegisterController(bars),
     regs_storage(new struct acq_core),
     regs(*regs_storage)
 {

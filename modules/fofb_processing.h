@@ -33,8 +33,6 @@ class LnlsFofbProcessing: public RegisterDecoder {
 
 class LnlsFofbProcessingController: public RegisterController {
   protected:
-    struct pcie_bars *bars;
-
     uint32_t fixed_point;
 
     std::unique_ptr<struct wb_fofb_processing_regs> regs_storage;

@@ -7,6 +7,11 @@
 
 #include "controllers.h"
 
+RegisterController::RegisterController(struct pcie_bars *bars):
+    bars(bars)
+{
+}
+
 void RegisterController::set_devinfo(const struct sdb_device_info &new_devinfo)
 {
     devinfo = new_devinfo;

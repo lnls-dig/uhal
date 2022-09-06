@@ -94,6 +94,11 @@ void CoreV1::print(FILE *f, bool verbose)
     }
 }
 
+ControllerV1::ControllerV1(struct pcie_bars *bars):
+    Controller(bars, device_match_v1)
+{
+}
+
 void ControllerV1::encode_config()
 {
     if (limit_a || limit_b)
