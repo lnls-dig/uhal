@@ -22,8 +22,8 @@
 
 static const unsigned ddr3_payload_size = 32;
 
-LnlsBpmAcqCore::LnlsBpmAcqCore():
-    RegisterDecoder({
+LnlsBpmAcqCore::LnlsBpmAcqCore(struct pcie_bars *bars):
+    RegisterDecoder(bars, {
         I("FSQ_ACQ_NOW", "Acquire data immediately and don't wait for any trigger", PrinterType::boolean, "acquire immediately", "wait on trigger"),
         I("FSM_STATE", "State machine status", PrinterType::custom_function,
             [](FILE *f, bool v, uint32_t value){

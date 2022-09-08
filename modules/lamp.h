@@ -42,7 +42,7 @@ class CoreV1: public RegisterDecoder {
     std::unique_ptr<struct rtmlamp_ohwr_regs> regs;
 
   public:
-    CoreV1();
+    CoreV1(struct pcie_bars *);
     ~CoreV1();
     void print(FILE *, bool);
 };
@@ -51,7 +51,7 @@ class CoreV2: public RegisterDecoder {
     std::unique_ptr<struct wb_rtmlamp_ohwr_regs> regs;
 
   public:
-    CoreV2();
+    CoreV2(struct pcie_bars *);
     ~CoreV2();
     void decode();
 };

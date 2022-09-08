@@ -7,8 +7,14 @@
 
 #include "decoders.h"
 
-RegisterDecoder::RegisterDecoder(std::unordered_map<const char *, Printer> printers):
+RegisterDecoder::RegisterDecoder(struct pcie_bars *bars, std::unordered_map<const char *, Printer> printers):
+    bars(bars),
     printers(printers)
+{
+}
+
+RegisterDecoder::RegisterDecoder(struct pcie_bars *bars):
+    bars(bars)
 {
 }
 
@@ -17,7 +23,7 @@ void RegisterDecoder::set_devinfo(const struct sdb_device_info &new_devinfo)
     devinfo = new_devinfo;
 }
 
-void RegisterDecoder::read(struct pcie_bars *bars)
+void RegisterDecoder::read()
 {
     bar4_read_v(bars, devinfo.start_addr, read_dest, read_size);
 }

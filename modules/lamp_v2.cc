@@ -24,8 +24,8 @@ static constexpr unsigned CHANNEL_DISTANCE = sizeof(channel_registers_v2);
 static constexpr unsigned NUM_CHAN = 12;
 static constexpr unsigned TRIGGER_ENABLE_VERSION = 1;
 
-CoreV2::CoreV2():
-    RegisterDecoder({
+CoreV2::CoreV2(struct pcie_bars *bars):
+    RegisterDecoder(bars, {
         I("AMP_IFLAG_L", "Amplifier Left Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
         I("AMP_TFLAG_L", "Amplifier Left Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),
         I("AMP_IFLAG_R", "Amplifier Right Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
