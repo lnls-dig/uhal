@@ -12,11 +12,13 @@
 #include "printer.h"
 #include "util.h"
 #include "fofb_processing.h"
-#include "hw/wb_fofb_processing_regs.h"
 
+namespace fofb_processing {
+
+#include "hw/wb_fofb_processing_regs.h"
 #define FOFB_PROCESSING_RAM_BANK_SIZE (WB_FOFB_PROCESSING_REGS_RAM_BANK_1 - WB_FOFB_PROCESSING_REGS_RAM_BANK_0)
 
-LnlsFofbProcessing::LnlsFofbProcessing(struct pcie_bars &bars):
+Core::Core(struct pcie_bars &bars):
     RegisterDecoder(bars),
     regs_storage(new struct wb_fofb_processing_regs),
     regs(*regs_storage)
@@ -26,9 +28,9 @@ LnlsFofbProcessing::LnlsFofbProcessing(struct pcie_bars &bars):
 
     device_match = device_match_fofb_processing;
 }
-LnlsFofbProcessing::~LnlsFofbProcessing() = default;
+Core::~Core() = default;
 
-void LnlsFofbProcessing::print(FILE *f, bool verbose)
+void Core::print(FILE *f, bool verbose)
 {
     static const std::unordered_map<const char *, Printer> printers ({
       I("FIXED_POINT_POS", "Position of point in fixed point representation", PrinterType::value),
@@ -71,22 +73,22 @@ void LnlsFofbProcessing::print(FILE *f, bool verbose)
     }
 }
 
-LnlsFofbProcessingController::LnlsFofbProcessingController(struct pcie_bars &bars):
+Controller::Controller(struct pcie_bars &bars):
     RegisterController(bars),
     regs_storage(new struct wb_fofb_processing_regs),
     regs(*regs_storage),
     ram_bank_values(FOFB_PROCESSING_RAM_BANK_SIZE / sizeof(float))
 {
 }
-LnlsFofbProcessingController::~LnlsFofbProcessingController() = default;
+Controller::~Controller() = default;
 
-void LnlsFofbProcessingController::get_internal_values()
+void Controller::get_internal_values()
 {
     bar4_read_v(&bars, addr, &regs, sizeof regs);
     fixed_point = extract_value<uint32_t>(regs.fixed_point_pos, WB_FOFB_PROCESSING_REGS_FIXED_POINT_POS_VAL_MASK);
 }
 
-void LnlsFofbProcessingController::encode_config()
+void Controller::encode_config()
 {
     get_internal_values();
 
@@ -113,9 +115,11 @@ void LnlsFofbProcessingController::encode_config()
     }
 }
 
-void LnlsFofbProcessingController::write_params()
+void Controller::write_params()
 {
     encode_config();
 
     bar4_write_v(&bars, addr, &regs, sizeof regs);
 }
+
+} /* namespace fofb_processing */

@@ -14,24 +14,27 @@
 #include "controllers.h"
 #include "decoders.h"
 
-#define FOFB_PROCESSING_DEVID 0x49681ca6
+namespace fofb_processing {
+
+constexpr unsigned FOFB_PROCESSING_DEVID = 0x49681ca6;
+
 inline const device_match_fn device_match_fofb_processing =
     device_match_impl<LNLS_VENDORID, FOFB_PROCESSING_DEVID, 1>;
 
 /* forward declaration */
 struct wb_fofb_processing_regs;
 
-class LnlsFofbProcessing: public RegisterDecoder {
+class Core: public RegisterDecoder {
     std::unique_ptr<struct wb_fofb_processing_regs> regs_storage;
     struct wb_fofb_processing_regs &regs;
 
   public:
-    LnlsFofbProcessing(struct pcie_bars &);
-    ~LnlsFofbProcessing();
+    Core(struct pcie_bars &);
+    ~Core();
     void print(FILE *, bool);
 };
 
-class LnlsFofbProcessingController: public RegisterController {
+class Controller: public RegisterController {
   protected:
     uint32_t fixed_point;
 
@@ -42,8 +45,8 @@ class LnlsFofbProcessingController: public RegisterController {
     void encode_config();
 
   public:
-    LnlsFofbProcessingController(struct pcie_bars &);
-    ~LnlsFofbProcessingController();
+    Controller(struct pcie_bars &);
+    ~Controller();
 
     static inline const device_match_fn device_match = device_match_fofb_processing;
 
@@ -52,5 +55,7 @@ class LnlsFofbProcessingController: public RegisterController {
 
     void write_params();
 };
+
+} /* namespace fofb_processing */
 
 #endif
