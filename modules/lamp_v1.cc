@@ -22,7 +22,7 @@ static constexpr unsigned REGISTERS_PER_CHAN = 6;
 static constexpr unsigned CHANNEL_DISTANCE = 4 * REGISTERS_PER_CHAN;
 static constexpr unsigned MAX_26BITS = 0x3ffffff;
 
-CoreV1::CoreV1(struct pcie_bars *bars):
+CoreV1::CoreV1(struct pcie_bars &bars):
     RegisterDecoder(bars)
 {
     read_size = sizeof *regs;
@@ -95,7 +95,7 @@ void CoreV1::print(FILE *f, bool verbose)
     }
 }
 
-ControllerV1::ControllerV1(struct pcie_bars *bars):
+ControllerV1::ControllerV1(struct pcie_bars &bars):
     Controller(bars, device_match_v1)
 {
 }
@@ -150,8 +150,8 @@ void ControllerV1::write_params()
 {
     encode_config();
 
-    bar4_write(bars, addr + RTMLAMP_OHWR_REGS_CTL, ctl);
-    bar4_write_v(bars, addr + RTMLAMP_OHWR_REGS_CH_0_STA + channel * CHANNEL_DISTANCE, &channel_regs, sizeof channel_regs);
+    bar4_write(&bars, addr + RTMLAMP_OHWR_REGS_CTL, ctl);
+    bar4_write_v(&bars, addr + RTMLAMP_OHWR_REGS_CH_0_STA + channel * CHANNEL_DISTANCE, &channel_regs, sizeof channel_regs);
 }
 
 }

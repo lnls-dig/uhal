@@ -24,7 +24,7 @@ static constexpr unsigned CHANNEL_DISTANCE = sizeof(channel_registers_v2);
 static constexpr unsigned NUM_CHAN = 12;
 static constexpr unsigned TRIGGER_ENABLE_VERSION = 1;
 
-CoreV2::CoreV2(struct pcie_bars *bars):
+CoreV2::CoreV2(struct pcie_bars &bars):
     RegisterDecoder(bars, {
         I("AMP_IFLAG_L", "Amplifier Left Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
         I("AMP_TFLAG_L", "Amplifier Left Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),
@@ -129,7 +129,7 @@ void CoreV2::decode()
     }
 }
 
-ControllerV2::ControllerV2(struct pcie_bars *bars):
+ControllerV2::ControllerV2(struct pcie_bars &bars):
     Controller(bars, device_match_v2)
 {
     channel_regs = std::make_unique<channel_registers_v2>();
@@ -157,7 +157,7 @@ void ControllerV2::encode_config()
     if (channel > NUM_CHAN-1)
         throw std::runtime_error("there are only 12 channels");
 
-    bar4_read_v(bars, addr + WB_RTMLAMP_OHWR_REGS_CH + channel * CHANNEL_DISTANCE, channel_regs.get(), CHANNEL_DISTANCE);
+    bar4_read_v(&bars, addr + WB_RTMLAMP_OHWR_REGS_CH + channel * CHANNEL_DISTANCE, channel_regs.get(), CHANNEL_DISTANCE);
 
     clear_and_insert(channel_regs->ctl, mode_option, WB_RTMLAMP_OHWR_REGS_CH_CTL_MODE_MASK);
     insert_bit(channel_regs->ctl, amp_enable, WB_RTMLAMP_OHWR_REGS_CH_CTL_AMP_EN);
@@ -185,7 +185,7 @@ void ControllerV2::write_params()
 {
     encode_config();
 
-    bar4_write_v(bars, addr + WB_RTMLAMP_OHWR_REGS_CH + channel * CHANNEL_DISTANCE, channel_regs.get(), CHANNEL_DISTANCE);
+    bar4_write_v(&bars, addr + WB_RTMLAMP_OHWR_REGS_CH + channel * CHANNEL_DISTANCE, channel_regs.get(), CHANNEL_DISTANCE);
 }
 
 }

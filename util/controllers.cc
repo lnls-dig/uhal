@@ -7,7 +7,7 @@
 
 #include "controllers.h"
 
-RegisterController::RegisterController(struct pcie_bars *bars):
+RegisterController::RegisterController(struct pcie_bars &bars):
     bars(bars)
 {
 }

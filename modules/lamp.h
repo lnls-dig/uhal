@@ -42,7 +42,7 @@ class CoreV1: public RegisterDecoder {
     std::unique_ptr<struct rtmlamp_ohwr_regs> regs;
 
   public:
-    CoreV1(struct pcie_bars *);
+    CoreV1(struct pcie_bars &);
     ~CoreV1();
     void print(FILE *, bool);
 };
@@ -51,7 +51,7 @@ class CoreV2: public RegisterDecoder {
     std::unique_ptr<struct wb_rtmlamp_ohwr_regs> regs;
 
   public:
-    CoreV2(struct pcie_bars *);
+    CoreV2(struct pcie_bars &);
     ~CoreV2();
     void decode();
 };
@@ -61,7 +61,7 @@ class Controller: public RegisterController {
     virtual void encode_config() = 0;
 
   public:
-    Controller(struct pcie_bars *bars, device_match_fn device_match):
+    Controller(struct pcie_bars &bars, device_match_fn device_match):
         RegisterController(bars),
         device_match(device_match)
     {
@@ -93,7 +93,7 @@ class ControllerV1: public Controller {
     void encode_config();
 
   public:
-    ControllerV1(struct pcie_bars *);
+    ControllerV1(struct pcie_bars &);
 
     void write_params();
 };
@@ -105,7 +105,7 @@ class ControllerV2: public Controller {
     void encode_config();
 
   public:
-    ControllerV2(struct pcie_bars *);
+    ControllerV2(struct pcie_bars &);
     ~ControllerV2();
 
     void write_params();
