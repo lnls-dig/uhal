@@ -64,12 +64,12 @@ class RegisterDecoder {
 
     /* FIXME: compatibility constructor should be removed */
     RegisterDecoder(struct pcie_bars &);
-
-  public:
-    virtual ~RegisterDecoder() {};
-    virtual void read();
     /* FIXME: should be deleted (=0) when possible */
     virtual void decode() {};
+
+  public:
+    virtual ~RegisterDecoder();
+    virtual void read();
     virtual void print(FILE *, bool);
 
     void set_devinfo(const struct sdb_device_info &);

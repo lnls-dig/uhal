@@ -31,10 +31,11 @@ class Core: public RegisterDecoder {
     std::unique_ptr<struct acq_core> regs_storage;
     struct acq_core &regs;
 
+    void decode();
+
   public:
     Core(struct pcie_bars &);
     ~Core();
-    void decode();
 };
 
 enum class data_sign {
