@@ -41,10 +41,11 @@ typedef struct channel_registers_v2_impl channel_registers_v2;
 class CoreV1: public RegisterDecoder {
     std::unique_ptr<struct rtmlamp_ohwr_regs> regs;
 
+    void decode();
+
   public:
     CoreV1(struct pcie_bars &);
     ~CoreV1();
-    void print(FILE *, bool);
 };
 
 class CoreV2: public RegisterDecoder {
