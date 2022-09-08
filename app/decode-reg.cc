@@ -8,6 +8,7 @@
 #include <inttypes.h>
 
 #include <algorithm>
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -23,6 +24,8 @@
 #include "acq.h"
 #include "fofb_processing.h"
 #include "lamp.h"
+
+using namespace std::chrono_literals;
 
 static void try_unsigned(unsigned &dest, const argparse::ArgumentParser &args, const char *flag)
 {
@@ -52,6 +55,8 @@ int main(int argc, char *argv[])
     decode_args.add_parents(parent_args);
     decode_args.add_argument("-q").help("type of registers").required();
     decode_args.add_argument("-c").help("channel number").scan<'u', unsigned>();
+    decode_args.add_argument("-w").help("watch registers").default_value(false).implicit_value(true);
+    decode_args.add_argument("-t").help("time register reading").default_value(false).implicit_value(true);
 
     argparse::ArgumentParser acq_args("decode-reg acq", "1.0", argparse::default_arguments::help);
     acq_args.add_parents(parent_args);
@@ -151,8 +156,26 @@ int main(int argc, char *argv[])
                 fprintf(stdout, "Found device in %08jx\n", (uintmax_t)d->start_addr);
             }
             dec->set_devinfo(*d);
-            dec->read();
-            dec->print(stdout, verbose);
+
+            bool watch = args.is_used("-w");
+            bool time_watch = args.is_used("-t");
+            uintmax_t loop_count = 0;
+            auto ti = std::chrono::high_resolution_clock::now();
+            do {
+                if (watch) {
+                    fprintf(stderr, "read #%ju\n", loop_count++);
+                    if (time_watch && loop_count % 1000 == 999) {
+                        auto tf = std::chrono::high_resolution_clock::now();
+                        auto d = tf - ti;
+                        ti = tf;
+                        uintmax_t dv = d / 1ms;
+                        fprintf(stderr, "1k iterations took %ju ms\n", dv);
+                    }
+                }
+
+                dec->read();
+                dec->print(stdout, verbose);
+            } while (watch);
         }
     }
     if (mode == "acq") {
