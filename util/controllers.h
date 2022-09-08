@@ -12,11 +12,11 @@
 
 class RegisterController {
   protected:
-    struct pcie_bars *bars;
+    struct pcie_bars &bars;
     struct sdb_device_info devinfo;
     size_t addr;
 
-    RegisterController(struct pcie_bars *bars);
+    RegisterController(struct pcie_bars &bars);
 
   public:
     void set_devinfo(const struct sdb_device_info &);

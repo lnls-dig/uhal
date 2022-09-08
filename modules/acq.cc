@@ -22,7 +22,7 @@
 
 static const unsigned ddr3_payload_size = 32;
 
-LnlsBpmAcqCore::LnlsBpmAcqCore(struct pcie_bars *bars):
+LnlsBpmAcqCore::LnlsBpmAcqCore(struct pcie_bars &bars):
     RegisterDecoder(bars, {
         I("FSQ_ACQ_NOW", "Acquire data immediately and don't wait for any trigger", PrinterType::boolean, "acquire immediately", "wait on trigger"),
         I("FSM_STATE", "State machine status", PrinterType::custom_function,
@@ -174,7 +174,7 @@ void LnlsBpmAcqCore::decode()
     }
 }
 
-LnlsBpmAcqCoreController::LnlsBpmAcqCoreController(struct pcie_bars *bars):
+LnlsBpmAcqCoreController::LnlsBpmAcqCoreController(struct pcie_bars &bars):
     RegisterController(bars),
     regs_storage(new struct acq_core),
     regs(*regs_storage)
@@ -184,7 +184,7 @@ LnlsBpmAcqCoreController::~LnlsBpmAcqCoreController() = default;
 
 void LnlsBpmAcqCoreController::get_internal_values()
 {
-    uint32_t channel_desc = bar4_read(bars, addr + ACQ_CORE_CH0_DESC + 8*channel);
+    uint32_t channel_desc = bar4_read(&bars, addr + ACQ_CORE_CH0_DESC + 8*channel);
     uint32_t num_coalesce = (channel_desc & ACQ_CORE_CH0_DESC_NUM_COALESCE_MASK) >> ACQ_CORE_CH0_DESC_NUM_COALESCE_SHIFT;
     uint32_t int_width = (channel_desc & ACQ_CORE_CH0_DESC_INT_WIDTH_MASK) >> ACQ_CORE_CH0_DESC_INT_WIDTH_SHIFT;
 
@@ -195,7 +195,7 @@ void LnlsBpmAcqCoreController::get_internal_values()
 
     alignment = (ddr3_payload_size > sample_size) ? ddr3_payload_size / sample_size : 1;
 
-    uint32_t channel_atom_desc = bar4_read(bars, addr + ACQ_CORE_CH0_ATOM_DESC + 8*channel);
+    uint32_t channel_atom_desc = bar4_read(&bars, addr + ACQ_CORE_CH0_ATOM_DESC + 8*channel);
     channel_atom_width = (channel_atom_desc & ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_MASK) >> ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_SHIFT;
     channel_num_atoms = (channel_atom_desc & ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_MASK) >> ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_SHIFT;
 }
@@ -237,14 +237,14 @@ void LnlsBpmAcqCoreController::write_config()
     encode_config();
 
     /* FIXME: before writing we should make sure nothing is currently running */
-    bar4_write_v(bars, addr, &regs, sizeof regs);
+    bar4_write_v(&bars, addr, &regs, sizeof regs);
 }
 
 void LnlsBpmAcqCoreController::start_acquisition()
 {
-    /* FIXME: hardcoded memory size */ bar4_write(bars, addr + ACQ_CORE_DDR3_END_ADDR, 0x0FFFFFE0);
+    /* FIXME: hardcoded memory size */ bar4_write(&bars, addr + ACQ_CORE_DDR3_END_ADDR, 0x0FFFFFE0);
     insert_bit(regs.ctl, true, ACQ_CORE_CTL_FSM_START_ACQ);
-    bar4_write(bars, addr + ACQ_CORE_CTL, regs.ctl);
+    bar4_write(&bars, addr + ACQ_CORE_CTL, regs.ctl);
 }
 
 #define ACQ_CORE_STA_FSM_IDLE (1 << ACQ_CORE_STA_FSM_STATE_SHIFT)
@@ -253,7 +253,7 @@ void LnlsBpmAcqCoreController::start_acquisition()
 
 bool LnlsBpmAcqCoreController::acquisition_ready()
 {
-    regs.sta = bar4_read(bars, addr + ACQ_CORE_STA);
+    regs.sta = bar4_read(&bars, addr + ACQ_CORE_STA);
     return (regs.sta & COMPLETE_MASK) == COMPLETE_VALUE;
 }
 
@@ -268,7 +268,7 @@ std::vector<uint32_t> LnlsBpmAcqCoreController::result_unsigned()
     /* total number of elements (samples*atoms) */
     size_t elements = (pre_samples + post_samples) * channel_num_atoms;
 
-    size_t trigger_pos = bar4_read(bars, addr + ACQ_CORE_TRIG_POS);
+    size_t trigger_pos = bar4_read(&bars, addr + ACQ_CORE_TRIG_POS);
 
     /* how we interpret the contents of FPGA memory depends on atom width */
     void *data_pointer;
@@ -299,7 +299,7 @@ std::vector<uint32_t> LnlsBpmAcqCoreController::result_unsigned()
     if (total_bytes != (pre_samples + post_samples) * sample_size)
         throw std::runtime_error("elements * data_size different from samples * sample_size");
 
-    bar2_read_v(bars, initial_pos, data_pointer, total_bytes);
+    bar2_read_v(&bars, initial_pos, data_pointer, total_bytes);
 
     /* stuff values back into result, if necessary - no effect if vectors are empty.
      * the reserve() call should also have no effect if resize() was called above.

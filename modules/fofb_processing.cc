@@ -16,7 +16,7 @@
 
 #define FOFB_PROCESSING_RAM_BANK_SIZE (WB_FOFB_PROCESSING_REGS_RAM_BANK_1 - WB_FOFB_PROCESSING_REGS_RAM_BANK_0)
 
-LnlsFofbProcessing::LnlsFofbProcessing(struct pcie_bars *bars):
+LnlsFofbProcessing::LnlsFofbProcessing(struct pcie_bars &bars):
     RegisterDecoder(bars),
     regs_storage(new struct wb_fofb_processing_regs),
     regs(*regs_storage)
@@ -71,7 +71,7 @@ void LnlsFofbProcessing::print(FILE *f, bool verbose)
     }
 }
 
-LnlsFofbProcessingController::LnlsFofbProcessingController(struct pcie_bars *bars):
+LnlsFofbProcessingController::LnlsFofbProcessingController(struct pcie_bars &bars):
     RegisterController(bars),
     regs_storage(new struct wb_fofb_processing_regs),
     regs(*regs_storage),
@@ -82,7 +82,7 @@ LnlsFofbProcessingController::~LnlsFofbProcessingController() = default;
 
 void LnlsFofbProcessingController::get_internal_values()
 {
-    bar4_read_v(bars, addr, &regs, sizeof regs);
+    bar4_read_v(&bars, addr, &regs, sizeof regs);
     fixed_point = extract_value<uint32_t>(regs.fixed_point_pos, WB_FOFB_PROCESSING_REGS_FIXED_POINT_POS_VAL_MASK);
 }
 
@@ -117,5 +117,5 @@ void LnlsFofbProcessingController::write_params()
 {
     encode_config();
 
-    bar4_write_v(bars, addr, &regs, sizeof regs);
+    bar4_write_v(&bars, addr, &regs, sizeof regs);
 }

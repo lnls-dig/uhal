@@ -26,7 +26,7 @@ class LnlsFofbProcessing: public RegisterDecoder {
     struct wb_fofb_processing_regs &regs;
 
   public:
-    LnlsFofbProcessing(struct pcie_bars *);
+    LnlsFofbProcessing(struct pcie_bars &);
     ~LnlsFofbProcessing();
     void print(FILE *, bool);
 };
@@ -42,7 +42,7 @@ class LnlsFofbProcessingController: public RegisterController {
     void encode_config();
 
   public:
-    LnlsFofbProcessingController(struct pcie_bars *);
+    LnlsFofbProcessingController(struct pcie_bars &);
     ~LnlsFofbProcessingController();
 
     static inline const device_match_fn device_match = device_match_fofb_processing;

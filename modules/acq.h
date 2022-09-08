@@ -29,7 +29,7 @@ class LnlsBpmAcqCore: public RegisterDecoder {
     struct acq_core &regs;
 
   public:
-    LnlsBpmAcqCore(struct pcie_bars *);
+    LnlsBpmAcqCore(struct pcie_bars &);
     ~LnlsBpmAcqCore();
     void decode();
 };
@@ -72,7 +72,7 @@ class LnlsBpmAcqCoreController: public RegisterController {
     } m_step = acq_step::acq_stop;
 
   public:
-    LnlsBpmAcqCoreController(struct pcie_bars *);
+    LnlsBpmAcqCoreController(struct pcie_bars &);
     ~LnlsBpmAcqCoreController();
 
     static inline const device_match_fn device_match = device_match_acq;
