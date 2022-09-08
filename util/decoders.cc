@@ -44,10 +44,9 @@ void RegisterDecoder::print(FILE *f, bool verbose)
 
     if (number_of_channels) for (unsigned i = 0; i < *number_of_channels; i++) {
         if (channel && *channel != i) {
-            i++;
             continue;
         }
-        fprintf(f, "channel %u:\n", i++);
+        fprintf(f, "channel %u:\n", i);
         indent = 4;
 
         for (const auto name: channel_data_order) {
