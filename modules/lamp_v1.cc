@@ -154,4 +154,4 @@ void ControllerV1::write_params()
     bar4_write_v(&bars, addr + RTMLAMP_OHWR_REGS_CH_0_STA + channel * CHANNEL_DISTANCE, &channel_regs, sizeof channel_regs);
 }
 
-}
+} /* namespace lamp */

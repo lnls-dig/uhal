@@ -111,6 +111,6 @@ class ControllerV2: public Controller {
     void write_params();
 };
 
-}
+} /* namespace lamp */
 
 #endif

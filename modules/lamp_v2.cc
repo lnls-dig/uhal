@@ -188,4 +188,4 @@ void ControllerV2::write_params()
     bar4_write_v(&bars, addr + WB_RTMLAMP_OHWR_REGS_CH + channel * CHANNEL_DISTANCE, channel_regs.get(), CHANNEL_DISTANCE);
 }
 
-}
+} /* namespace lamp */
