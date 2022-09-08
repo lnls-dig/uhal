@@ -26,7 +26,7 @@ class LnlsFofbProcessing: public RegisterDecoder {
     struct wb_fofb_processing_regs &regs;
 
   public:
-    LnlsFofbProcessing();
+    LnlsFofbProcessing(struct pcie_bars *);
     ~LnlsFofbProcessing();
     void print(FILE *, bool);
 };

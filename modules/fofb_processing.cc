@@ -16,7 +16,8 @@
 
 #define FOFB_PROCESSING_RAM_BANK_SIZE (WB_FOFB_PROCESSING_REGS_RAM_BANK_1 - WB_FOFB_PROCESSING_REGS_RAM_BANK_0)
 
-LnlsFofbProcessing::LnlsFofbProcessing():
+LnlsFofbProcessing::LnlsFofbProcessing(struct pcie_bars *bars):
+    RegisterDecoder(bars),
     regs_storage(new struct wb_fofb_processing_regs),
     regs(*regs_storage)
 {

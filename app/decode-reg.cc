@@ -129,16 +129,16 @@ int main(int argc, char *argv[])
         auto type = args.get<std::string>("-q");
         std::unique_ptr<RegisterDecoder> dec;
         if (type == "acq") {
-            dec = std::make_unique<LnlsBpmAcqCore>();
+            dec = std::make_unique<LnlsBpmAcqCore>(&bars);
         } else if (type == "lamp") {
-            dec = std::make_unique<lamp::CoreV1>();
+            dec = std::make_unique<lamp::CoreV1>(&bars);
             /* if v1 can't be found, try v2;
              * assumes only one version of the device will be available */
             if (!read_sdb(&bars, dec->device_match, dev_index)) {
-                dec = std::make_unique<lamp::CoreV2>();
+                dec = std::make_unique<lamp::CoreV2>(&bars);
             }
         } else if (type == "fofb_processing") {
-            dec = std::make_unique<LnlsFofbProcessing>();
+            dec = std::make_unique<LnlsFofbProcessing>(&bars);
         } else {
             fprintf(stderr, "Unknown type: '%s'\n", type.c_str());
             return 1;
@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
                 fprintf(stdout, "Found device in %08jx\n", (uintmax_t)d->start_addr);
             }
             dec->set_devinfo(*d);
-            dec->read(&bars);
+            dec->read();
             dec->print(stdout, verbose);
         }
     }

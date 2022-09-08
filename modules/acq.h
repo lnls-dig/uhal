@@ -29,7 +29,7 @@ class LnlsBpmAcqCore: public RegisterDecoder {
     struct acq_core &regs;
 
   public:
-    LnlsBpmAcqCore();
+    LnlsBpmAcqCore(struct pcie_bars *);
     ~LnlsBpmAcqCore();
     void decode();
 };

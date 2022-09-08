@@ -22,7 +22,8 @@ static constexpr unsigned REGISTERS_PER_CHAN = 6;
 static constexpr unsigned CHANNEL_DISTANCE = 4 * REGISTERS_PER_CHAN;
 static constexpr unsigned MAX_26BITS = 0x3ffffff;
 
-CoreV1::CoreV1()
+CoreV1::CoreV1(struct pcie_bars *bars):
+    RegisterDecoder(bars)
 {
     read_size = sizeof *regs;
     regs = std::make_unique<struct rtmlamp_ohwr_regs>();
