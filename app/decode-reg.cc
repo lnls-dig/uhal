@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
         auto type = args.get<std::string>("-q");
         std::unique_ptr<RegisterDecoder> dec;
         if (type == "acq") {
-            dec = std::make_unique<LnlsBpmAcqCore>(bars);
+            dec = std::make_unique<acq::Core>(bars);
         } else if (type == "lamp") {
             dec = std::make_unique<lamp::CoreV1>(bars);
             /* if v1 can't be found, try v2;
@@ -179,7 +179,7 @@ int main(int argc, char *argv[])
         }
     }
     if (mode == "acq") {
-        LnlsBpmAcqCoreController ctl{bars};
+        acq::Controller ctl{bars};
         if (auto v = read_sdb(&bars, ctl.device_match, dev_index)) {
             ctl.set_devinfo(*v);
         } else {
@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
         try_unsigned(ctl.data_trigger_channel, args, "-C");
         try_unsigned(ctl.trigger_delay, args, "-d");
 
-        auto res = std::get<std::vector<int32_t>>(ctl.result(data_sign::d_signed));
+        auto res = std::get<std::vector<int32_t>>(ctl.result(acq::data_sign::d_signed));
         ctl.print_csv(stdout, res);
     }
     if (mode == "lamp") {
