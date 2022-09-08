@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
                 dec = std::make_unique<lamp::CoreV2>(bars);
             }
         } else if (type == "fofb_processing") {
-            dec = std::make_unique<LnlsFofbProcessing>(bars);
+            dec = std::make_unique<fofb_processing::Core>(bars);
         } else {
             fprintf(stderr, "Unknown type: '%s'\n", type.c_str());
             return 1;
@@ -233,9 +233,9 @@ int main(int argc, char *argv[])
         ctl.write_params();
     }
     if (mode == "fofb_processing") {
-        LnlsFofbProcessingController ctl{bars};
+        fofb_processing::Controller ctl{bars};
 
-        if (auto v = read_sdb(&bars, LnlsFofbProcessingController::device_match, dev_index)) {
+        if (auto v = read_sdb(&bars, fofb_processing::Controller::device_match, dev_index)) {
             ctl.set_devinfo(*v);
         } else {
             fprintf(stderr, "Couldn't find fofb_processing module index %u\n", dev_index);
