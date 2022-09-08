@@ -15,6 +15,9 @@
 #include "printer.h"
 #include "util.h"
 #include "acq.h"
+
+namespace acq {
+
 #include "hw/wb_acq_core_regs.h"
 
 #define MAX_NUM_CHAN 24
@@ -22,7 +25,7 @@
 
 static const unsigned ddr3_payload_size = 32;
 
-LnlsBpmAcqCore::LnlsBpmAcqCore(struct pcie_bars &bars):
+Core::Core(struct pcie_bars &bars):
     RegisterDecoder(bars, {
         I("FSQ_ACQ_NOW", "Acquire data immediately and don't wait for any trigger", PrinterType::boolean, "acquire immediately", "wait on trigger"),
         I("FSM_STATE", "State machine status", PrinterType::custom_function,
@@ -78,9 +81,9 @@ LnlsBpmAcqCore::LnlsBpmAcqCore(struct pcie_bars &bars):
 
     device_match = device_match_acq;
 }
-LnlsBpmAcqCore::~LnlsBpmAcqCore() = default;
+Core::~Core() = default;
 
-void LnlsBpmAcqCore::decode()
+void Core::decode()
 {
     uint32_t t;
 
@@ -174,15 +177,15 @@ void LnlsBpmAcqCore::decode()
     }
 }
 
-LnlsBpmAcqCoreController::LnlsBpmAcqCoreController(struct pcie_bars &bars):
+Controller::Controller(struct pcie_bars &bars):
     RegisterController(bars),
     regs_storage(new struct acq_core),
     regs(*regs_storage)
 {
 }
-LnlsBpmAcqCoreController::~LnlsBpmAcqCoreController() = default;
+Controller::~Controller() = default;
 
-void LnlsBpmAcqCoreController::get_internal_values()
+void Controller::get_internal_values()
 {
     uint32_t channel_desc = bar4_read(&bars, addr + ACQ_CORE_CH0_DESC + 8*channel);
     uint32_t num_coalesce = (channel_desc & ACQ_CORE_CH0_DESC_NUM_COALESCE_MASK) >> ACQ_CORE_CH0_DESC_NUM_COALESCE_SHIFT;
@@ -200,7 +203,7 @@ void LnlsBpmAcqCoreController::get_internal_values()
     channel_num_atoms = (channel_atom_desc & ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_MASK) >> ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_SHIFT;
 }
 
-void LnlsBpmAcqCoreController::encode_config()
+void Controller::encode_config()
 {
     get_internal_values();
 
@@ -232,7 +235,7 @@ void LnlsBpmAcqCoreController::encode_config()
     regs.trig_dly = trigger_delay;
 }
 
-void LnlsBpmAcqCoreController::write_config()
+void Controller::write_config()
 {
     encode_config();
 
@@ -240,7 +243,7 @@ void LnlsBpmAcqCoreController::write_config()
     bar4_write_v(&bars, addr, &regs, sizeof regs);
 }
 
-void LnlsBpmAcqCoreController::start_acquisition()
+void Controller::start_acquisition()
 {
     /* FIXME: hardcoded memory size */ bar4_write(&bars, addr + ACQ_CORE_DDR3_END_ADDR, 0x0FFFFFE0);
     insert_bit(regs.ctl, true, ACQ_CORE_CTL_FSM_START_ACQ);
@@ -251,13 +254,13 @@ void LnlsBpmAcqCoreController::start_acquisition()
 #define COMPLETE_MASK  (ACQ_CORE_STA_FSM_STATE_MASK | ACQ_CORE_STA_FSM_ACQ_DONE | ACQ_CORE_STA_FC_TRANS_DONE | ACQ_CORE_STA_DDR3_TRANS_DONE)
 #define COMPLETE_VALUE (ACQ_CORE_STA_FSM_IDLE       | ACQ_CORE_STA_FSM_ACQ_DONE | ACQ_CORE_STA_FC_TRANS_DONE | ACQ_CORE_STA_DDR3_TRANS_DONE)
 
-bool LnlsBpmAcqCoreController::acquisition_ready()
+bool Controller::acquisition_ready()
 {
     regs.sta = bar4_read(&bars, addr + ACQ_CORE_STA);
     return (regs.sta & COMPLETE_MASK) == COMPLETE_VALUE;
 }
 
-std::vector<uint32_t> LnlsBpmAcqCoreController::result_unsigned()
+std::vector<uint32_t> Controller::result_unsigned()
 {
     /* intermediate vectors for smaller atoms */
     std::vector<uint8_t> v8;
@@ -311,7 +314,7 @@ std::vector<uint32_t> LnlsBpmAcqCoreController::result_unsigned()
     return result;
 }
 
-std::vector<int32_t> LnlsBpmAcqCoreController::convert_to_signed(std::vector<uint32_t> unsigned_result)
+std::vector<int32_t> Controller::convert_to_signed(std::vector<uint32_t> unsigned_result)
 {
     std::vector<int32_t> result;
     result.reserve(unsigned_result.size());
@@ -323,7 +326,7 @@ std::vector<int32_t> LnlsBpmAcqCoreController::convert_to_signed(std::vector<uin
     return result;
 }
 
-acq_result LnlsBpmAcqCoreController::m_result(data_sign sign, bool is_timed, std::chrono::milliseconds wait_time)
+acq_result Controller::m_result(data_sign sign, bool is_timed, std::chrono::milliseconds wait_time)
 {
     std::chrono::steady_clock::time_point start_time;
     if (is_timed) start_time = std::chrono::steady_clock::now();
@@ -341,17 +344,17 @@ acq_result LnlsBpmAcqCoreController::m_result(data_sign sign, bool is_timed, std
     return r;
 }
 
-acq_result LnlsBpmAcqCoreController::result(data_sign sign, std::chrono::milliseconds wait_time)
+acq_result Controller::result(data_sign sign, std::chrono::milliseconds wait_time)
 {
     return m_result(sign, true, wait_time);
 }
 
-acq_result LnlsBpmAcqCoreController::result(data_sign sign)
+acq_result Controller::result(data_sign sign)
 {
     return m_result(sign, false);
 }
 
-acq_result LnlsBpmAcqCoreController::result_async(data_sign sign)
+acq_result Controller::result_async(data_sign sign)
 {
     if (m_step == acq_step::acq_stop) {
         write_config();
@@ -379,7 +382,7 @@ acq_result LnlsBpmAcqCoreController::result_async(data_sign sign)
 }
 
 template<typename T>
-void LnlsBpmAcqCoreController::print_csv(FILE *f, std::vector<T> &res)
+void Controller::print_csv(FILE *f, std::vector<T> &res)
 {
     for (unsigned i = 0; i < (pre_samples + post_samples); i++) {
         for (unsigned j = 0; j < channel_num_atoms; j++) {
@@ -392,5 +395,7 @@ void LnlsBpmAcqCoreController::print_csv(FILE *f, std::vector<T> &res)
         fputc('\n', f);
     }
 }
-template void LnlsBpmAcqCoreController::print_csv<int32_t>(FILE *, std::vector<int32_t> &);
-template void LnlsBpmAcqCoreController::print_csv<uint32_t>(FILE *, std::vector<uint32_t> &);
+template void Controller::print_csv<int32_t>(FILE *, std::vector<int32_t> &);
+template void Controller::print_csv<uint32_t>(FILE *, std::vector<uint32_t> &);
+
+} /* namespace acq */

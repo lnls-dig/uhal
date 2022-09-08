@@ -17,20 +17,23 @@
 #include "controllers.h"
 #include "decoders.h"
 
-#define ACQ_DEVID 0x4519a0ad
+namespace acq {
+
+constexpr unsigned ACQ_DEVID = 0x4519a0ad;
+
 inline const device_match_fn device_match_acq =
     device_match_impl<LNLS_VENDORID, ACQ_DEVID, 2>;
 
 /* forward declaration */
 struct acq_core;
 
-class LnlsBpmAcqCore: public RegisterDecoder {
+class Core: public RegisterDecoder {
     std::unique_ptr<struct acq_core> regs_storage;
     struct acq_core &regs;
 
   public:
-    LnlsBpmAcqCore(struct pcie_bars &);
-    ~LnlsBpmAcqCore();
+    Core(struct pcie_bars &);
+    ~Core();
     void decode();
 };
 
@@ -46,7 +49,7 @@ enum class acq_status {
 };
 typedef std::variant<acq_status, std::vector<uint32_t>, std::vector<int32_t>> acq_result;
 
-class LnlsBpmAcqCoreController: public RegisterController {
+class Controller: public RegisterController {
     unsigned sample_size, alignment;
     /* current channel variables */
     unsigned channel_atom_width, channel_num_atoms;
@@ -72,8 +75,8 @@ class LnlsBpmAcqCoreController: public RegisterController {
     } m_step = acq_step::acq_stop;
 
   public:
-    LnlsBpmAcqCoreController(struct pcie_bars &);
-    ~LnlsBpmAcqCoreController();
+    Controller(struct pcie_bars &);
+    ~Controller();
 
     static inline const device_match_fn device_match = device_match_acq;
 
@@ -99,5 +102,7 @@ class LnlsBpmAcqCoreController: public RegisterController {
     template<typename T>
     void print_csv(FILE *f, std::vector<T> &res);
 };
+
+} /* namespace acq */
 
 #endif
