@@ -50,10 +50,11 @@ class CoreV1: public RegisterDecoder {
 class CoreV2: public RegisterDecoder {
     std::unique_ptr<struct wb_rtmlamp_ohwr_regs> regs;
 
+    void decode();
+
   public:
     CoreV2(struct pcie_bars &);
     ~CoreV2();
-    void decode();
 };
 
 class Controller: public RegisterController {

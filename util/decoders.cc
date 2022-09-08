@@ -18,6 +18,8 @@ RegisterDecoder::RegisterDecoder(struct pcie_bars &bars):
 {
 }
 
+RegisterDecoder::~RegisterDecoder() = default;
+
 void RegisterDecoder::set_devinfo(const struct sdb_device_info &new_devinfo)
 {
     devinfo = new_devinfo;
@@ -26,12 +28,12 @@ void RegisterDecoder::set_devinfo(const struct sdb_device_info &new_devinfo)
 void RegisterDecoder::read()
 {
     bar4_read_v(&bars, devinfo.start_addr, read_dest, read_size);
+
+    decode();
 }
 
 void RegisterDecoder::print(FILE *f, bool verbose)
 {
-    decode();
-
     unsigned indent = 0;
 
     auto print = [this, f, verbose, &indent](const char *name, auto value) {
