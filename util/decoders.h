@@ -61,11 +61,7 @@ class RegisterDecoder {
     std::unordered_map<const char *, Printer> printers;
 
     RegisterDecoder(struct pcie_bars &, std::unordered_map<const char *, Printer>);
-
-    /* FIXME: compatibility constructor should be removed */
-    RegisterDecoder(struct pcie_bars &);
-    /* FIXME: should be deleted (=0) when possible */
-    virtual void decode() {};
+    virtual void decode() = 0;
 
   public:
     virtual ~RegisterDecoder();

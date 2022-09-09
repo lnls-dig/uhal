@@ -12,12 +12,6 @@ RegisterDecoder::RegisterDecoder(struct pcie_bars &bars, std::unordered_map<cons
     printers(printers)
 {
 }
-
-RegisterDecoder::RegisterDecoder(struct pcie_bars &bars):
-    bars(bars)
-{
-}
-
 RegisterDecoder::~RegisterDecoder() = default;
 
 void RegisterDecoder::set_devinfo(const struct sdb_device_info &new_devinfo)
