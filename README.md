@@ -1,20 +1,30 @@
-# decode-reg
+# μHAL
 
-This program performs high level operations with our PCI devices, without the
-need for underlying daemons or anything of the sort.
+This project implements a Hardware Abstraction Layer (HAL) for LNLS's FPGA
+devices, which use the PCIe bus and conform to the MicroTCA (μTCA) standard. No
+daemons or kernel drivers are necessary.
+
+Along with the main library, we have the `decode-reg` utility, which can read
+and write into hardware registers -- with proper encoding and decoding --
+enabling inspection and debugging of devices as well as directly controlling
+them.
 
 ## How to build
 
-Use Make (`make`) or Meson (`meson build; ninja -C build`). Export
-`LDFLAGS=-static` to create a static binary that can be exported to other
-machines. This is extra relevant because the utility uses C++17 features, which
-might not be available with the installed compiler/runtime on an older
-platform.
+This projects uses the Meson build system. The build steps are simple:
+
+```
+$ meson build
+$ ninja -C build
+```
+
+You can export `LDFLAGS=-static` to the `meson` command to create a static
+binary that can be exported to other machines. This is relevant because we use
+many C++17 features, which might not be available with the installed
+compiler/runtime on an older platform.
 
 ## How to use
 
-Run `decode-reg` with the `-h` option to see the available arguments. Due to
-bugs in argument parsing, provide flags and arguments in the order shown in the
-help output. No special flags, and the utility reads ACQ registers. With `-r`,
-it performs an acquisition using the ACQ core, and with `-x`, it writes
-configuration parameters into the LAMP registers.
+Run `decode-reg` without any arguments to see the available operation modes.
+With the operation mode selected, the `-h` flag can be used to view all the
+available options.
