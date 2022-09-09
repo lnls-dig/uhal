@@ -14,6 +14,21 @@ RegisterDecoder::RegisterDecoder(struct pcie_bars &bars, std::unordered_map<cons
 }
 RegisterDecoder::~RegisterDecoder() = default;
 
+void RegisterDecoder::add_general(const char *name, int32_t value, bool skip)
+{
+    general_data[name] = value;
+    if (!data_order_done && !skip)
+        general_data_order.push_back(name);
+}
+
+void RegisterDecoder::add_channel_impl(const char *name, unsigned pos, int32_t value, bool skip)
+{
+    /* using .at() to explicitly catch out of bounds access */
+    channel_data[name].at(pos) = value;
+    if (!data_order_done && !skip)
+        channel_data_order.push_back(name);
+}
+
 void RegisterDecoder::set_devinfo(const struct sdb_device_info &new_devinfo)
 {
     devinfo = new_devinfo;

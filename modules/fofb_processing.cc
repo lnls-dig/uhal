@@ -36,12 +36,6 @@ Core::~Core() = default;
 
 void Core::decode()
 {
-    auto add_general = [this](const char *name, auto value) {
-        general_data[name] = value;
-        if (!data_order_done)
-            general_data_order.push_back(name);
-    };
-
     fixed_point = extract_value<uint32_t>(regs.fixed_point_pos, WB_FOFB_PROCESSING_REGS_FIXED_POINT_POS_VAL_MASK);
     add_general("FIXED_POINT_POS", fixed_point);
 

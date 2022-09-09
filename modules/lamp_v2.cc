@@ -84,9 +84,7 @@ void CoreV2::decode()
     unsigned i = 0;
     auto add_channel = [this, &i](const char *name, auto value, bool skip=false) {
         channel_data[name].resize(*number_of_channels);
-        channel_data[name][i] = value;
-        if (!data_order_done && !skip)
-            channel_data_order.push_back(name);
+        add_channel_impl(name, i, value, skip);
     };
 
     for (const auto &channel_regs: regs->ch) {

@@ -56,21 +56,13 @@ void CoreV1::decode()
 
     number_of_channels = MAX_NUM_CHAN;
 
-    auto add_general = [this](const char *name, auto value) {
-        general_data[name] = value;
-        if (!data_order_done)
-            general_data_order.push_back(name);
-    };
-
     t = regs->ctl;
     add_general("DAC_DATA_FROM_WB", t & RTMLAMP_OHWR_REGS_CTL_DAC_DATA_FROM_WB);
 
     unsigned i;
     auto add_channel = [this, &i](const char *name, auto value) {
         channel_data[name].resize(*number_of_channels);
-        channel_data[name][i] = value;
-        if (!data_order_done)
-            channel_data_order.push_back(name);
+        add_channel_impl(name, i, value);
     };
 
     uint32_t p[MAX_NUM_CHAN * REGISTERS_PER_CHAN];

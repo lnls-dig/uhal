@@ -63,6 +63,9 @@ class RegisterDecoder {
     RegisterDecoder(struct pcie_bars &, std::unordered_map<const char *, Printer>);
     virtual void decode() = 0;
 
+    void add_general(const char *, int32_t, bool = false);
+    void add_channel_impl(const char *, unsigned, int32_t, bool = false);
+
   public:
     virtual ~RegisterDecoder();
     virtual void read();

@@ -87,12 +87,6 @@ void Core::decode()
 {
     uint32_t t;
 
-    auto add_general = [this](const char *name, auto value) {
-        general_data[name] = value;
-        if (!data_order_done)
-            general_data_order.push_back(name);
-    };
-
     /* control register */
     t = regs.ctl;
     add_general("FSQ_ACQ_NOW", t & ACQ_CORE_CTL_FSM_ACQ_NOW);
@@ -161,9 +155,7 @@ void Core::decode()
     unsigned i;
     auto add_channel = [this, &i](const char *name, auto value) {
         channel_data[name].resize(*number_of_channels);
-        channel_data[name][i] = value;
-        if (!data_order_done)
-            channel_data_order.push_back(name);
+        add_channel_impl(name, i, value);
     };
 
     for (i = 0; i < num_chan; i++) {
