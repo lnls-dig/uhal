@@ -18,8 +18,12 @@ namespace fofb_processing {
 #include "hw/wb_fofb_processing_regs.h"
 #define FOFB_PROCESSING_RAM_BANK_SIZE (WB_FOFB_PROCESSING_REGS_RAM_BANK_1 - WB_FOFB_PROCESSING_REGS_RAM_BANK_0)
 
+static constexpr unsigned MAX_NUM_CHAN = 12;
+
 Core::Core(struct pcie_bars &bars):
-    RegisterDecoder(bars),
+    RegisterDecoder(bars, {
+        I("FIXED_POINT_POS", "Position of point in fixed point representation", PrinterType::value),
+    }),
     regs_storage(new struct wb_fofb_processing_regs),
     regs(*regs_storage)
 {
@@ -30,46 +34,63 @@ Core::Core(struct pcie_bars &bars):
 }
 Core::~Core() = default;
 
-void Core::print(FILE *f, bool verbose)
+void Core::decode()
 {
-    static const std::unordered_map<const char *, Printer> printers ({
-      I("FIXED_POINT_POS", "Position of point in fixed point representation", PrinterType::value),
-    });
-
-    bool v = verbose;
-    unsigned indent = 0;
-    uint32_t fixed_point;
-
-    auto print = [f, v, &indent](const char *name, uint32_t value) {
-        printers.at(name).print(f, v, indent, value);
+    auto add_general = [this](const char *name, auto value) {
+        general_data[name] = value;
+        if (!data_order_done)
+            general_data_order.push_back(name);
     };
 
     fixed_point = extract_value<uint32_t>(regs.fixed_point_pos, WB_FOFB_PROCESSING_REGS_FIXED_POINT_POS_VAL_MASK);
-    print("FIXED_POINT_POS", fixed_point);
+    add_general("FIXED_POINT_POS", fixed_point);
 
-    auto convert_fixed_point = [fixed_point](uint32_t value) -> float {
+    data_order_done = true;
+
+    /* we don't use number_of_channels here,
+     * because there aren't 'normal' per channel variables */
+    coefficients.resize(MAX_NUM_CHAN);
+
+    auto convert_fixed_point = [this](uint32_t value) -> float {
         return (double)(int32_t)value / (1 << fixed_point);
     };
 
-    auto read_bank = [f, &convert_fixed_point](const auto &ram_bank) {
-        for (auto v: ram_bank)
-            fprintf(f, "%f\n", convert_fixed_point(v.data));
+    /* finish conversion */
+    unsigned i;
+    auto add_bank = [this, &i, &convert_fixed_point](const auto &ram_bank) {
+        const size_t elements = sizeof ram_bank/sizeof *ram_bank;
+        coefficients[i].resize(elements);
+
+        size_t u = 0;
+        std::generate(coefficients[i].begin(), coefficients[i].end(),
+            [&](){ return convert_fixed_point(ram_bank[u++].data); });
     };
 
-    if (channel) switch (*channel) {
-        case 0: read_bank(regs.ram_bank_0); return;
-        case 1: read_bank(regs.ram_bank_1); return;
-        case 2: read_bank(regs.ram_bank_2); return;
-        case 3: read_bank(regs.ram_bank_3); return;
-        case 4: read_bank(regs.ram_bank_4); return;
-        case 5: read_bank(regs.ram_bank_5); return;
-        case 6: read_bank(regs.ram_bank_6); return;
-        case 7: read_bank(regs.ram_bank_7); return;
-        case 8: read_bank(regs.ram_bank_8); return;
-        case 9: read_bank(regs.ram_bank_9); return;
-        case 10: read_bank(regs.ram_bank_10); return;
-        case 11: read_bank(regs.ram_bank_11); return;
-        default: throw std::runtime_error("there are only 12 RAM banks");
+    for (i = 0; i < MAX_NUM_CHAN; i++) switch (i) {
+        case 0: add_bank(regs.ram_bank_0); break;
+        case 1: add_bank(regs.ram_bank_1); break;
+        case 2: add_bank(regs.ram_bank_2); break;
+        case 3: add_bank(regs.ram_bank_3); break;
+        case 4: add_bank(regs.ram_bank_4); break;
+        case 5: add_bank(regs.ram_bank_5); break;
+        case 6: add_bank(regs.ram_bank_6); break;
+        case 7: add_bank(regs.ram_bank_7); break;
+        case 8: add_bank(regs.ram_bank_8); break;
+        case 9: add_bank(regs.ram_bank_9); break;
+        case 10: add_bank(regs.ram_bank_10); break;
+        case 11: add_bank(regs.ram_bank_11); break;
+        default: throw std::logic_error("there are only 12 RAM banks");
+    }
+}
+
+void Core::print(FILE *f, bool verbose)
+{
+    const bool v = verbose;
+
+    RegisterDecoder::print(f, v);
+
+    if (channel) for (auto v: coefficients[*channel]) {
+        fprintf(f, "%f\n", v);
     }
 }
 

@@ -28,10 +28,16 @@ class Core: public RegisterDecoder {
     std::unique_ptr<struct wb_fofb_processing_regs> regs_storage;
     struct wb_fofb_processing_regs &regs;
 
+    uint32_t fixed_point;
+
+    void decode();
+    void print(FILE *, bool);
+
   public:
     Core(struct pcie_bars &);
     ~Core();
-    void print(FILE *, bool);
+
+    std::vector<std::vector<float>> coefficients;
 };
 
 class Controller: public RegisterController {
