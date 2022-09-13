@@ -36,8 +36,9 @@ int main(int argc, char *argv[])
     auto ti = std::chrono::high_resolution_clock::now();
     bar2_read_v(&bars, 0, dst, s);
     auto tf = std::chrono::high_resolution_clock::now();
-	 auto d = tf - ti;
-    std::cout << d / 1ms << " ms" << std::endl;
+    auto d = tf - ti;
+    std::cout << d / 1ms << " ms" << std::endl <<
+        (double)(s >> 20) / (d / 1.s) << " MB/s" << std::endl;
 
     return 0;
 }
