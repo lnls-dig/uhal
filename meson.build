@@ -7,9 +7,8 @@ project(
 
 subdir('third_party')
 
-cc = meson.get_compiler('c')
 thread_dep = dependency('threads')
-argparse = dependency('argparse', fallback: ['argparse', 'argparse_dep'])
+argparse = dependency('argparse', fallback: 'argparse')
 
 header_dir = 'uhal'
 
