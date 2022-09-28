@@ -8,6 +8,8 @@ utilities_lib = static_library(
 utilities_inc = include_directories('.')
 utilities = declare_dependency(link_with: utilities_lib, include_directories: utilities_inc)
 
+subdir('tests')
+
 install_headers(
   ['controllers.h', 'decoders.h', 'defer.h', 'pcie-open.h', 'pcie.h', 'printer.h', 'util_sdb.h'],
   subdir: header_dir
