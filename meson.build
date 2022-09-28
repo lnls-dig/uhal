@@ -5,6 +5,12 @@ project(
   default_options: ['c_std=gnu11', 'cpp_std=c++17', 'warning_level=3',],
 )
 
+if get_option('pcie_opt')
+  if host_machine.cpu_family() == 'x86_64'
+    add_project_arguments('-msse4.1', language: ['c', 'cpp'])
+  endif
+endif
+
 subdir('third_party')
 
 thread_dep = dependency('threads')
