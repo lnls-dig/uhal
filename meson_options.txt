@@ -1,0 +1,6 @@
+option(
+  'pcie_opt',
+  description: 'enable arch-specific optimizations for PCIe access',
+  type: 'boolean',
+  value: true
+)
