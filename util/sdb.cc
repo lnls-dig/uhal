@@ -7,6 +7,7 @@
 
 #include <endian.h>
 #include <limits.h>
+#include <stdint.h>
 
 extern "C" {
 /* library uses "this" as a struct member name */
