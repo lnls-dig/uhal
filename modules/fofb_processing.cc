@@ -7,7 +7,6 @@
 
 #include <cmath>
 #include <stdexcept>
-#include <unordered_map>
 
 #include "printer.h"
 #include "util.h"
