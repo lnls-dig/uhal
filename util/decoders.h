@@ -43,8 +43,8 @@ class RegisterDecoder {
      *
      * int32_t is so far a generic enough value to be used here,
      * but int64_t can be considered if it ever becomes an issue */
-    std::unordered_map<std::string, int32_t> general_data;
-    std::unordered_map<std::string, std::vector<int32_t>> channel_data;
+    std::unordered_map<std::string_view, int32_t> general_data;
+    std::unordered_map<std::string_view, std::vector<int32_t>> channel_data;
     /* hold the order in which the data has been added to the maps,
      * which allows us to implement printing cleanly and prettily
      * while also using an unordered_map */
@@ -58,9 +58,9 @@ class RegisterDecoder {
     /* a device that has multiple channels will set this */
     std::optional<unsigned> number_of_channels;
 
-    std::unordered_map<const char *, Printer> printers;
+    std::unordered_map<std::string_view, Printer> printers;
 
-    RegisterDecoder(struct pcie_bars &, std::unordered_map<const char *, Printer>);
+    RegisterDecoder(struct pcie_bars &, std::unordered_map<std::string_view, Printer>);
     virtual void decode() = 0;
 
     void add_general(const char *, int32_t, bool = false);

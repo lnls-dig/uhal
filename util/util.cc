@@ -116,9 +116,10 @@ sign_extension_fn &sign_extend_function(unsigned width)
     }
 }
 
-std::string list_of_keys(const std::unordered_map<std::string, int> &m)
+std::string list_of_keys(const std::unordered_map<std::string_view, int> &m)
 {
     auto b = m.begin();
-    return std::accumulate(std::next(b), m.end(), b->first,
-        [](std::string a, std::pair<std::string, int> b) {return a + ", " + b.first;});
+    return std::accumulate(std::next(b), m.end(), std::string(b->first),
+        /* we know b.first.data() is safe to use here because it's guaranteed to be null terminated */
+        [](std::string a, auto b) { return a.append({", ", b.first.data()}); });
 }
