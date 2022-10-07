@@ -48,7 +48,7 @@ class Printer {
     void print(FILE *, bool, unsigned, T) const;
 };
 
-/* helper for defining std::unordered_map<const char *, Printer> */
+/* helper for defining std::unordered_map<std::string_view, Printer> */
 #define I(name, ...) {name, {name, __VA_ARGS__}}
 
 void print_reg_impl(FILE *f, bool v, unsigned &indent, const char *reg, unsigned offset);

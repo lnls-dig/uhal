@@ -105,7 +105,7 @@ void ControllerV1::encode_config()
 
     insert_bit(channel_regs.ctl, amp_enable, RTMLAMP_OHWR_REGS_CH_0_CTL_AMP_EN);
 
-    static const std::unordered_map<std::string, int> mode_options({
+    static const std::unordered_map<std::string_view, int> mode_options({
         {"none", -1},
         {"triangular", 0},
         {"square", 1},

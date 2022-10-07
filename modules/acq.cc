@@ -206,7 +206,7 @@ void Controller::encode_config()
 
     clear_and_insert(regs.shots, number_shots, ACQ_CORE_SHOTS_NB_MASK);
 
-    const static std::unordered_map<std::string, std::array<bool, 4>> trigger_types({
+    const static std::unordered_map<std::string_view, std::array<bool, 4>> trigger_types({
         /* CTL_FSM_ACQ_NOW, TRIG_CFG_HW_TRIG_EN, TRIG_CFG_SW_TRIG_EN, TRIG_CFG_HW_TRIG_SEL */
         {"immediate", {true, false, false, false}},
         {"external", {false, true, false, true}},
