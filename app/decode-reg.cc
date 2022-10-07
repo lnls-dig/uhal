@@ -176,6 +176,9 @@ int main(int argc, char *argv[])
                 dec->read();
                 dec->print(stdout, verbose);
             } while (watch);
+        } else {
+            fprintf(stderr, "Couldn't find %s module index %u\n", type.c_str(), dev_index);
+            return 1;
         }
     }
     if (mode == "acq") {
