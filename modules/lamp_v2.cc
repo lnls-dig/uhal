@@ -26,13 +26,13 @@ static constexpr unsigned TRIGGER_ENABLE_VERSION = 1;
 
 CoreV2::CoreV2(struct pcie_bars &bars):
     RegisterDecoder(bars, {
-        I("AMP_IFLAG_L", "Amplifier Left Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
-        I("AMP_TFLAG_L", "Amplifier Left Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),
-        I("AMP_IFLAG_R", "Amplifier Right Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
-        I("AMP_TFLAG_R", "Amplifier Right Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),
-        I("AMP_EN", "Amplifier Enable", PrinterType::boolean),
+        PRINTER("AMP_IFLAG_L", "Amplifier Left Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
+        PRINTER("AMP_TFLAG_L", "Amplifier Left Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),
+        PRINTER("AMP_IFLAG_R", "Amplifier Right Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
+        PRINTER("AMP_TFLAG_R", "Amplifier Right Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),
+        PRINTER("AMP_EN", "Amplifier Enable", PrinterType::boolean),
         /* TODO: add test mode when it becomes a single value */
-        I("MODE", "Power supply operation mode", PrinterType::custom_function,
+        PRINTER("MODE", "Power supply operation mode", PrinterType::custom_function,
             [](FILE *f, bool v, uint32_t value){
                 (void)v;
                 static const char *modes[8] = {
@@ -50,17 +50,17 @@ CoreV2::CoreV2(struct pcie_bars &bars):
                 fputc('\n', f);
             }
         ),
-        I("TRIG_EN", "Trigger enable", PrinterType::enable),
-        I("PI_KP", "PI KP Coefficient", PrinterType::value),
-        I("PI_TI", "PI TI Coefficient", PrinterType::value),
-        I("PI_SP", "PI Setpoint", PrinterType::value),
-        I("DAC", "DAC Data For Channel", PrinterType::value),
-        I("LIMIT_A", "Signed limit 'a'", PrinterType::value),
-        I("LIMIT_B", "Signed limit 'b'", PrinterType::value),
-        I("CNT", "Test mode period, in clock ticks", PrinterType::value),
-        I("ADC_INST", "ADC instantaneous measurement", PrinterType::value),
-        I("DAC_EFF", "DAC effective measurement - actual value sent to DAC", PrinterType::value),
-        I("SP_EFF", "Set point instantaneous effective data", PrinterType::value),
+        PRINTER("TRIG_EN", "Trigger enable", PrinterType::enable),
+        PRINTER("PI_KP", "PI KP Coefficient", PrinterType::value),
+        PRINTER("PI_TI", "PI TI Coefficient", PrinterType::value),
+        PRINTER("PI_SP", "PI Setpoint", PrinterType::value),
+        PRINTER("DAC", "DAC Data For Channel", PrinterType::value),
+        PRINTER("LIMIT_A", "Signed limit 'a'", PrinterType::value),
+        PRINTER("LIMIT_B", "Signed limit 'b'", PrinterType::value),
+        PRINTER("CNT", "Test mode period, in clock ticks", PrinterType::value),
+        PRINTER("ADC_INST", "ADC instantaneous measurement", PrinterType::value),
+        PRINTER("DAC_EFF", "DAC effective measurement - actual value sent to DAC", PrinterType::value),
+        PRINTER("SP_EFF", "Set point instantaneous effective data", PrinterType::value),
     })
 {
     read_size = sizeof *regs;

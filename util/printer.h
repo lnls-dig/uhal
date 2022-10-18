@@ -49,7 +49,7 @@ class Printer {
 };
 
 /* helper for defining std::unordered_map<std::string_view, Printer> */
-#define I(name, ...) {name, {name, __VA_ARGS__}}
+#define PRINTER(name, ...) {name, {name, __VA_ARGS__}}
 
 void print_reg_impl(FILE *f, bool v, unsigned &indent, const char *reg, unsigned offset);
 

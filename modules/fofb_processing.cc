@@ -21,7 +21,7 @@ static constexpr unsigned MAX_NUM_CHAN = 12;
 
 Core::Core(struct pcie_bars &bars):
     RegisterDecoder(bars, {
-        I("FIXED_POINT_POS", "Position of point in fixed point representation", PrinterType::value),
+        PRINTER("FIXED_POINT_POS", "Position of point in fixed point representation", PrinterType::value),
     }),
     regs_storage(new struct wb_fofb_processing_regs),
     regs(*regs_storage)

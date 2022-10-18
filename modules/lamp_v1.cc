@@ -24,22 +24,22 @@ static constexpr unsigned MAX_26BITS = 0x3ffffff;
 
 CoreV1::CoreV1(struct pcie_bars &bars):
     RegisterDecoder(bars, {
-        I("DAC_DATA_FROM_WB", "Use data from WB for DACs", PrinterType::boolean, "DAC data from RTM module input ports", "DAC data from Wishbone"),
+        PRINTER("DAC_DATA_FROM_WB", "Use data from WB for DACs", PrinterType::boolean, "DAC data from RTM module input ports", "DAC data from Wishbone"),
         /* per channel info */
-        I("AMP_IFLAG_L", "Amplifier Left Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
-        I("AMP_TFLAG_L", "Amplifier Left Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),
-        I("AMP_IFLAG_R", "Amplifier Right Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
-        I("AMP_TFLAG_R", "Amplifier Right Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),
-        I("AMP_EN", "Amplifier Enable", PrinterType::boolean),
+        PRINTER("AMP_IFLAG_L", "Amplifier Left Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
+        PRINTER("AMP_TFLAG_L", "Amplifier Left Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),
+        PRINTER("AMP_IFLAG_R", "Amplifier Right Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
+        PRINTER("AMP_TFLAG_R", "Amplifier Right Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),
+        PRINTER("AMP_EN", "Amplifier Enable", PrinterType::boolean),
         /* TODO: add test mode when it becomes a single value */
-        I("PI_ENABLE", "PI Enable", PrinterType::boolean),
-        I("PI_KP", "PI KP Coefficient", PrinterType::value),
-        I("PI_TI", "PI TI Coefficient", PrinterType::value),
-        I("PI_SP", "PI Setpoint", PrinterType::value),
-        I("DAC", "DAC Data For Channel", PrinterType::value),
+        PRINTER("PI_ENABLE", "PI Enable", PrinterType::boolean),
+        PRINTER("PI_KP", "PI KP Coefficient", PrinterType::value),
+        PRINTER("PI_TI", "PI TI Coefficient", PrinterType::value),
+        PRINTER("PI_SP", "PI Setpoint", PrinterType::value),
+        PRINTER("DAC", "DAC Data For Channel", PrinterType::value),
         /* PI control */
-        I("PI_OL_DAC_CNT_MAX", "PI open-loop DAC test mode period, in clock ticks", PrinterType::value),
-        I("PI_SP_LIM_INF", "PI open-loop DAC test mode inferior limit. The upper limit is the setpoint itself", PrinterType::value),
+        PRINTER("PI_OL_DAC_CNT_MAX", "PI open-loop DAC test mode period, in clock ticks", PrinterType::value),
+        PRINTER("PI_SP_LIM_INF", "PI open-loop DAC test mode inferior limit. The upper limit is the setpoint itself", PrinterType::value),
     })
 {
     read_size = sizeof *regs;
