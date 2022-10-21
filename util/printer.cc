@@ -50,6 +50,11 @@ Printer::Printer(const char *name, const char *description, PrinterType type, co
     }
 }
 
+PrinterType Printer::get_type()
+{
+    return type;
+}
+
 template<typename T>
 void Printer::print(FILE *f, bool verbose, unsigned indent, T value) const
 {
