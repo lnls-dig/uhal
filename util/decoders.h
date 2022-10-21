@@ -30,6 +30,9 @@ bool device_match_impl(const struct sdb_device_info &devinfo)
 }
 
 class RegisterDecoder {
+    bool is_boolean_value(const char *);
+    int32_t try_boolean_value(const char *, int32_t);
+
   protected:
     size_t read_size;
     void *read_dest;

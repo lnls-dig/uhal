@@ -14,8 +14,21 @@ RegisterDecoder::RegisterDecoder(struct pcie_bars &bars, std::unordered_map<std:
 }
 RegisterDecoder::~RegisterDecoder() = default;
 
+bool RegisterDecoder::is_boolean_value(const char *name)
+{
+    auto type = printers.at(name).get_type();
+    return type == PrinterType::boolean || type == PrinterType::progress || type == PrinterType::enable;
+}
+
+int32_t RegisterDecoder::try_boolean_value(const char *name, int32_t value)
+{
+    return is_boolean_value(name) ? (bool)value : value;
+}
+
 void RegisterDecoder::add_general(const char *name, int32_t value, bool skip)
 {
+    value = try_boolean_value(name, value);
+
     general_data[name] = value;
     if (!data_order_done && !skip)
         general_data_order.push_back(name);
@@ -23,6 +36,8 @@ void RegisterDecoder::add_general(const char *name, int32_t value, bool skip)
 
 void RegisterDecoder::add_channel_impl(const char *name, unsigned pos, int32_t value, bool skip)
 {
+    value = try_boolean_value(name, value);
+
     /* using .at() to explicitly catch out of bounds access */
     channel_data[name].at(pos) = value;
     if (!data_order_done && !skip)
