@@ -49,7 +49,7 @@ static void clear_and_insert(uint32_t &dest, unsigned value, uint32_t mask, unsi
 /* TODO: template this as well */
 void clear_and_insert(uint32_t &dest, unsigned value, uint32_t mask)
 {
-    uint32_t max = (1 << bit_popcount(mask)) - 1;
+    uint32_t max = ((uint64_t)1 << bit_popcount(mask)) - 1;
     unsigned shift = bit_countr_zero(mask);
 
     clear_and_insert(dest, value, mask, shift, max, 0);
