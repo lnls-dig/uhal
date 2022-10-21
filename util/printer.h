@@ -8,11 +8,10 @@
 #ifndef PRINTER_H
 #define PRINTER_H
 
+#include <cstdint>
+#include <cstdio>
 #include <stdexcept>
 #include <functional>
-
-#include <stdint.h>
-#include <stdio.h>
 
 enum class PrinterType {
     /* boolean values */
@@ -43,6 +42,8 @@ class Printer {
     Printer(const char *name, const char *description, PrinterType type);
     Printer(const char *name, const char *description, PrinterType type, printing_function custom_fn);
     Printer(const char *name, const char *description, PrinterType type, const char *truth, const char *not_truth);
+
+    PrinterType get_type();
 
     template<typename T>
     void print(FILE *, bool, unsigned, T) const;
