@@ -22,6 +22,7 @@
 #include "pcie-open.h"
 #include "util_sdb.h"
 #include "acq.h"
+#include "fofb_cc.h"
 #include "fofb_processing.h"
 #include "lamp.h"
 
@@ -40,7 +41,7 @@ int main(int argc, char *argv[])
         fputs(
             "Usage: decode-reg mode <mode specific options>\n\n"
             "Positional arguments:\n"
-            "mode      mode of operation ('reset', 'decode', 'acq', 'lamp' or 'fofb_processing')\n",
+            "mode      mode of operation ('reset', 'decode', 'acq', 'lamp', 'fofb_cc' or 'fofb_processing')\n",
             stderr);
         return 1;
     }
@@ -142,6 +143,8 @@ int main(int argc, char *argv[])
             if (!read_sdb(&bars, dec->device_match, dev_index)) {
                 dec = std::make_unique<lamp::CoreV2>(bars);
             }
+        } else if (type == "fofb_cc") {
+            dec = std::make_unique<fofb_cc::Core>(bars);
         } else if (type == "fofb_processing") {
             dec = std::make_unique<fofb_processing::Core>(bars);
         } else {
