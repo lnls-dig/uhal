@@ -124,6 +124,38 @@ sign_extension_fn &sign_extend_function(unsigned width)
     }
 }
 
+uint32_t float2fixed(double v, unsigned point_pos, bool saturate)
+{
+    const uint32_t max_value_rep = 0x7fffffff, min_value_rep = 0x80000000;
+
+    /* we know a 32-bit value fits inside the significand of a double, so these are exact */
+    const double max_value = fixed2float(max_value_rep, point_pos);
+    const double min_value = fixed2float(min_value_rep, point_pos);
+
+    if (saturate) {
+        if (v >= max_value) return max_value_rep;
+        if (v <= min_value) return min_value_rep;
+    } else {
+        if (v > max_value) {
+            /* if we are setting to one bit beyond the maximum, allow it */
+            if (v == -min_value) return max_value_rep;
+
+            throw std::runtime_error(std::string("value greater than max representable value of ") + std::to_string(max_value));
+        }
+        if (v < min_value) {
+            throw std::runtime_error(std::string("value less than min representable value of ") + std::to_string(min_value));
+        }
+    }
+
+    /* used for values inside the valid range */
+    return v * ((uint64_t)1 << point_pos);
+}
+
+double fixed2float(uint32_t v, unsigned point_pos)
+{
+    return (double)(int32_t)v / ((uint64_t)1 << point_pos);
+}
+
 std::string list_of_keys(const std::unordered_map<std::string_view, int> &m)
 {
     auto b = m.begin();
