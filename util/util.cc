@@ -64,6 +64,12 @@ void insert_bit(uint32_t &dest, bool value, uint32_t mask)
         dest &= ~mask;
 }
 
+bool get_bit(uint32_t value, uint32_t mask)
+{
+    assert(bit_popcount(mask) == 1);
+    return value & mask;
+}
+
 unsigned align_extend(unsigned value, unsigned alignment)
 {
     unsigned extra = value % alignment;
