@@ -113,7 +113,7 @@ void Core::decode()
 {
     uint32_t t;
 
-    /* TODO: add extract_value<bool> */
+    /* TODO: use get_bit() */
     t = regs.cfg_val;
     add_general("CC_ENABLE", t & FOFB_CC_REGS_CFG_VAL_CC_ENABLE);
     add_general("TFS_OVERRIDE", t & FOFB_CC_REGS_CFG_VAL_TFS_OVERRIDE);
