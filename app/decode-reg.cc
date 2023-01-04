@@ -25,6 +25,7 @@
 #include "fofb_cc.h"
 #include "fofb_processing.h"
 #include "lamp.h"
+#include "trigger_mux.h"
 
 using namespace std::chrono_literals;
 
@@ -147,6 +148,8 @@ int main(int argc, char *argv[])
             dec = std::make_unique<fofb_cc::Core>(bars);
         } else if (type == "fofb_processing") {
             dec = std::make_unique<fofb_processing::Core>(bars);
+        } else if (type == "trigger_mux") {
+            dec = std::make_unique<trigger_mux::Core>(bars);
         } else {
             fprintf(stderr, "Unknown type: '%s'\n", type.c_str());
             return 1;
