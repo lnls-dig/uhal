@@ -88,8 +88,10 @@ T extract_value(uint32_t value, uint32_t mask)
 }
 template int32_t extract_value(uint32_t, uint32_t);
 template int16_t extract_value(uint32_t, uint32_t);
+template int8_t extract_value(uint32_t, uint32_t);
 template uint32_t extract_value(uint32_t, uint32_t);
 template uint16_t extract_value(uint32_t, uint32_t);
+template uint8_t extract_value(uint32_t, uint32_t);
 
 template<typename Signed>
 int32_t sign_extend(uint32_t v)
