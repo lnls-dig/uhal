@@ -38,17 +38,13 @@ class Core: public RegisterDecoder {
     ~Core();
 };
 
-enum class data_sign {
-    d_unsigned,
-    d_signed,
-};
-
 enum class acq_status {
     success,
     in_progress,
     timeout,
 };
-typedef std::variant<acq_status, std::vector<uint32_t>, std::vector<int32_t>> acq_result;
+template<class Data>
+using acq_result = std::variant<acq_status, std::vector<Data>>;
 
 class Controller: public RegisterController {
     unsigned sample_size, alignment;
@@ -64,7 +60,6 @@ class Controller: public RegisterController {
     void start_acquisition();
     bool acquisition_ready();
 
-    acq_result m_result(data_sign sign, bool is_timed, std::chrono::milliseconds wait_time={});
     std::vector<uint32_t> result_unsigned();
     std::vector<int32_t> convert_to_signed(std::vector<uint32_t> unsigned_result);
 
@@ -93,12 +88,10 @@ class Controller: public RegisterController {
     unsigned data_trigger_channel = 0;
     unsigned trigger_delay = 0;
 
-    [[nodiscard]]
-    acq_result result(data_sign sign);
-    [[nodiscard]]
-    acq_result result(data_sign sign, std::chrono::milliseconds wait_time);
-    [[nodiscard]]
-    acq_result result_async(data_sign sign);
+    template <class Data> [[nodiscard]]
+    acq_result<Data> result(std::optional<std::chrono::milliseconds> wait_time=std::nullopt);
+    template <class Data> [[nodiscard]]
+    acq_result<Data> result_async();
 
     template<typename T>
     void print_csv(FILE *f, std::vector<T> &res);

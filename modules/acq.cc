@@ -9,6 +9,7 @@
 #include <charconv>
 #include <cstring>
 #include <stdexcept>
+#include <type_traits>
 #include <unordered_map>
 
 #include "decoders.h"
@@ -292,8 +293,9 @@ std::vector<uint32_t> Controller::result_unsigned()
     size_t total_bytes = elements * data_size;
     /* this is an identity, just want to be sure */
     if (total_bytes != (pre_samples + post_samples) * sample_size)
-        throw std::runtime_error("elements * data_size different from samples * sample_size");
+        throw std::logic_error("elements * data_size different from samples * sample_size");
 
+    /* FIXME: perform circular buffer dance correctly */
     bar2_read_v(&bars, initial_pos, data_pointer, total_bytes);
 
     /* stuff values back into result, if necessary - no effect if vectors are empty.
@@ -318,35 +320,29 @@ std::vector<int32_t> Controller::convert_to_signed(std::vector<uint32_t> unsigne
     return result;
 }
 
-acq_result Controller::m_result(data_sign sign, bool is_timed, std::chrono::milliseconds wait_time)
+template<class Data>
+acq_result<Data> Controller::result(std::optional<std::chrono::milliseconds> wait_time)
 {
     std::chrono::steady_clock::time_point start_time;
-    if (is_timed) start_time = std::chrono::steady_clock::now();
+    if (wait_time) start_time = std::chrono::steady_clock::now();
 
-    acq_result r;
+    acq_result<Data> r;
     const acq_status *status;
     do {
-        r = result_async(sign);
+        r = result_async<Data>();
     } while (
         (status = std::get_if<acq_status>(&r)) &&
         *status == acq_status::in_progress &&
-        (!is_timed || std::chrono::steady_clock::now() - start_time < wait_time)
+        (!wait_time || std::chrono::steady_clock::now() - start_time < *wait_time)
     );
 
     return r;
 }
+template acq_result<uint32_t> Controller::result(std::optional<std::chrono::milliseconds>);
+template acq_result<int32_t> Controller::result(std::optional<std::chrono::milliseconds>);
 
-acq_result Controller::result(data_sign sign, std::chrono::milliseconds wait_time)
-{
-    return m_result(sign, true, wait_time);
-}
-
-acq_result Controller::result(data_sign sign)
-{
-    return m_result(sign, false);
-}
-
-acq_result Controller::result_async(data_sign sign)
+template<class Data>
+acq_result<Data> Controller::result_async()
 {
     if (m_step == acq_step::acq_stop) {
         write_config();
@@ -362,12 +358,13 @@ acq_result Controller::result_async(data_sign sign)
     if (m_step == acq_step::acq_done) {
         m_step = acq_step::acq_stop;
 
-        /* TODO: add async DMA API? */
+        /* XXX: add async DMA API if it ever becomes available */
         std::vector<uint32_t> r = result_unsigned();
-        if (sign == data_sign::d_signed)
+        if constexpr (std::is_signed<Data>()) {
             return convert_to_signed(r);
-        else
+        } else if constexpr (std::is_unsigned<Data>()) {
             return r;
+        }
     }
 
     throw std::logic_error("should be unreachable");
