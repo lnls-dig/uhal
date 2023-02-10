@@ -5,6 +5,7 @@
  * Released according to the GNU GPL, version 3 or any later version.
  */
 
+#include <algorithm>
 #include <array>
 #include <charconv>
 #include <cstring>
@@ -253,13 +254,14 @@ bool Controller::acquisition_ready()
     return (regs.sta & COMPLETE_MASK) == COMPLETE_VALUE;
 }
 
-std::vector<uint32_t> Controller::result_unsigned()
+template <class Data>
+std::vector<Data> Controller::get_result()
 {
-    /* intermediate vectors for smaller atoms */
-    std::vector<uint8_t> v8;
-    std::vector<uint16_t> v16;
-
-    std::vector<uint32_t> result;
+    /* intermediate vectors for any size atoms */
+    constexpr bool is_signed = std::is_signed_v<Data>;
+    std::vector<std::conditional_t<is_signed, int8_t, uint8_t>> v8;
+    std::vector<std::conditional_t<is_signed, int16_t, uint16_t>> v16;
+    std::vector<std::conditional_t<is_signed, int32_t, uint32_t>> v32;
 
     /* total number of elements (samples*atoms) */
     size_t elements = (pre_samples + post_samples) * channel_num_atoms;
@@ -269,21 +271,20 @@ std::vector<uint32_t> Controller::result_unsigned()
     /* how we interpret the contents of FPGA memory depends on atom width */
     void *data_pointer;
     size_t data_size;
+    auto set_data = [&data_pointer, &data_size, elements](auto &v) {
+        v.resize(elements);
+        data_pointer = v.data();
+        data_size = sizeof v[0];
+    };
     switch (channel_atom_width) {
         case 8:
-            v8.resize(elements);
-            data_pointer = v8.data();
-            data_size = 1;
+            set_data(v8);
             break;
         case 16:
-            v16.resize(elements);
-            data_pointer = v16.data();
-            data_size = 2;
+            set_data(v16);
             break;
         case 32:
-            result.resize(elements);
-            data_pointer = result.data();
-            data_size = 4;
+            set_data(v32);
             break;
         default:
             throw std::runtime_error("unsupported channel atom width");
@@ -298,26 +299,26 @@ std::vector<uint32_t> Controller::result_unsigned()
     /* FIXME: perform circular buffer dance correctly */
     bar2_read_v(&bars, initial_pos, data_pointer, total_bytes);
 
-    /* stuff values back into result, if necessary - no effect if vectors are empty.
-     * the reserve() call should also have no effect if resize() was called above.
-     * since these are unsigned, we don't need to care about signal extension. */
-    result.reserve(elements);
-    for (auto v: v8) result.push_back(v);
-    for (auto v: v16) result.push_back(v);
+    auto convert_result = [elements](auto &v) -> std::vector<Data> {
+        if constexpr (sizeof v[0] == sizeof(Data)) return v;
+        std::vector<Data> result;
+        result.resize(elements);
+        std::copy(v.begin(), v.end(), result.begin());
+        return result;
+    };
+    switch (channel_atom_width) {
+        case 8:
+            return convert_result(v8);
+            break;
+        case 16:
+            return convert_result(v16);
+            break;
+        case 32:
+            return convert_result(v32);
+            break;
+    }
 
-    return result;
-}
-
-std::vector<int32_t> Controller::convert_to_signed(std::vector<uint32_t> unsigned_result)
-{
-    std::vector<int32_t> result;
-    result.resize(unsigned_result.size());
-
-    sign_extension_fn &chosen_se = sign_extend_function(channel_atom_width);
-
-    for (size_t i = 0; i < unsigned_result.size(); i++) result[i] = chosen_se(unsigned_result[i]);
-
-    return result;
+    throw std::logic_error("should be unreachable");
 }
 
 template<class Data>
@@ -339,11 +340,16 @@ acq_result<Data> Controller::result(std::optional<std::chrono::milliseconds> wai
     return r;
 }
 template acq_result<uint32_t> Controller::result(std::optional<std::chrono::milliseconds>);
+template acq_result<uint16_t> Controller::result(std::optional<std::chrono::milliseconds>);
+template acq_result<uint8_t> Controller::result(std::optional<std::chrono::milliseconds>);
 template acq_result<int32_t> Controller::result(std::optional<std::chrono::milliseconds>);
+template acq_result<int16_t> Controller::result(std::optional<std::chrono::milliseconds>);
+template acq_result<int8_t> Controller::result(std::optional<std::chrono::milliseconds>);
 
 template<class Data>
 acq_result<Data> Controller::result_async()
 {
+    /* XXX: add async DMA API if it ever becomes available */
     if (m_step == acq_step::acq_stop) {
         write_config();
         start_acquisition();
@@ -358,13 +364,7 @@ acq_result<Data> Controller::result_async()
     if (m_step == acq_step::acq_done) {
         m_step = acq_step::acq_stop;
 
-        /* XXX: add async DMA API if it ever becomes available */
-        std::vector<uint32_t> r = result_unsigned();
-        if constexpr (std::is_signed<Data>()) {
-            return convert_to_signed(r);
-        } else if constexpr (std::is_unsigned<Data>()) {
-            return r;
-        }
+        return get_result<Data>();
     }
 
     throw std::logic_error("should be unreachable");

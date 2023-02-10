@@ -60,8 +60,8 @@ class Controller: public RegisterController {
     void start_acquisition();
     bool acquisition_ready();
 
-    std::vector<uint32_t> result_unsigned();
-    std::vector<int32_t> convert_to_signed(std::vector<uint32_t> unsigned_result);
+    template <class Data>
+    std::vector<Data> get_result();
 
     /* state variables for async */
     enum class acq_step {
