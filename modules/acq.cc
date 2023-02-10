@@ -322,7 +322,7 @@ std::vector<Data> Controller::get_result()
 }
 
 template<class Data>
-acq_result<Data> Controller::result(std::optional<std::chrono::milliseconds> wait_time)
+std::vector<Data> Controller::result(std::optional<std::chrono::milliseconds> wait_time)
 {
     std::chrono::steady_clock::time_point start_time;
     if (wait_time) start_time = std::chrono::steady_clock::now();
@@ -337,14 +337,16 @@ acq_result<Data> Controller::result(std::optional<std::chrono::milliseconds> wai
         (!wait_time || std::chrono::steady_clock::now() - start_time < *wait_time)
     );
 
-    return r;
+    if (auto pv = std::get_if<std::vector<Data>>(&r))
+        return *pv;
+    throw std::runtime_error("acquisition failed");
 }
-template acq_result<uint32_t> Controller::result(std::optional<std::chrono::milliseconds>);
-template acq_result<uint16_t> Controller::result(std::optional<std::chrono::milliseconds>);
-template acq_result<uint8_t> Controller::result(std::optional<std::chrono::milliseconds>);
-template acq_result<int32_t> Controller::result(std::optional<std::chrono::milliseconds>);
-template acq_result<int16_t> Controller::result(std::optional<std::chrono::milliseconds>);
-template acq_result<int8_t> Controller::result(std::optional<std::chrono::milliseconds>);
+template std::vector<uint32_t> Controller::result(std::optional<std::chrono::milliseconds>);
+template std::vector<uint16_t> Controller::result(std::optional<std::chrono::milliseconds>);
+template std::vector<uint8_t> Controller::result(std::optional<std::chrono::milliseconds>);
+template std::vector<int32_t> Controller::result(std::optional<std::chrono::milliseconds>);
+template std::vector<int16_t> Controller::result(std::optional<std::chrono::milliseconds>);
+template std::vector<int8_t> Controller::result(std::optional<std::chrono::milliseconds>);
 
 template<class Data>
 acq_result<Data> Controller::result_async()
