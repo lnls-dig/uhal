@@ -311,11 +311,11 @@ std::vector<uint32_t> Controller::result_unsigned()
 std::vector<int32_t> Controller::convert_to_signed(std::vector<uint32_t> unsigned_result)
 {
     std::vector<int32_t> result;
-    result.reserve(unsigned_result.size());
+    result.resize(unsigned_result.size());
 
     sign_extension_fn &chosen_se = sign_extend_function(channel_atom_width);
 
-    for (auto v: unsigned_result) result.push_back(chosen_se(v));
+    for (size_t i = 0; i < unsigned_result.size(); i++) result[i] = chosen_se(unsigned_result[i]);
 
     return result;
 }
