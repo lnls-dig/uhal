@@ -89,7 +89,7 @@ class Controller: public RegisterController {
     unsigned trigger_delay = 0;
 
     template <class Data> [[nodiscard]]
-    acq_result<Data> result(std::optional<std::chrono::milliseconds> wait_time=std::nullopt);
+    std::vector<Data> result(std::optional<std::chrono::milliseconds> wait_time=std::nullopt);
     template <class Data> [[nodiscard]]
     acq_result<Data> result_async();
 

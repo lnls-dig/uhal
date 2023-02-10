@@ -211,7 +211,7 @@ int main(int argc, char *argv[])
         try_unsigned(ctl.data_trigger_channel, args, "-C");
         try_unsigned(ctl.trigger_delay, args, "-d");
 
-        auto res = std::get<std::vector<int32_t>>(ctl.result<int32_t>());
+        auto res = ctl.result<int32_t>();
         ctl.print_csv(stdout, res);
     }
     if (mode == "lamp") {
