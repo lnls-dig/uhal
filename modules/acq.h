@@ -80,7 +80,7 @@ class Controller: public RegisterController {
     unsigned pre_samples = 4;
     unsigned post_samples = 0;
     unsigned number_shots = 1;
-    std::string trigger_type = "immediate";
+    std::string trigger_type = "now";
     unsigned data_trigger_threshold = 0;
     bool data_trigger_polarity_neg = true;
     unsigned data_trigger_sel = 0;
