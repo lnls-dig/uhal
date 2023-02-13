@@ -210,9 +210,9 @@ void Controller::encode_config()
 
     const static std::unordered_map<std::string_view, std::array<bool, 4>> trigger_types({
         /* CTL_FSM_ACQ_NOW, TRIG_CFG_HW_TRIG_EN, TRIG_CFG_SW_TRIG_EN, TRIG_CFG_HW_TRIG_SEL */
-        {"immediate", {true, false, false, false}},
+        {"now", {true, false, false, false}},
         {"external", {false, true, false, true}},
-        {"data-driven", {false, true, false, false}},
+        {"data", {false, true, false, false}},
         {"software", {false, false, true, false}},
     });
     auto &trigger_setting = trigger_types.at(trigger_type);
