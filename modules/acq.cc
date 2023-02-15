@@ -10,6 +10,7 @@
 #include <charconv>
 #include <cstring>
 #include <stdexcept>
+#include <thread>
 #include <type_traits>
 #include <unordered_map>
 
@@ -26,6 +27,9 @@ namespace acq {
 #define REGISTERS_PER_CHAN 2
 
 static const unsigned ddr3_payload_size = 32;
+
+using namespace std::chrono_literals;
+static const auto acq_loop_time = 1ms;
 
 Core::Core(struct pcie_bars &bars):
     RegisterDecoder(bars, {
@@ -335,6 +339,7 @@ std::vector<Data> Controller::result(std::optional<std::chrono::milliseconds> wa
     const acq_status *status;
     do {
         r = result_async<Data>();
+        std::this_thread::sleep_for(acq_loop_time);
     } while (
         (status = std::get_if<acq_status>(&r)) &&
         *status == acq_status::in_progress &&
