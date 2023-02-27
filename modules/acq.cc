@@ -204,6 +204,8 @@ void Controller::get_internal_values()
 void Controller::encode_config()
 {
     get_internal_values();
+    acq_pre_samples = pre_samples;
+    acq_post_samples = post_samples;
 
     clear_and_insert(regs.acq_chan_ctl, channel, ACQ_CORE_ACQ_CHAN_CTL_WHICH_MASK);
 
@@ -243,6 +245,12 @@ void Controller::write_config()
 
 void Controller::start_acquisition()
 {
+    if (m_step != acq_step::stop)
+        throw std::logic_error("acquisition should only be started if it's not currently running");
+    m_step = acq_step::started;
+
+    write_config();
+
     /* FIXME: hardcoded memory size */ bar4_write(&bars, addr + ACQ_CORE_DDR3_END_ADDR, 0x0FFFFFE0);
     insert_bit(regs.ctl, true, ACQ_CORE_CTL_FSM_START_ACQ);
     bar4_write(&bars, addr + ACQ_CORE_CTL, regs.ctl);
@@ -262,9 +270,15 @@ bool Controller::acquisition_ready()
     return (regs.sta & COMPLETE_MASK) == COMPLETE_VALUE;
 }
 
+/* XXX: evaluate performance difference from reusing a vector from the caller
+ * instead of always creating a new one */
 template <class Data>
 std::vector<Data> Controller::get_result()
 {
+    if (m_step != acq_step::done)
+        throw std::logic_error("get_result() called in the wrong step");
+    m_step = acq_step::stop;
+
     /* intermediate vectors for any size atoms */
     constexpr bool is_signed = std::is_signed_v<Data>;
     std::vector<std::conditional_t<is_signed, int8_t, uint8_t>> v8;
@@ -272,7 +286,8 @@ std::vector<Data> Controller::get_result()
     std::vector<std::conditional_t<is_signed, int32_t, uint32_t>> v32;
 
     /* total number of elements (samples*atoms) */
-    size_t elements = (pre_samples + post_samples) * channel_num_atoms;
+    size_t total_samples = acq_pre_samples + acq_post_samples,
+           elements = total_samples * channel_num_atoms;
 
     size_t trigger_pos = bar4_read(&bars, addr + ACQ_CORE_TRIG_POS);
 
@@ -298,13 +313,13 @@ std::vector<Data> Controller::get_result()
             throw std::runtime_error("unsupported channel atom width");
     }
 
-    size_t initial_pos = trigger_pos - sample_size * pre_samples;
     size_t total_bytes = elements * data_size;
     /* this is an identity, just want to be sure */
-    if (total_bytes != (pre_samples + post_samples) * sample_size)
+    if (total_bytes != (total_samples) * sample_size)
         throw std::logic_error("elements * data_size different from samples * sample_size");
 
     /* FIXME: perform circular buffer dance correctly */
+    size_t initial_pos = trigger_pos - sample_size * acq_pre_samples;
     bar2_read_v(&bars, initial_pos, data_pointer, total_bytes);
 
     auto convert_result = [elements](auto &v) -> std::vector<Data> {
@@ -332,22 +347,23 @@ std::vector<Data> Controller::get_result()
 template<class Data>
 std::vector<Data> Controller::result(std::optional<std::chrono::milliseconds> wait_time)
 {
+    start_acquisition();
+
     std::chrono::steady_clock::time_point start_time;
     if (wait_time) start_time = std::chrono::steady_clock::now();
 
-    acq_result<Data> r;
-    const acq_status *status;
+    acq_status r;
     do {
-        r = result_async<Data>();
-        std::this_thread::sleep_for(acq_loop_time);
+        r = result_async();
+        if (r == acq_status::in_progress) std::this_thread::sleep_for(acq_loop_time);
     } while (
-        (status = std::get_if<acq_status>(&r)) &&
-        *status == acq_status::in_progress &&
+        r == acq_status::in_progress &&
         (!wait_time || std::chrono::steady_clock::now() - start_time < *wait_time)
     );
 
-    if (auto pv = std::get_if<std::vector<Data>>(&r))
-        return *pv;
+    if (r == acq_status::success)
+        return get_result<Data>();
+
     throw std::runtime_error("acquisition failed");
 }
 template std::vector<uint32_t> Controller::result(std::optional<std::chrono::milliseconds>);
@@ -357,25 +373,20 @@ template std::vector<int32_t> Controller::result(std::optional<std::chrono::mill
 template std::vector<int16_t> Controller::result(std::optional<std::chrono::milliseconds>);
 template std::vector<int8_t> Controller::result(std::optional<std::chrono::milliseconds>);
 
-template<class Data>
-acq_result<Data> Controller::result_async()
+acq_status Controller::result_async()
 {
     /* XXX: add async DMA API if it ever becomes available */
-    if (m_step == acq_step::acq_stop) {
-        write_config();
-        start_acquisition();
-        m_step = acq_step::acq_started;
+    if (m_step == acq_step::stop) {
+        return acq_status::idle;
     }
-    if (m_step == acq_step::acq_started) {
+    if (m_step == acq_step::started) {
         if (acquisition_ready())
-            m_step = acq_step::acq_done;
+            m_step = acq_step::done;
         else
             return acq_status::in_progress;
     }
-    if (m_step == acq_step::acq_done) {
-        m_step = acq_step::acq_stop;
-
-        return get_result<Data>();
+    if (m_step == acq_step::done) {
+        return acq_status::success;
     }
 
     throw std::logic_error("should be unreachable");

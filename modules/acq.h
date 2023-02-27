@@ -39,17 +39,20 @@ class Core: public RegisterDecoder {
 };
 
 enum class acq_status {
+    idle,
     success,
     in_progress,
     timeout,
 };
-template<class Data>
-using acq_result = std::variant<acq_status, std::vector<Data>>;
 
 class Controller: public RegisterController {
-    unsigned sample_size, alignment;
-    /* current channel variables */
-    unsigned channel_atom_width, channel_num_atoms;
+    /* information from the current acquisition:
+     * - current channel information
+     * - current channel information that had to be calculated
+     * - amount of samples */
+    unsigned channel_atom_width, channel_num_atoms,
+             sample_size, alignment,
+             acq_pre_samples, acq_post_samples;
 
     std::unique_ptr<struct acq_core> regs_storage;
     struct acq_core &regs;
@@ -57,18 +60,14 @@ class Controller: public RegisterController {
     void get_internal_values();
     void encode_config();
     void write_config();
-    void start_acquisition();
     bool acquisition_ready();
-
-    template <class Data>
-    std::vector<Data> get_result();
 
     /* state variables for async */
     enum class acq_step {
-        acq_stop,
-        acq_started,
-        acq_done,
-    } m_step = acq_step::acq_stop;
+        stop,
+        started,
+        done,
+    } m_step = acq_step::stop;
 
   public:
     Controller(struct pcie_bars &);
@@ -88,10 +87,15 @@ class Controller: public RegisterController {
     unsigned data_trigger_channel = 0;
     unsigned trigger_delay = 0;
 
+    void start_acquisition();
+
+    template <class Data>
+    std::vector<Data> get_result();
+
     template <class Data> [[nodiscard]]
     std::vector<Data> result(std::optional<std::chrono::milliseconds> wait_time=std::nullopt);
-    template <class Data> [[nodiscard]]
-    acq_result<Data> result_async();
+    [[nodiscard]]
+    acq_status result_async();
 
     template<typename T>
     void print_csv(FILE *f, std::vector<T> &res);
