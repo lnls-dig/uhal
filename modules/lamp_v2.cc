@@ -26,6 +26,7 @@ static constexpr unsigned TRIGGER_ENABLE_VERSION = 1;
 
 CoreV2::CoreV2(struct pcie_bars &bars):
     RegisterDecoder(bars, {
+        PRINTER("AMP_STATUS", "Amplifier flags", PrinterType::value_hex),
         PRINTER("AMP_IFLAG_L", "Amplifier Left Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
         PRINTER("AMP_TFLAG_L", "Amplifier Left Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),
         PRINTER("AMP_IFLAG_R", "Amplifier Right Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
@@ -89,6 +90,7 @@ void CoreV2::decode()
 
     for (const auto &channel_regs: regs->ch) {
         t = channel_regs.sta;
+        add_channel("AMP_STATUS", t);
         add_channel("AMP_IFLAG_L", t & WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_L);
         add_channel("AMP_TFLAG_L", t & WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_L);
         add_channel("AMP_IFLAG_R", t & WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_R);
