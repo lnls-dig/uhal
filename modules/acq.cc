@@ -19,6 +19,40 @@
 #include "util.h"
 #include "acq.h"
 
+namespace {
+
+const int max_acq_cores = 8;
+const size_t acq_ram = 2 * 1024 * 1024;
+const size_t acq_ram_per_core = acq_ram / max_acq_cores;
+
+class MemoryAllocator {
+    std::unordered_map<struct pcie_bars *, int> counts;
+
+    MemoryAllocator() {}
+
+  public:
+    std::array<size_t, 2> get_range(struct pcie_bars &bars)
+    {
+        auto index = counts[&bars];
+        counts[&bars]++;
+
+        if (counts[&bars] >= max_acq_cores) {
+            throw std::logic_error("we only support up to " + std::to_string(max_acq_cores) + " acq");
+        }
+
+        return {index * acq_ram_per_core, (index+1) * acq_ram_per_core};
+    }
+
+    static MemoryAllocator &get_memory_allocator()
+    {
+        /* singleton instance */
+        static MemoryAllocator instance;
+        return instance;
+    }
+};
+
+}
+
 namespace acq {
 
 #include "hw/wb_acq_core_regs.h"
@@ -180,6 +214,10 @@ Controller::Controller(struct pcie_bars &bars):
     regs_storage(new struct acq_core()),
     regs(*regs_storage)
 {
+    auto addrs = MemoryAllocator::get_memory_allocator().get_range(bars);
+    ram_start_addr = addrs[0];
+    ram_end_addr = addrs[1];
+
     /* we want a consistent view of the world, and that includes no acquisitions
      * we don't know about. it's too complicated to gather information about
      * running acquisitions, as well, so that's not supported for now */
@@ -237,6 +275,10 @@ void Controller::encode_config()
     clear_and_insert(regs.trig_data_cfg, data_trigger_filt, ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_MASK);
     clear_and_insert(regs.ctl, data_trigger_channel, ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_MASK);
     regs.trig_dly = trigger_delay;
+
+    regs.ddr3_start_addr = ram_start_addr;
+    /* we want the last sample to stay in the reserved area */
+    regs.ddr3_end_addr = ram_end_addr - sample_size;
 }
 
 void Controller::write_config()
@@ -253,7 +295,6 @@ void Controller::start_acquisition()
 
     write_config();
 
-    /* FIXME: hardcoded memory size */ bar4_write(&bars, addr + ACQ_CORE_DDR3_END_ADDR, 0x0FFFFFE0);
     insert_bit(regs.ctl, true, ACQ_CORE_CTL_FSM_START_ACQ);
     bar4_write(&bars, addr + ACQ_CORE_CTL, regs.ctl);
 

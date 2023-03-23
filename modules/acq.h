@@ -46,6 +46,9 @@ enum class acq_status {
 };
 
 class Controller: public RegisterController {
+    /* read from internal MemoryAllocator */
+    size_t ram_start_addr, ram_end_addr;
+
     /* information from the current acquisition:
      * - current channel information
      * - current channel information that had to be calculated
