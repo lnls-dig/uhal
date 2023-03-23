@@ -101,11 +101,6 @@ static volatile uint32_t *bar0_get_u32p(const struct pcie_bars *bars, size_t add
     return (volatile void *)((unsigned char *)bars->bar0 + addr);
 }
 
-static uint32_t bar0_read(const struct pcie_bars *bars, size_t addr)
-{
-    return *bar0_get_u32p(bars, addr);
-}
-
 static void bar0_write(const struct pcie_bars *bars, size_t addr, uint32_t value)
 {
     *bar0_get_u32p(bars, addr) = value;
@@ -203,36 +198,6 @@ void bar2_read_v(struct pcie_bars *bars, size_t addr, void *dest, size_t n)
     }
 
     pthread_mutex_unlock(&bars->locks[BAR2]);
-}
-
-void bar2_read_dma(const struct pcie_bars *bars, size_t addr, unsigned bar, unsigned long physical_address, size_t n)
-{
-    /* uses upstream DMA */
-    size_t dma_base_address = PCIE_CFG_REG_DMA_US_BASE;
-
-    /* FIXME: check for ongoing transfer */
-
-    /* reset dma */
-    bar0_write(bars, dma_base_address + PCIE_CFG_REG_DMA_CTRL, PCIE_CFG_DMA_CTRL_VALID | PCIE_CFG_TX_CTRL_CHANNEL_RST);
-    /* set dma */
-    bar0_write(bars, dma_base_address + PCIE_CFG_REG_DMA_PAH, ((uint64_t)addr) >> 32);
-    bar0_write(bars, dma_base_address + PCIE_CFG_REG_DMA_PAL, addr);
-    bar0_write(bars, dma_base_address + PCIE_CFG_REG_DMA_HAH, ((uint64_t)physical_address) >> 32);
-    bar0_write(bars, dma_base_address + PCIE_CFG_REG_DMA_HAL, physical_address);
-    bar0_write(bars, dma_base_address + PCIE_CFG_REG_DMA_BDAH, 0);
-    bar0_write(bars, dma_base_address + PCIE_CFG_REG_DMA_BDAL, 0);
-    bar0_write(bars, dma_base_address + PCIE_CFG_REG_DMA_BDAH, 0);
-    bar0_write(bars, dma_base_address + PCIE_CFG_REG_DMA_LENG, n);
-
-    /* start transfer */
-    bar0_write(bars, dma_base_address + PCIE_CFG_REG_DMA_CTRL,
-        PCIE_CFG_DMA_CTRL_VALID | PCIE_CFG_DMA_CTRL_LAST | PCIE_CFG_DMA_CTRL_AINC | (bar << PCIE_CFG_DMA_CTRL_BAR_SHIFT));
-
-    /* wait for completion */
-    uint32_t status_reg;
-    do {
-        status_reg = bar0_read(bars, dma_base_address + PCIE_CFG_REG_DMA_STA);
-    } while(!(status_reg & PCIE_CFG_DMA_STA_DONE));
 }
 
 static size_t bar4_access_offset(struct pcie_bars *bars, size_t addr)
