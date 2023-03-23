@@ -430,7 +430,6 @@ template std::vector<int8_t> Controller::result(std::optional<std::chrono::milli
 
 acq_status Controller::result_async()
 {
-    /* XXX: add async DMA API if it ever becomes available */
     if (m_step == acq_step::stop) {
         return acq_status::idle;
     }
