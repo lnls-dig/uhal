@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
         fputs(
             "Usage: decode-reg mode <mode specific options>\n\n"
             "Positional arguments:\n"
-            "mode      mode of operation ('reset', 'decode', 'acq', 'lamp', 'fofb_cc' or 'fofb_processing')\n",
+            "mode      mode of operation ('reset', 'decode', 'ram', 'acq', 'lamp', 'fofb_cc' or 'fofb_processing')\n",
             stderr);
         return 1;
     }
@@ -60,6 +60,11 @@ int main(int argc, char *argv[])
     decode_args.add_argument("-c").help("channel number").scan<'u', unsigned>();
     decode_args.add_argument("-w").help("watch registers").default_value(false).implicit_value(true);
     decode_args.add_argument("-t").help("time register reading").default_value(false).implicit_value(true);
+
+    argparse::ArgumentParser ram_args("decode-reg ram", "1.0", argparse::default_arguments::help);
+    ram_args.add_parents(parent_args);
+    ram_args.add_argument("-f").help("first address").required().scan<'x', unsigned>();
+    ram_args.add_argument("-l").help("last address").required().scan<'x', unsigned>();
 
     argparse::ArgumentParser acq_args("decode-reg acq", "1.0", argparse::default_arguments::help);
     acq_args.add_parents(parent_args);
@@ -99,6 +104,8 @@ int main(int argc, char *argv[])
         pargs = &parent_args;
     } else if (mode == "decode") {
         pargs = &decode_args;
+    } else if (mode == "ram") {
+        pargs = &ram_args;
     } else if (mode == "acq") {
         pargs = &acq_args;
     } else if (mode == "lamp") {
@@ -189,6 +196,15 @@ int main(int argc, char *argv[])
             fprintf(stderr, "Couldn't find %s module index %u\n", type.c_str(), dev_index);
             return 1;
         }
+    }
+    if (mode == "ram") {
+        auto first = args.get<unsigned>("-f");
+        auto last = args.get<unsigned>("-l");
+
+        auto space = last - first;
+        std::vector<uint32_t> samples((space) / 4);
+        bar2_read_v(&bars, first, samples.data(), space);
+        for (auto v: samples) printf("%u ", v);
     }
     if (mode == "acq") {
         acq::Controller ctl{bars};
