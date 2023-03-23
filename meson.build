@@ -11,6 +11,8 @@ if get_option('pcie_opt')
   endif
 endif
 
+add_project_arguments('-Wstrict-aliasing=3', language: ['c', 'cpp'])
+
 subdir('third_party')
 
 thread_dep = dependency('threads')

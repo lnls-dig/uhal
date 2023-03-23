@@ -91,7 +91,7 @@ static void bar_generic_read_v(struct pcie_bars *bars, size_t addr, void *dest, 
     assert((addr & 0x3) == 0);
     assert((n & 0x3) == 0);
 
-    uint32_t *destp = dest;
+    __attribute__((__may_alias__)) uint32_t *destp = dest;
     for (size_t i = 0; i < n; i += 4)
         destp[i/4] = fn(bars, addr + i);
 }
