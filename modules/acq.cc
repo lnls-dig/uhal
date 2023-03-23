@@ -217,11 +217,6 @@ Controller::Controller(struct pcie_bars &bars):
     auto addrs = MemoryAllocator::get_memory_allocator().get_range(bars);
     ram_start_addr = addrs[0];
     ram_end_addr = addrs[1];
-
-    /* we want a consistent view of the world, and that includes no acquisitions
-     * we don't know about. it's too complicated to gather information about
-     * running acquisitions, as well, so that's not supported for now */
-    stop_acquisition();
 }
 Controller::~Controller() = default;
 
@@ -292,6 +287,16 @@ void Controller::start_acquisition()
     if (m_step != acq_step::stop)
         throw std::logic_error("acquisition should only be started if it's not currently running");
     m_step = acq_step::started;
+
+    /* we want a consistent view of the world, and that includes no acquisitions
+     * we don't know about. it's too complicated to gather information about
+     * running acquisitions, as well, so that's not supported for now. we want
+     * to call this function a single time, so we don't spend unnecessary time
+     * on the back and forth with the hardware */
+    if (!called_stop) {
+        called_stop = true;
+        stop_acquisition();
+    }
 
     write_config();
 
