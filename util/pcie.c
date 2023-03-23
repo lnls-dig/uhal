@@ -134,6 +134,8 @@ void bar2_read_v(struct pcie_bars *bars, size_t addr, void *dest, size_t n)
     __m128i scratch[256] __attribute__((aligned(64)));
 #endif
 
+    __attribute__((__may_alias__)) uint32_t *destp = dest;
+
     while (n) {
         const size_t addr_now = PCIE_ADDR_SDRAM_PG_OFFS(addr);
         const size_t can_read = sz - addr_now;
@@ -141,15 +143,16 @@ void bar2_read_v(struct pcie_bars *bars, size_t addr, void *dest, size_t n)
 
         set_sdram_pg(bars, PCIE_ADDR_SDRAM_PG(addr));
 
-#ifdef USE_SSE41
         /* stores number of uint32_t's written */
         size_t i = 0;
+
+#ifdef USE_SSE41
         const size_t alignment = 64, read_size = 1024;
 
         size_t head = addr_now % alignment;
         head = head ? alignment - head : 0;
         for (size_t j = head; i < to_read/4 && j; i++, j-=4)
-            ((uint32_t *)dest)[i] = *bar2_get_u32p_small(bars, addr_now, i);
+            destp[i] = *bar2_get_u32p_small(bars, addr_now, i);
 
         for (; i + (read_size-1) < to_read/4; i += read_size) {
             __m128i a, b, c, d;
@@ -178,23 +181,20 @@ void bar2_read_v(struct pcie_bars *bars, size_t addr, void *dest, size_t n)
                 d = _mm_load_si128(scratch + base + 3);
 
                 base = i + j * 16;
-                _mm_stream_si128((__m128i *)((uint32_t *)dest + base), a);
-                _mm_stream_si128((__m128i *)((uint32_t *)dest + base+4), b);
-                _mm_stream_si128((__m128i *)((uint32_t *)dest + base+8), c);
-                _mm_stream_si128((__m128i *)((uint32_t *)dest + base+12), d);
+                _mm_stream_si128((__m128i *)(destp + base), a);
+                _mm_stream_si128((__m128i *)(destp + base+4), b);
+                _mm_stream_si128((__m128i *)(destp + base+8), c);
+                _mm_stream_si128((__m128i *)(destp + base+12), d);
             }
         }
-
-        for (; i < to_read/4; i++)
-            ((uint32_t *)dest)[i] = *bar2_get_u32p_small(bars, addr_now, i);
-#else
-        for (size_t i = 0; i < to_read/4; i++)
-            ((uint32_t *)dest)[i] = *bar2_get_u32p_small(bars, addr_now, i);
 #endif
+        for (; i < to_read/4; i++)
+            destp[i] = *bar2_get_u32p_small(bars, addr_now, i);
 
         n -= to_read;
         addr += to_read;
-        dest = (unsigned char *)dest + to_read;
+        assert((to_read & 0x3) == 0);
+        destp = destp + to_read/4;
     }
 
     pthread_mutex_unlock(&bars->locks[BAR2]);
