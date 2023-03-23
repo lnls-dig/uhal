@@ -87,7 +87,7 @@ void Printer::print(FILE *f, bool verbose, unsigned indent, T value) const
             }
             break;
         case PrinterType::value_hex:
-            fprintf(f, "%s: %08X\n", final_name, (unsigned)value);
+            fprintf(f, "%s: 0x%08X\n", final_name, (unsigned)value);
             break;
         case PrinterType::custom_function:
             fprintf(f, "%s: ", final_name);
