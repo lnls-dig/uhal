@@ -177,9 +177,13 @@ void Core::decode()
 
 Controller::Controller(struct pcie_bars &bars):
     RegisterController(bars),
-    regs_storage(new struct acq_core),
+    regs_storage(new struct acq_core()),
     regs(*regs_storage)
 {
+    /* we want a consistent view of the world, and that includes no acquisitions
+     * we don't know about. it's too complicated to gather information about
+     * running acquisitions, as well, so that's not supported for now */
+    stop_acquisition();
 }
 Controller::~Controller() = default;
 
@@ -238,8 +242,6 @@ void Controller::encode_config()
 void Controller::write_config()
 {
     encode_config();
-
-    /* FIXME: before writing we should make sure nothing is currently running */
     bar4_write_v(&bars, addr, &regs, sizeof regs);
 }
 
@@ -257,6 +259,18 @@ void Controller::start_acquisition()
 
     /* clear start for next acquisition */
     insert_bit(regs.ctl, false, ACQ_CORE_CTL_FSM_START_ACQ);
+    bar4_write(&bars, addr + ACQ_CORE_CTL, regs.ctl);
+}
+
+void Controller::stop_acquisition()
+{
+    m_step = acq_step::stop;
+
+    insert_bit(regs.ctl, true, ACQ_CORE_CTL_FSM_STOP_ACQ);
+    bar4_write(&bars, addr + ACQ_CORE_CTL, regs.ctl);
+
+    /* clear bit */
+    insert_bit(regs.ctl, false, ACQ_CORE_CTL_FSM_STOP_ACQ);
     bar4_write(&bars, addr + ACQ_CORE_CTL, regs.ctl);
 }
 
