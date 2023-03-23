@@ -88,6 +88,7 @@ class Controller: public RegisterController {
     unsigned trigger_delay = 0;
 
     void start_acquisition();
+    void stop_acquisition();
 
     template <class Data>
     std::vector<Data> get_result();
