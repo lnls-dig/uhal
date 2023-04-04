@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
         fputs(
             "Usage: decode-reg mode <mode specific options>\n\n"
             "Positional arguments:\n"
-            "mode      mode of operation ('reset', 'decode', 'ram', 'acq', 'lamp', 'fofb_cc' or 'fofb_processing')\n",
+            "mode      mode of operation ('reset', 'decode', 'ram', 'acq', 'lamp')\n",
             stderr);
         return 1;
     }
@@ -94,11 +94,6 @@ int main(int argc, char *argv[])
     lamp_args.add_argument("-C").help("Count value").scan<'u', unsigned>();
     lamp_args.add_argument("-T").help("Trigger enable").scan<'u', unsigned>();
 
-    argparse::ArgumentParser fofb_processing_args("decode-reg fofb_processing", "1.0", argparse::default_arguments::help);
-    fofb_processing_args.add_parents(parent_args);
-    fofb_processing_args.add_argument("-c").help("ram bank channel number").required().scan<'u', unsigned>();
-    fofb_processing_args.add_argument("-C").help("constant value to be written").required().scan<'f', float>();
-
     argparse::ArgumentParser *pargs;
     if (mode == "reset") {
         pargs = &parent_args;
@@ -110,8 +105,6 @@ int main(int argc, char *argv[])
         pargs = &acq_args;
     } else if (mode == "lamp") {
         pargs = &lamp_args;
-    } else if (mode == "fofb_processing") {
-        pargs = &fofb_processing_args;
     } else {
         fprintf(stderr, "Unsupported type: '%s'\n", mode.c_str());
         return 1;
@@ -256,24 +249,6 @@ int main(int argc, char *argv[])
 
         if (auto trigger_enable = args.present<unsigned>("-T")) {
             ctl.trigger_enable = *trigger_enable;
-        }
-
-        ctl.write_params();
-    }
-    if (mode == "fofb_processing") {
-        fofb_processing::Controller ctl{bars};
-
-        if (auto v = read_sdb(&bars, fofb_processing::Controller::device_match, dev_index)) {
-            ctl.set_devinfo(*v);
-        } else {
-            fprintf(stderr, "Couldn't find fofb_processing module index %u\n", dev_index);
-            return 1;
-        }
-
-        ctl.channel = args.get<unsigned>("-c");
-
-        if (auto con_value = args.present<float>("-C")) {
-            std::fill(ctl.ram_bank_values.begin(), ctl.ram_bank_values.end(), *con_value);
         }
 
         ctl.write_params();
