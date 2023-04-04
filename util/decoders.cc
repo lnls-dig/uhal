@@ -16,8 +16,13 @@ RegisterDecoder::~RegisterDecoder() = default;
 
 bool RegisterDecoder::is_boolean_value(const char *name)
 {
-    auto type = printers.at(name).get_type();
-    return type == PrinterType::boolean || type == PrinterType::progress || type == PrinterType::enable;
+    /* deal with values that don't have a printer defined for them */
+    try {
+        auto type = printers.at(name).get_type();
+        return type == PrinterType::boolean || type == PrinterType::progress || type == PrinterType::enable;
+    } catch (std::out_of_range &e) {
+        return false;
+    }
 }
 
 int32_t RegisterDecoder::try_boolean_value(const char *name, int32_t value)
