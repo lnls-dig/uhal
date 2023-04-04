@@ -19,7 +19,7 @@ namespace fofb_processing {
 constexpr unsigned FOFB_PROCESSING_DEVID = 0x49681ca6;
 
 inline const device_match_fn device_match_fofb_processing =
-    device_match_impl<LNLS_VENDORID, FOFB_PROCESSING_DEVID, 1>;
+    device_match_impl<LNLS_VENDORID, FOFB_PROCESSING_DEVID, 3>;
 
 /* forward declaration */
 struct wb_fofb_processing_regs;
@@ -28,8 +28,6 @@ class Core: public RegisterDecoder {
     std::unique_ptr<struct wb_fofb_processing_regs> regs_storage;
     struct wb_fofb_processing_regs &regs;
 
-    uint32_t fixed_point;
-
     void decode();
     void print(FILE *, bool);
 
@@ -37,18 +35,19 @@ class Core: public RegisterDecoder {
     Core(struct pcie_bars &);
     ~Core();
 
-    std::vector<std::vector<float>> coefficients;
+    std::vector<int32_t> ref_orb_x, ref_orb_y;
+    std::vector<std::vector<double>> coefficients_x, coefficients_y;
 };
 
 class Controller: public RegisterController {
   protected:
-    uint32_t fixed_point;
-
     std::unique_ptr<struct wb_fofb_processing_regs> regs_storage;
     struct wb_fofb_processing_regs &regs;
 
-    void get_internal_values();
+    void set_devinfo_callback();
     void encode_config();
+
+    unsigned fixed_point_coeff, fixed_point_gains;
 
   public:
     Controller(struct pcie_bars &);
@@ -56,8 +55,20 @@ class Controller: public RegisterController {
 
     static inline const device_match_fn device_match = device_match_fofb_processing;
 
-    std::vector<float> ram_bank_values;
-    unsigned channel = 0;
+    bool intlk_sta_clr = false, intlk_en_orb_distort = false, intlk_en_packet_loss = false;
+    unsigned orb_distort_limit = 0, min_num_packets = 0;
+
+    std::vector<int32_t> ref_orb_x, ref_orb_y;
+
+    struct parameters {
+        std::vector<double> coefficients_x, coefficients_y;
+        bool acc_clear = false, acc_freeze = false;
+        double acc_gain = 0;
+        uint32_t sp_limit_max = 0, sp_limit_min = 0;
+        /** Decimation ratio must be at least 1 */
+        uint32_t sp_decim_ratio = 1;
+    };
+    std::vector<struct parameters> parameters;
 
     void write_params();
 };
