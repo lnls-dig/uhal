@@ -21,6 +21,7 @@ enum class PrinterType {
     /* directly print value */
     value, /* generic, so we don't need signed or unsigned versions */
     value_hex,
+    value_float,
     /* allow it to print its own value */
     custom_function,
 };
