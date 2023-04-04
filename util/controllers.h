@@ -18,6 +18,10 @@ class RegisterController {
 
     RegisterController(struct pcie_bars &bars);
 
+    /** Child classes should implement this function to capture one-time values
+     * from hardware and perform any other necessary initialization */
+    virtual void set_devinfo_callback() { }
+
   public:
     void set_devinfo(const struct sdb_device_info &);
 };
