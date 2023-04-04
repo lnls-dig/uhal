@@ -89,17 +89,17 @@ void Printer::print(FILE *f, bool verbose, unsigned indent, T value) const
         case PrinterType::value_hex:
             fprintf(f, "%s: 0x%08X\n", final_name, (unsigned)value);
             break;
+        case PrinterType::value_float:
+            fprintf(f, "%s: %.lf\n", final_name, (double)value);
+            break;
         case PrinterType::custom_function:
             fprintf(f, "%s: ", final_name);
             custom_fn(f, verbose, value);
             break;
     }
 }
-template void Printer::print(FILE *, bool, unsigned, uint64_t) const; /* masks are specified as xxxUL */
-template void Printer::print(FILE *, bool, unsigned, uint32_t) const; /* most values fall under this category */
-template void Printer::print(FILE *, bool, unsigned, uint16_t) const;
 template void Printer::print(FILE *, bool, unsigned, int32_t) const;
-template void Printer::print(FILE *, bool, unsigned, int16_t) const;
+template void Printer::print(FILE *, bool, unsigned, double) const;
 
 void print_reg_impl(FILE *f, bool v, unsigned &indent, const char *reg, unsigned offset)
 {
