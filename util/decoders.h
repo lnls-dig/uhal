@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <optional>
 #include <unordered_map>
+#include <variant>
 #include <vector>
 
 #include <sys/types.h>
@@ -33,6 +34,11 @@ class RegisterDecoder {
     bool is_boolean_value(const char *);
     int32_t try_boolean_value(const char *, int32_t);
 
+    template <class T>
+    void add_general_internal(const char *, T, bool);
+    template <class T>
+    void add_channel_internal(const char *, unsigned, T, bool);
+
   protected:
     size_t read_size;
     void *read_dest;
@@ -45,9 +51,11 @@ class RegisterDecoder {
      * - channel is for registers that are repeated for each channel
      *
      * int32_t is so far a generic enough value to be used here,
-     * but int64_t can be considered if it ever becomes an issue */
-    std::unordered_map<std::string_view, int32_t> general_data;
-    std::unordered_map<std::string_view, std::vector<int32_t>> channel_data;
+     * but int64_t can be considered if it ever becomes an issue.
+     * we use double for floating point values */
+    using data_type = std::variant<std::int32_t, double>;
+    std::unordered_map<std::string_view, data_type> general_data;
+    std::unordered_map<std::string_view, std::vector<data_type>> channel_data;
     /* hold the order in which the data has been added to the maps,
      * which allows us to implement printing cleanly and prettily
      * while also using an unordered_map */
@@ -67,7 +75,9 @@ class RegisterDecoder {
     virtual void decode() = 0;
 
     void add_general(const char *, int32_t, bool = false);
+    void add_general_double(const char *, double, bool = false);
     void add_channel_impl(const char *, unsigned, int32_t, bool = false);
+    void add_channel_impl_double(const char *, unsigned, double, bool = false);
 
   public:
     virtual ~RegisterDecoder();
@@ -76,8 +86,10 @@ class RegisterDecoder {
 
     void set_devinfo(const struct sdb_device_info &);
 
-    int32_t get_general_data(const char *);
-    int32_t get_channel_data(const char *, unsigned);
+    template <class T>
+    T get_general_data(const char *);
+    template <class T>
+    T get_channel_data(const char *, unsigned);
 
     device_match_fn device_match;
 
