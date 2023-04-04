@@ -5,6 +5,8 @@
  * Released according to the GNU GPL, version 3 or any later version.
  */
 
+#include <stdexcept>
+
 #include "decoders.h"
 
 RegisterDecoder::RegisterDecoder(struct pcie_bars &bars, std::unordered_map<std::string_view, Printer> printers):
@@ -30,23 +32,41 @@ int32_t RegisterDecoder::try_boolean_value(const char *name, int32_t value)
     return is_boolean_value(name) ? (bool)value : value;
 }
 
-void RegisterDecoder::add_general(const char *name, int32_t value, bool skip)
+template <class T>
+void RegisterDecoder::add_general_internal(const char *name, T value, bool skip)
 {
-    value = try_boolean_value(name, value);
-
     general_data[name] = value;
     if (!data_order_done && !skip)
         general_data_order.push_back(name);
 }
 
-void RegisterDecoder::add_channel_impl(const char *name, unsigned pos, int32_t value, bool skip)
+void RegisterDecoder::add_general(const char *name, int32_t value, bool skip)
 {
     value = try_boolean_value(name, value);
+    add_general_internal(name, value, skip);
+}
+void RegisterDecoder::add_general_double(const char *name, double value, bool skip)
+{
+    add_general_internal(name, value, skip);
+}
 
+template <class T>
+void RegisterDecoder::add_channel_internal(const char *name, unsigned pos, T value, bool skip)
+{
     /* using .at() to explicitly catch out of bounds access */
     channel_data[name].at(pos) = value;
     if (!data_order_done && !skip)
         channel_data_order.push_back(name);
+}
+
+void RegisterDecoder::add_channel_impl(const char *name, unsigned pos, int32_t value, bool skip)
+{
+    value = try_boolean_value(name, value);
+    add_channel_internal(name, pos, value, skip);
+}
+void RegisterDecoder::add_channel_impl_double(const char *name, unsigned pos, double value, bool skip)
+{
+    add_channel_internal(name, pos, value, skip);
 }
 
 void RegisterDecoder::set_devinfo(const struct sdb_device_info &new_devinfo)
@@ -66,7 +86,12 @@ void RegisterDecoder::print(FILE *f, bool verbose)
     unsigned indent = 0;
 
     auto print = [this, f, verbose, &indent](const char *name, auto value) {
-        printers.at(name).print(f, verbose, indent, value);
+        if (auto vp = std::get_if<int32_t>(&value))
+            printers.at(name).print(f, verbose, indent, *vp);
+        else if (auto vp = std::get_if<double>(&value))
+            printers.at(name).print(f, verbose, indent, *vp);
+        else
+            throw std::logic_error("unhandled data type from *_data");
     };
 
     for (const auto name: general_data_order) {
@@ -86,22 +111,28 @@ void RegisterDecoder::print(FILE *f, bool verbose)
     }
 }
 
-int32_t RegisterDecoder::get_general_data(const char *name)
+template <class T>
+T RegisterDecoder::get_general_data(const char *name)
 {
     try {
-        return general_data.at(name);
+        return std::get<T>(general_data.at(name));
     } catch (std::out_of_range &e) {
         fprintf(stderr, "%s: bad key '%s'\n", __func__, name);
         throw e;
     }
 }
+template int32_t RegisterDecoder::get_general_data(const char *);
+template double RegisterDecoder::get_general_data(const char *);
 
-int32_t RegisterDecoder::get_channel_data(const char *name, unsigned channel_index)
+template <class T>
+T RegisterDecoder::get_channel_data(const char *name, unsigned channel_index)
 {
     try {
-        return channel_data.at(name).at(channel_index);
+        return std::get<T>(channel_data.at(name).at(channel_index));
     } catch (std::out_of_range &e) {
         fprintf(stderr, "%s: bad key '%s'\n", __func__, name);
         throw e;
     }
 }
+template int32_t RegisterDecoder::get_channel_data(const char *, unsigned);
+template double RegisterDecoder::get_channel_data(const char *, unsigned);
