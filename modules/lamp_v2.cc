@@ -78,7 +78,7 @@ void CoreV2::decode()
 
     /* add printer if this value ever gets flags;
      * this is being done for IOC compatibility */
-    general_data["PS_STATUS"] = regs->sta;
+    add_general("PS_STATUS", regs->sta, true);
 
     number_of_channels = NUM_CHAN;
 
