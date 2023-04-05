@@ -220,6 +220,14 @@ Controller::Controller(struct pcie_bars &bars):
 }
 Controller::~Controller() = default;
 
+void Controller::set_devinfo_callback()
+{
+    /* we want a consistent view of the world, and that includes no acquisitions
+     * we don't know about. it's too complicated to gather information about
+     * running acquisitions, as well, so that's not supported for now */
+    stop_acquisition();
+}
+
 void Controller::get_internal_values()
 {
     uint32_t channel_desc = bar4_read(&bars, addr + ACQ_CORE_CH0_DESC + 8*channel);
@@ -287,16 +295,6 @@ void Controller::start_acquisition()
     if (m_step != acq_step::stop)
         throw std::logic_error("acquisition should only be started if it's not currently running");
     m_step = acq_step::started;
-
-    /* we want a consistent view of the world, and that includes no acquisitions
-     * we don't know about. it's too complicated to gather information about
-     * running acquisitions, as well, so that's not supported for now. we want
-     * to call this function a single time, so we don't spend unnecessary time
-     * on the back and forth with the hardware */
-    if (!called_stop) {
-        called_stop = true;
-        stop_acquisition();
-    }
 
     write_config();
 

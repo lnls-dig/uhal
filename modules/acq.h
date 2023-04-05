@@ -57,9 +57,6 @@ class Controller: public RegisterController {
              sample_size, alignment,
              acq_pre_samples, acq_post_samples;
 
-    /* stores whether stop has been called after initialization */
-    bool called_stop = false;
-
     std::unique_ptr<struct acq_core> regs_storage;
     struct acq_core &regs;
 
@@ -67,6 +64,8 @@ class Controller: public RegisterController {
     void encode_config();
     void write_config();
     bool acquisition_ready();
+
+    void set_devinfo_callback();
 
     /* state variables for async */
     enum class acq_step {
