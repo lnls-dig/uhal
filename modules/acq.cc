@@ -303,7 +303,6 @@ void Controller::start_acquisition()
 
     /* clear start for next acquisition */
     insert_bit(regs.ctl, false, ACQ_CORE_CTL_FSM_START_ACQ);
-    bar4_write(&bars, addr + ACQ_CORE_CTL, regs.ctl);
 }
 
 void Controller::stop_acquisition()
@@ -315,7 +314,6 @@ void Controller::stop_acquisition()
 
     /* clear bit */
     insert_bit(regs.ctl, false, ACQ_CORE_CTL_FSM_STOP_ACQ);
-    bar4_write(&bars, addr + ACQ_CORE_CTL, regs.ctl);
 }
 
 #define ACQ_CORE_STA_FSM_IDLE (1 << ACQ_CORE_STA_FSM_STATE_SHIFT)
