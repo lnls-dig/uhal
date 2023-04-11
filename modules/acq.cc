@@ -22,7 +22,7 @@
 namespace {
 
 const int max_acq_cores = 8;
-const size_t acq_ram = 2 * 1024 * 1024;
+const size_t acq_ram = 2UL * 1024UL * 1024UL * 1024UL;
 const size_t acq_ram_per_core = acq_ram / max_acq_cores;
 
 class MemoryAllocator {
