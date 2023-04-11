@@ -72,6 +72,10 @@ CoreV2::CoreV2(struct pcie_bars &bars):
 }
 CoreV2::~CoreV2() = default;
 
+#define STA_AMP_MASK \
+    (WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_L | WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_L | \
+     WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_R | WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_R)
+
 void CoreV2::decode()
 {
     uint32_t t;
@@ -90,7 +94,8 @@ void CoreV2::decode()
 
     for (const auto &channel_regs: regs->ch) {
         t = channel_regs.sta;
-        add_channel("AMP_STATUS", t);
+        /* we want AMP_STATUS to be 0 if everything is fine */
+        add_channel("AMP_STATUS", (~t) & STA_AMP_MASK);
         add_channel("AMP_IFLAG_L", t & WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_L);
         add_channel("AMP_TFLAG_L", t & WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_L);
         add_channel("AMP_IFLAG_R", t & WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_R);
