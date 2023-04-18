@@ -1,0 +1,7 @@
+# clangd files
+.cache/
+compile_commands.json
+
+# doxygen
+html/
+latex/
