@@ -1,4 +1,4 @@
-modules_src = ['acq.cc', 'lamp_v1.cc', 'lamp_v2.cc', 'fofb_cc.cc', 'fofb_processing.cc', 'trigger_iface.cc', 'trigger_mux.cc']
+modules_src = ['acq.cc', 'lamp.cc', 'fofb_cc.cc', 'fofb_processing.cc', 'trigger_iface.cc', 'trigger_mux.cc']
 modules_lib = static_library(
   'uhal-modules',
   modules_src,

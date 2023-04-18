@@ -22,31 +22,13 @@ namespace lamp {
 
 constexpr unsigned LAMP_DEVID = 0xa1248bec;
 
-inline const device_match_fn device_match_v1 =
-    device_match_impl<LNLS_VENDORID, LAMP_DEVID, 1>;
 inline const device_match_fn device_match_v2 =
     device_match_impl<LNLS_VENDORID, LAMP_DEVID, 2>;
 
-/* forward declarations to avoid conflicts in headers */
-struct rtmlamp_ohwr_regs;
 struct wb_rtmlamp_ohwr_regs;
 
-/* v1 */
-struct channel_registers {
-    uint32_t sta, ctl, pi_kp, pi_ti, pi_sp, dac;
-};
 /* v2 forward declaration */
 typedef struct channel_registers_v2_impl channel_registers_v2;
-
-class CoreV1: public RegisterDecoder {
-    std::unique_ptr<struct rtmlamp_ohwr_regs> regs;
-
-    void decode();
-
-  public:
-    CoreV1(struct pcie_bars &);
-    ~CoreV1();
-};
 
 class CoreV2: public RegisterDecoder {
     std::unique_ptr<struct wb_rtmlamp_ohwr_regs> regs;
@@ -85,19 +67,6 @@ class Controller: public RegisterController {
     std::optional<uint32_t> cnt;
 
     virtual void write_params() = 0;
-};
-
-class ControllerV1: public Controller {
-    /* control registers */
-    uint32_t ctl = 0;
-    struct channel_registers channel_regs{};
-
-    void encode_config();
-
-  public:
-    ControllerV1(struct pcie_bars &);
-
-    void write_params();
 };
 
 class ControllerV2: public Controller {

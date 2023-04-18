@@ -139,12 +139,7 @@ int main(int argc, char *argv[])
         if (type == "acq") {
             dec = std::make_unique<acq::Core>(bars);
         } else if (type == "lamp") {
-            dec = std::make_unique<lamp::CoreV1>(bars);
-            /* if v1 can't be found, try v2;
-             * assumes only one version of the device will be available */
-            if (!read_sdb(&bars, dec->device_match, dev_index)) {
-                dec = std::make_unique<lamp::CoreV2>(bars);
-            }
+            dec = std::make_unique<lamp::CoreV2>(bars);
         } else if (type == "fofb_cc") {
             dec = std::make_unique<fofb_cc::Core>(bars);
         } else if (type == "fofb_processing") {
@@ -224,16 +219,13 @@ int main(int argc, char *argv[])
         ctl.print_csv(stdout, res);
     }
     if (mode == "lamp") {
-        std::unique_ptr<lamp::Controller> ctlp = std::make_unique<lamp::ControllerV1>(bars);
-        if (!read_sdb(&bars, ctlp->device_match, dev_index)) {
-            ctlp = std::make_unique<lamp::ControllerV2>(bars);
-            if (!read_sdb(&bars, ctlp->device_match, dev_index)) {
-                fprintf(stderr, "Couldn't find lamp module index %u\n", dev_index);
-                return 1;
-            }
+        lamp::ControllerV2 ctl{bars};
+        if (auto v = read_sdb(&bars, ctl.device_match, dev_index)) {
+            ctl.set_devinfo(*v);
+        } else {
+            fprintf(stderr, "Couldn't find lamp module index %u\n", dev_index);
+            return 1;
         }
-        lamp::Controller &ctl = *ctlp;
-        ctl.set_devinfo(*read_sdb(&bars, ctl.device_match, dev_index));
 
         ctl.amp_enable = args.is_used("-e");
         ctl.mode = args.get<std::string>("-m");
