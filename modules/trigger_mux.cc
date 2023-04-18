@@ -7,7 +7,7 @@
 
 #include "util.h"
 
-#include "trigger_mux.h"
+#include "modules/trigger_mux.h"
 
 #include "hw/wb_trigger_mux_regs.h"
 

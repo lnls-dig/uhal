@@ -11,7 +11,7 @@
 
 #include "printer.h"
 #include "util.h"
-#include "fofb_processing.h"
+#include "modules/fofb_processing.h"
 
 namespace fofb_processing {
 

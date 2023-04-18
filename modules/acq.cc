@@ -17,7 +17,7 @@
 #include "decoders.h"
 #include "printer.h"
 #include "util.h"
-#include "acq.h"
+#include "modules/acq.h"
 
 namespace {
 

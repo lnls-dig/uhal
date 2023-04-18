@@ -21,12 +21,12 @@
 #include "pcie.h"
 #include "pcie-open.h"
 #include "util_sdb.h"
-#include "acq.h"
-#include "fofb_cc.h"
-#include "fofb_processing.h"
-#include "lamp.h"
-#include "trigger_iface.h"
-#include "trigger_mux.h"
+#include "modules/acq.h"
+#include "modules/fofb_cc.h"
+#include "modules/fofb_processing.h"
+#include "modules/lamp.h"
+#include "modules/trigger_iface.h"
+#include "modules/trigger_mux.h"
 
 using namespace std::chrono_literals;
 

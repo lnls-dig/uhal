@@ -21,6 +21,7 @@ catch2 = dependency('catch2-with-main', fallback: 'catch2')
 
 header_dir = 'uhal'
 
+subdir('include')
 subdir('util')
 subdir('modules')
 subdir('app')

@@ -10,7 +10,7 @@
 
 #include "printer.h"
 #include "util.h"
-#include "fofb_cc.h"
+#include "modules/fofb_cc.h"
 
 namespace fofb_cc {
 

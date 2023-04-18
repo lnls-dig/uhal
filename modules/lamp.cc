@@ -16,7 +16,7 @@ namespace lamp {
 }
 
 #define channel_registers_v2_impl wb_rtmlamp_ohwr_regs::ch
-#include "lamp.h"
+#include "modules/lamp.h"
 
 namespace lamp {
 

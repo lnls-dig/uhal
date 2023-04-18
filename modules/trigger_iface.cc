@@ -7,7 +7,7 @@
 
 #include "util.h"
 
-#include "trigger_iface.h"
+#include "modules/trigger_iface.h"
 
 #include "hw/wb_trigger_iface_regs.h"
 
