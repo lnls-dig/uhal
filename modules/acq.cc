@@ -134,7 +134,7 @@ void Core::decode()
     /* status register */
     t = regs.sta;
 
-    add_general("FSM_STATE", (t & ACQ_CORE_STA_FSM_STATE_MASK) >> ACQ_CORE_STA_FSM_STATE_SHIFT);
+    add_general("FSM_STATE", extract_value<uint32_t>(t, ACQ_CORE_STA_FSM_STATE_MASK));
     add_general("FSM_ACQ_DONE", t & ACQ_CORE_STA_FSM_ACQ_DONE);
     add_general("FC_TRANS_DONE", t & ACQ_CORE_STA_FC_TRANS_DONE);
     add_general("FC_FULL", t & ACQ_CORE_STA_FC_FULL);
@@ -146,11 +146,11 @@ void Core::decode()
     add_general("HW_TRIG_POL", t & ACQ_CORE_TRIG_CFG_HW_TRIG_POL);
     add_general("HW_TRIG_EN", t & ACQ_CORE_TRIG_CFG_HW_TRIG_EN);
     add_general("SW_TRIG_EN", t & ACQ_CORE_TRIG_CFG_SW_TRIG_EN);
-    add_general("INT_TRIG_SEL", ((t & ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_MASK) >> ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_SHIFT) + 1);
+    add_general("INT_TRIG_SEL", extract_value<uint32_t>(t, ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_MASK) + 1);
 
     /* trigger data config thresold */
     t = regs.trig_data_cfg;
-    add_general("THRES_FILT", (t & ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_MASK) >> ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_SHIFT);
+    add_general("THRES_FILT", extract_value<uint32_t>(t, ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_MASK));
 
     /* trigger */
     add_general("TRIG_DATA_THRES", (int32_t)regs.trig_data_thres);
@@ -158,9 +158,9 @@ void Core::decode()
 
     /* number of shots */
     t = regs.shots;
-    add_general("NB", (t & ACQ_CORE_SHOTS_NB_MASK) >> ACQ_CORE_SHOTS_NB_SHIFT);
+    add_general("NB", extract_value<uint32_t>(t, ACQ_CORE_SHOTS_NB_MASK));
     add_general("MULTISHOT_RAM_SIZE_IMPL", t & ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_IMPL);
-    add_general("MULTISHOT_RAM_SIZE", (t & ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_MASK) >> ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_SHIFT);
+    add_general("MULTISHOT_RAM_SIZE", extract_value<uint32_t>(t, ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_MASK));
 
     /* trigger address register */
     add_general("TRIG_POS", regs.trig_pos);
@@ -177,9 +177,9 @@ void Core::decode()
     /* acquisition channel control */
     t = regs.acq_chan_ctl;
     /* will be used to determine how many channels to show in the next block */
-    unsigned num_chan = (t & ACQ_CORE_ACQ_CHAN_CTL_NUM_CHAN_MASK) >> ACQ_CORE_ACQ_CHAN_CTL_NUM_CHAN_SHIFT;
-    add_general("WHICH", (t & ACQ_CORE_ACQ_CHAN_CTL_WHICH_MASK) >> ACQ_CORE_ACQ_CHAN_CTL_WHICH_SHIFT);
-    add_general("DTRIG_WHICH", (t & ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_MASK) >> ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_SHIFT);
+    unsigned num_chan = extract_value<uint32_t>(t, ACQ_CORE_ACQ_CHAN_CTL_NUM_CHAN_MASK);
+    add_general("WHICH", extract_value<uint32_t>(t, ACQ_CORE_ACQ_CHAN_CTL_WHICH_MASK));
+    add_general("DTRIG_WHICH", extract_value<uint32_t>(t, ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_MASK));
     add_general("NUM_CHAN", num_chan);
 
     if (num_chan > MAX_NUM_CHAN) {
@@ -200,10 +200,10 @@ void Core::decode()
 
     for (i = 0; i < num_chan; i++) {
         uint32_t desc = p[i*REGISTERS_PER_CHAN], adesc = p[i*REGISTERS_PER_CHAN + 1];
-        add_channel("INT_WIDTH", (desc & ACQ_CORE_CH0_DESC_INT_WIDTH_MASK) >> ACQ_CORE_CH0_DESC_INT_WIDTH_SHIFT);
-        add_channel("NUM_COALESCE", (desc & ACQ_CORE_CH0_DESC_NUM_COALESCE_MASK) >> ACQ_CORE_CH0_DESC_NUM_COALESCE_SHIFT);
-        add_channel("NUM_ATOMS", (adesc & ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_MASK) >> ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_SHIFT);
-        add_channel("ATOM_WIDTH", (adesc & ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_MASK) >> ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_SHIFT);
+        add_channel("INT_WIDTH", extract_value<uint32_t>(desc, ACQ_CORE_CH0_DESC_INT_WIDTH_MASK));
+        add_channel("NUM_COALESCE", extract_value<uint32_t>(desc, ACQ_CORE_CH0_DESC_NUM_COALESCE_MASK));
+        add_channel("NUM_ATOMS", extract_value<uint32_t>(adesc, ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_MASK));
+        add_channel("ATOM_WIDTH", extract_value<uint32_t>(adesc, ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_MASK));
 
         data_order_done = true;
     }
@@ -231,8 +231,8 @@ void Controller::set_devinfo_callback()
 void Controller::get_internal_values()
 {
     uint32_t channel_desc = bar4_read(&bars, addr + ACQ_CORE_CH0_DESC + 8*channel);
-    uint32_t num_coalesce = (channel_desc & ACQ_CORE_CH0_DESC_NUM_COALESCE_MASK) >> ACQ_CORE_CH0_DESC_NUM_COALESCE_SHIFT;
-    uint32_t int_width = (channel_desc & ACQ_CORE_CH0_DESC_INT_WIDTH_MASK) >> ACQ_CORE_CH0_DESC_INT_WIDTH_SHIFT;
+    uint32_t num_coalesce = extract_value<uint32_t>(channel_desc, ACQ_CORE_CH0_DESC_NUM_COALESCE_MASK);
+    uint32_t int_width = extract_value<uint32_t>(channel_desc, ACQ_CORE_CH0_DESC_INT_WIDTH_MASK);
 
     /* taken from halcs:
      *  - int_width is a width in bits, so we need to divide by 8 to get a number of bytes
@@ -242,8 +242,8 @@ void Controller::get_internal_values()
     alignment = (ddr3_payload_size > sample_size) ? ddr3_payload_size / sample_size : 1;
 
     uint32_t channel_atom_desc = bar4_read(&bars, addr + ACQ_CORE_CH0_ATOM_DESC + 8*channel);
-    channel_atom_width = (channel_atom_desc & ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_MASK) >> ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_SHIFT;
-    channel_num_atoms = (channel_atom_desc & ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_MASK) >> ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_SHIFT;
+    channel_atom_width = extract_value<uint32_t>(channel_atom_desc, ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_MASK);
+    channel_num_atoms = extract_value<uint32_t>(channel_atom_desc, ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_MASK);
 }
 
 void Controller::encode_config()
