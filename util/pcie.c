@@ -24,27 +24,21 @@
 #define PCIE_SDRAM_PG_SHIFT                 0           /* bits */
 #define PCIE_SDRAM_PG_MAX                   20          /* bits */
 #define PCIE_SDRAM_PG_SIZE                  (1<<PCIE_SDRAM_PG_MAX)  /* in Bytes (8-bit) */
-#define PCIE_SDRAM_PG_MASK                  ((PCIE_SDRAM_PG_SIZE-1) << \
-                                                PCIE_SDRAM_PG_SHIFT)
+#define PCIE_SDRAM_PG_MASK                  ((PCIE_SDRAM_PG_SIZE-1) << PCIE_SDRAM_PG_SHIFT)
 
 /* Wishbone is accessed via 64-bit BAR (64-bit addressed) */
 #define PCIE_WB_PG_SHIFT                    0           /* bits */
 #define PCIE_WB_PG_MAX                      16          /* bits */
 #define PCIE_WB_PG_SIZE                     (1<<PCIE_WB_PG_MAX)  /* in Bytes (8-bit) */
-#define PCIE_WB_PG_MASK                     ((PCIE_WB_PG_SIZE-1) << \
-                                                PCIE_WB_PG_SHIFT)
+#define PCIE_WB_PG_MASK                     ((PCIE_WB_PG_SIZE-1) << PCIE_WB_PG_SHIFT)
 
 /* PCIe SDRAM Address Page number and offset extractor */
-#define PCIE_ADDR_SDRAM_PG_OFFS(addr)       ((addr & PCIE_SDRAM_PG_MASK) >> \
-                                                PCIE_SDRAM_PG_SHIFT)
-#define PCIE_ADDR_SDRAM_PG(addr)            ((addr & ~PCIE_SDRAM_PG_MASK) >> \
-                                                PCIE_SDRAM_PG_MAX)
+#define PCIE_ADDR_SDRAM_PG_OFFS(addr)       ((addr & PCIE_SDRAM_PG_MASK) >> PCIE_SDRAM_PG_SHIFT)
+#define PCIE_ADDR_SDRAM_PG(addr)            ((addr & ~PCIE_SDRAM_PG_MASK) >> PCIE_SDRAM_PG_MAX)
 
 /* PCIe WB Address Page number and offset extractor */
-#define PCIE_ADDR_WB_PG_OFFS(addr)          ((addr & PCIE_WB_PG_MASK) >> \
-                                                PCIE_WB_PG_SHIFT)
-#define PCIE_ADDR_WB_PG(addr)               ((addr & ~PCIE_WB_PG_MASK) >> \
-                                                PCIE_WB_PG_MAX)
+#define PCIE_ADDR_WB_PG_OFFS(addr)          ((addr & PCIE_WB_PG_MASK) >> PCIE_WB_PG_SHIFT)
+#define PCIE_ADDR_WB_PG(addr)               ((addr & ~PCIE_WB_PG_MASK) >> PCIE_WB_PG_MAX)
 
 #define WB_QWORD_ACC                        3           /* 64-bit addressing */
 #define WB_DWORD_ACC                        2           /* 32-bit addressing */
