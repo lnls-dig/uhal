@@ -11,6 +11,6 @@ utilities = declare_dependency(link_with: utilities_lib, include_directories: ut
 subdir('tests')
 
 install_headers(
-  ['controllers.h', 'decoders.h', 'pcie-open.h', 'pcie-defs.h', 'printer.h', 'sdb-defs.h', 'util_sdb.h'],
+  ['controllers.h', 'decoders.h', 'pcie-open.h', 'pcie-defs.h', 'sdb-defs.h', 'util_sdb.h'],
   subdir: header_dir
 )
