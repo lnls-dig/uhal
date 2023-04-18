@@ -14,7 +14,7 @@
 #include <type_traits>
 #include <unordered_map>
 
-#include "decoders.h"
+#include "pcie.h"
 #include "printer.h"
 #include "util.h"
 #include "modules/acq.h"

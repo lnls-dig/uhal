@@ -7,6 +7,8 @@
 
 #include "util.h"
 
+#include "pcie.h"
+#include "printer.h"
 #include "modules/trigger_mux.h"
 
 #include "hw/wb_trigger_mux_regs.h"

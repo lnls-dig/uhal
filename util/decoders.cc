@@ -7,6 +7,7 @@
 
 #include <stdexcept>
 
+#include "pcie.h"
 #include "decoders.h"
 
 RegisterDecoder::RegisterDecoder(struct pcie_bars &bars, std::unordered_map<std::string_view, Printer> printers):

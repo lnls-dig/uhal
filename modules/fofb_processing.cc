@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <type_traits>
 
+#include "pcie.h"
 #include "printer.h"
 #include "util.h"
 #include "modules/fofb_processing.h"

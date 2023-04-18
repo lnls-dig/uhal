@@ -8,30 +8,7 @@
 #ifndef PCIE_H
 #define PCIE_H
 
-#include <pthread.h>
-#include <stdint.h>
-#include <sys/types.h>
-
-enum bar_lock {
-    BAR2,
-    BAR4,
-    NUM_LOCKS,
-};
-
-struct pcie_bars {
-    volatile void *bar0;
-    volatile void *bar2;
-    volatile void *bar4;
-
-    size_t sizes[3];
-
-    /* private fields */
-    uint32_t last_bar4_page; /* protected by locks[BAR4] */
-
-    /* we only need locking for bar2 and bar4, since they are paged.
-     * these mutexes MUST be initialized as recursive */
-    pthread_mutex_t locks[NUM_LOCKS];
-};
+#include "pcie-defs.h"
 
 #ifdef __cplusplus
 extern "C" {

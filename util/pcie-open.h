@@ -8,7 +8,7 @@
 #ifndef PCIE_OPEN_H
 #define PCIE_OPEN_H
 
-#include "pcie.h"
+#include "pcie-defs.h"
 
 void dev_open_slot(struct pcie_bars &bars, int slot);
 void dev_open_slot(struct pcie_bars &bars, const char *slot);

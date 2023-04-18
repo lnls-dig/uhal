@@ -8,6 +8,7 @@
 #include <cstring>
 #include <unordered_map>
 
+#include "pcie.h"
 #include "printer.h"
 #include "util.h"
 

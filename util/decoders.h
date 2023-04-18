@@ -17,9 +17,8 @@
 
 #include <sys/types.h>
 
-#include "pcie.h"
 #include "printer.h"
-#include "util_sdb.h"
+#include "sdb-defs.h"
 
 #define LNLS_VENDORID 0x1000000000001215
 

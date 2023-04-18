@@ -8,7 +8,7 @@
 #ifndef CONTROLLERS_H
 #define CONTROLLERS_H
 
-#include "util_sdb.h"
+#include "sdb-defs.h"
 
 class RegisterController {
   protected:

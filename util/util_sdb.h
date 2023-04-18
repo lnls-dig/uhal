@@ -9,17 +9,9 @@
 #define UPPER_SDB_H
 
 #include <optional>
-#include <functional>
 
-#include "pcie.h"
-
-struct sdb_device_info {
-    uint64_t start_addr;
-    uint64_t vendor_id;
-    uint32_t device_id;
-    uint8_t abi_ver_major;
-    uint8_t abi_ver_minor;
-};
+#include "pcie-defs.h"
+#include "sdb-defs.h"
 
 typedef std::function<bool(const struct sdb_device_info &)> device_match_fn;
 

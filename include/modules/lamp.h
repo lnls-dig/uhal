@@ -12,9 +12,6 @@
 #include <optional>
 #include <string>
 
-#include "pcie.h"
-#include "util_sdb.h"
-
 #include "controllers.h"
 #include "decoders.h"
 
