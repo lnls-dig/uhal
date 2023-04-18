@@ -131,7 +131,7 @@ void Core::decode()
         return regs.ram_reg[offset].data;
     };
 
-    add_general("BPM_ID", ram_reg(BPM_ID));
+    add_general("BPM_ID", ram_reg(BPM_ID) & BPM_ID_MASK);
     add_general("TIME_FRAME_LEN", ram_reg(TIME_FRAME_LEN));
     add_general("MGT_POWERDOWN", ram_reg(MGT_POWERDOWN));
     add_general("MGT_LOOPBACK", ram_reg(MGT_LOOPBACK));
@@ -185,9 +185,9 @@ void Controller::encode_config()
     get_internal_values();
 
     uint32_t *target_reg;
-    auto insert_cfg = [this, &target_reg](auto option, uint32_t mask) {
+    auto insert_cfg = [&target_reg](auto option, uint32_t mask) {
         if (option)
-            insert_bit(*target_reg, *cc_enable, mask);
+            insert_bit(*target_reg, *option, mask);
     };
 
     target_reg = &regs.cfg_val;
@@ -239,4 +239,4 @@ void Controller::write_params()
         regs.cfg_val | FOFB_CC_REGS_CFG_VAL_ACT_PART);
 }
 
-} /* namespace fofb_processing */
+} /* namespace fofb_cc */
