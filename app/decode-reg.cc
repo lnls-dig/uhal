@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
         fputs(
             "Usage: decode-reg mode <mode specific options>\n\n"
             "Positional arguments:\n"
-            "mode      mode of operation ('reset', 'decode', 'ram', 'acq', 'lamp')\n",
+            "mode      mode of operation ('reset', 'build_info', 'decode', 'ram', 'acq', 'lamp')\n",
             stderr);
         return 1;
     }
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
     lamp_args.add_argument("-T").help("Trigger enable").scan<'u', unsigned>();
 
     argparse::ArgumentParser *pargs;
-    if (mode == "reset") {
+    if (mode == "reset" || mode == "build_info") {
         pargs = &parent_args;
     } else if (mode == "decode") {
         pargs = &decode_args;
@@ -128,6 +128,20 @@ int main(int argc, char *argv[])
 
     if (mode == "reset") {
         device_reset(&bars);
+        return 0;
+    }
+    if (mode == "build_info") {
+        auto build_info = get_synthesis_info(&bars);
+
+        for (auto &b: build_info) {
+            printf("name %s\n", b.name);
+            printf("    commit-id %s\n", b.commit);
+            if (b.tool_name[0]) printf("    tool-name %s\n", b.tool_name);
+            if (b.tool_version) printf("    tool-version 0x%08x\n", (unsigned)b.tool_version);
+            if (b.date) printf("    date 0x%08x\n", (unsigned)b.date);
+            if (b.user_name[0]) printf("    user-name %s\n", b.user_name);
+        }
+
         return 0;
     }
 
