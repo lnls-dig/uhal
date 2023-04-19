@@ -23,6 +23,15 @@ struct sdb_device_info {
     uint8_t abi_ver_minor;
 };
 
+struct sdb_synthesis_info {
+    char name[17];
+    char commit[33];
+    char tool_name[9];
+    uint32_t tool_version;
+    uint32_t date;
+    char user_name[16];
+};
+
 #ifdef __cplusplus
 typedef std::function<bool(const struct sdb_device_info &)> device_match_fn;
 #endif
