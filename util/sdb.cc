@@ -82,3 +82,50 @@ bool print_sdb(const struct sdb_device_info &devinfo)
         (unsigned)devinfo.abi_ver_major, (uintmax_t)devinfo.start_addr);
     return false;
 }
+
+std::vector<struct sdb_synthesis_info> get_synthesis_info(struct pcie_bars *bars)
+{
+    struct sdbfs fs = sdbfs_init(bars);
+    defer _(nullptr, [&fs](...){sdbfs_dev_destroy(&fs);});
+
+    std::vector<struct sdb_synthesis_info> rv;
+
+    struct sdb_device *d;
+    while ((d = sdbfs_scan(&fs, 0))) {
+        struct sdb_product *p = &d->sdb_component.product;
+        if (p->record_type != sdb_type_synthesis) continue;
+
+        auto s = (struct sdb_synthesis *)(void *)d;
+
+        struct sdb_synthesis_info syninfo;
+
+        auto copy_string = [](auto &dest, const auto &src) {
+            /* strings in sdb_synthesis aren't nul-terminated */
+            static_assert(sizeof dest == sizeof src + 1);
+
+            /* some fields might be empty (where padding can be nul or whitespace)  */
+            if (src[0] && src[0] != ' ') {
+                memcpy(dest, src, sizeof src);
+                dest[sizeof src] = '\0';
+            } else {
+                strcpy(dest, "");
+            }
+        };
+
+        copy_string(syninfo.name, s->syn_name);
+
+        static_assert(sizeof syninfo.commit == sizeof s->commit_id * 2 + 1);
+        /* sprintf nul-terminates it automatically for us */
+        for (size_t i = 0; i < sizeof s->commit_id; i++)
+            sprintf(syninfo.commit + i*2, "%02x", s->commit_id[i]);
+
+        copy_string(syninfo.tool_name, s->tool_name);
+        syninfo.tool_version = ntohl(s->tool_version);
+        syninfo.date = ntohl(s->date);
+        copy_string(syninfo.user_name, s->user_name);
+
+        rv.push_back(syninfo);
+    }
+
+    return rv;
+}
