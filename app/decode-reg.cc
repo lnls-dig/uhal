@@ -25,6 +25,7 @@
 #include "modules/fofb_cc.h"
 #include "modules/fofb_processing.h"
 #include "modules/lamp.h"
+#include "modules/sysid.h"
 #include "modules/trigger_iface.h"
 #include "modules/trigger_mux.h"
 
@@ -158,6 +159,8 @@ int main(int argc, char *argv[])
             dec = std::make_unique<fofb_cc::Core>(bars);
         } else if (type == "fofb_processing") {
             dec = std::make_unique<fofb_processing::Core>(bars);
+        } else if (type == "sys_id") {
+            dec = std::make_unique<sys_id::Core>(bars);
         } else if (type == "trigger_iface") {
             dec = std::make_unique<trigger_iface::Core>(bars);
         } else if (type == "trigger_mux") {
