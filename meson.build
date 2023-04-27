@@ -5,13 +5,21 @@ project(
   default_options: ['c_std=gnu11', 'cpp_std=c++17', 'warning_level=3',],
 )
 
+languages = ['c', 'cpp']
+
 if get_option('pcie_opt')
   if host_machine.cpu_family() == 'x86_64'
-    add_project_arguments('-msse4.1', language: ['c', 'cpp'])
+    add_project_arguments('-msse4.1', language: languages)
   endif
 endif
 
-add_project_arguments('-Wstrict-aliasing=3', language: ['c', 'cpp'])
+foreach lang : languages
+  compiler = meson.get_compiler(lang)
+  if compiler.has_argument('-Wstrict-aliasing=3')
+    add_project_arguments('-Wstrict-aliasing=3', language: lang)
+  endif
+endforeach
+
 
 subdir('third_party')
 
