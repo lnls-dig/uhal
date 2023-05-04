@@ -178,7 +178,7 @@ void Controller::encode_config()
 
     for (unsigned i = 0; i < MAX_NUM_CHAN; i++) {
         if (parameters[i].sp_decim_ratio < 1)
-            throw std::runtime_error("decimation ration can't be 0");
+            throw std::runtime_error("decimation ratio can't be 0");
 
         for (unsigned j = 0; j < MAX_BPMS; j++) {
             regs.ch[i].coeff_ram_bank[j].data = float2fixed(parameters[i].coefficients_x[j], fixed_point_coeff);
