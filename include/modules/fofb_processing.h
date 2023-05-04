@@ -19,7 +19,7 @@ namespace fofb_processing {
 constexpr unsigned FOFB_PROCESSING_DEVID = 0x49681ca6;
 
 inline const device_match_fn device_match_fofb_processing =
-    device_match_impl<LNLS_VENDORID, FOFB_PROCESSING_DEVID, 3>;
+    device_match_impl<LNLS_VENDORID, FOFB_PROCESSING_DEVID, 4>;
 
 /* forward declaration */
 struct wb_fofb_processing_regs;
