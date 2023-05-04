@@ -1,6 +1,6 @@
 PROJECT_NAME = "μHAL"
 
-INPUT = README.md app/ modules/ modules/hw/ util/
+INPUT = README.md app/ include/modules/ modules/ util/
 USE_MDFILE_AS_MAINPAGE = README.md
 
 BUILTIN_STL_SUPPORT = YES
