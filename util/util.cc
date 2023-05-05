@@ -78,15 +78,6 @@ bool get_bit(uint32_t value, uint32_t mask)
     return value & mask;
 }
 
-unsigned align_extend(unsigned value, unsigned alignment)
-{
-    unsigned extra = value % alignment;
-    if (extra)
-        return value + (alignment - extra);
-    else
-        return value;
-}
-
 template<typename T>
 T extract_value(uint32_t value, uint32_t mask)
 {
