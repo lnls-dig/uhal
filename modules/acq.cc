@@ -254,8 +254,21 @@ void Controller::encode_config()
 
     clear_and_insert(regs.acq_chan_ctl, channel, ACQ_CORE_ACQ_CHAN_CTL_WHICH_MASK);
 
-    regs.pre_samples = align_extend(pre_samples, alignment);
-    regs.post_samples = align_extend(post_samples, alignment);
+    auto align_extend = [](unsigned value, unsigned alignment, bool can_be_zero) -> unsigned {
+        if (value == 0) {
+            if (can_be_zero) return 0;
+            else return alignment;
+        }
+
+        unsigned extra = value % alignment;
+        if (extra)
+            return value + (alignment - extra);
+        else
+            return value;
+    };
+
+    regs.pre_samples = align_extend(pre_samples, alignment, false);
+    regs.post_samples = align_extend(post_samples, alignment, trigger_type == "now");
 
     clear_and_insert(regs.shots, number_shots, ACQ_CORE_SHOTS_NB_MASK);
 
