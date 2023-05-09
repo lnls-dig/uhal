@@ -16,7 +16,7 @@
 
 /* XXX: replace with C++20's <bit> */
 
-static inline unsigned bit_popcount(uint32_t x)
+static inline unsigned internal_bit_popcount(uint32_t x)
 {
 #ifdef __GNUC__
     return __builtin_popcount(x);
@@ -29,6 +29,14 @@ static inline unsigned bit_popcount(uint32_t x)
     return c;
 #endif
 }
+
+unsigned bit_popcount(uint32_t x)
+{
+    return internal_bit_popcount(x);
+}
+
+/* use only the inline version in this file */
+#define bit_popcount internal_bit_popcount
 
 static inline unsigned bit_countr_zero(uint32_t x)
 {
