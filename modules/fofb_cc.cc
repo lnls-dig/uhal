@@ -17,6 +17,8 @@ namespace fofb_cc {
 
 #include "hw/wb_fofb_cc_regs.h"
 
+static_assert(FOFB_CC_REGS_RAM_REG == offsetof(fofb_cc_regs, ram_reg));
+
 #define FOFB_CC_OFFS_SHIFT 8
 
 /* Read/Write RAM-based registers */

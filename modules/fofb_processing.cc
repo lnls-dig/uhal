@@ -18,6 +18,11 @@ namespace fofb_processing {
 
 #include "hw/wb_fofb_processing_regs.h"
 
+static_assert(WB_FOFB_PROCESSING_REGS_SPS_RAM_BANK == offsetof(wb_fofb_processing_regs, sps_ram_bank));
+/* check channel 1 to make sure all values are correct, including the channel size */
+static_assert(WB_FOFB_PROCESSING_REGS_CH + WB_FOFB_PROCESSING_REGS_CH_COEFF_RAM_BANK + WB_FOFB_PROCESSING_REGS_CH_SIZE ==
+    offsetof(wb_fofb_processing_regs, ch[1].coeff_ram_bank));
+
 static constexpr unsigned MAX_NUM_CHAN = 12, MAX_BPMS = 256;
 
 Core::Core(struct pcie_bars &bars):
