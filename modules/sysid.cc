@@ -17,6 +17,8 @@ namespace sys_id {
 
 #include "hw/wb_fofb_sys_id_regs.h"
 
+static_assert(WB_FOFB_SYS_ID_REGS_PRBS_BPM_POS_DISTORT == offsetof(wb_fofb_sys_id_regs, prbs.bpm_pos_distort.distort_ram));
+
 static_assert(WB_FOFB_SYS_ID_REGS_PRBS_SP_DISTORT_CH_LEVELS_LEVEL_0_MASK ==
     WB_FOFB_SYS_ID_REGS_PRBS_BPM_POS_DISTORT_DISTORT_RAM_LEVELS_LEVEL_0_MASK);
 static_assert(WB_FOFB_SYS_ID_REGS_PRBS_SP_DISTORT_CH_LEVELS_LEVEL_1_MASK ==
