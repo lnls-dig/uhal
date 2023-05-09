@@ -61,6 +61,7 @@ int main(int argc, char *argv[])
     decode_args.add_argument("-c").help("channel number").scan<'u', unsigned>();
     decode_args.add_argument("-w").help("watch registers").default_value(false).implicit_value(true);
     decode_args.add_argument("-t").help("time register reading").default_value(false).implicit_value(true);
+    decode_args.add_argument("-B").help("binary dump").default_value(false).implicit_value(true);
 
     argparse::ArgumentParser ram_args("decode-reg ram", "1.0", argparse::default_arguments::help);
     ram_args.add_parents(parent_args);
@@ -177,6 +178,12 @@ int main(int argc, char *argv[])
                 fprintf(stdout, "Found device in %08jx\n", (uintmax_t)d->start_addr);
             }
             dec->set_devinfo(*d);
+
+            if (args.is_used("-B")) {
+                dec->read();
+                dec->binary_dump(stdout);
+                return 0;
+            }
 
             bool watch = args.is_used("-w");
             bool time_watch = args.is_used("-t");
