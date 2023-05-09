@@ -83,6 +83,7 @@ class RegisterDecoder {
   public:
     virtual ~RegisterDecoder();
     virtual void read();
+    void binary_dump(FILE *) const;
     virtual void print(FILE *, bool);
 
     void set_devinfo(const struct sdb_device_info &);

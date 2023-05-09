@@ -83,6 +83,11 @@ void RegisterDecoder::read()
     decode();
 }
 
+void RegisterDecoder::binary_dump(FILE *f) const
+{
+    fwrite(read_dest, 1, read_size, f);
+}
+
 void RegisterDecoder::print(FILE *f, bool verbose)
 {
     unsigned indent = 0;
