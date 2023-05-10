@@ -234,10 +234,10 @@ void Controller::get_internal_values()
     uint32_t num_coalesce = extract_value<uint32_t>(channel_desc, ACQ_CORE_CH0_DESC_NUM_COALESCE_MASK);
     uint32_t int_width = extract_value<uint32_t>(channel_desc, ACQ_CORE_CH0_DESC_INT_WIDTH_MASK);
 
-    /* taken from halcs:
-     *  - int_width is a width in bits, so we need to divide by 8 to get a number of bytes
-     */
+    /* int_width is in bits, so needs to be converted to bytes */
     sample_size = (int_width / 8) * num_coalesce;
+    if (bit_popcount(sample_size) != 1)
+        throw std::logic_error("we can only handle power of 2 sample sizes");
 
     alignment = (ddr3_payload_size > sample_size) ? ddr3_payload_size / sample_size : 1;
 
