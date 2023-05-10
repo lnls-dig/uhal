@@ -348,25 +348,27 @@ std::vector<Data> Controller::get_result()
         throw std::logic_error("get_result() called in the wrong step");
     m_step = acq_step::stop;
 
-    /* intermediate vectors for any size atoms */
+    /* total number of elements (samples*atoms) */
+    size_t total_samples = acq_pre_samples + acq_post_samples,
+           elements = total_samples * channel_num_atoms;
+    size_t total_bytes = elements * (channel_atom_width/8);
+
+    /* this is an identity, just want to be sure */
+    if (total_bytes != (total_samples) * sample_size)
+        throw std::logic_error("elements * channel_atom_width/8 different from samples * sample_size");
+
+    /* how we interpret the contents of FPGA memory depends on atom width,
+     * so we need intermediate vectors for any size atoms */
     constexpr bool is_signed = std::is_signed_v<Data>;
     std::vector<std::conditional_t<is_signed, int8_t, uint8_t>> v8;
     std::vector<std::conditional_t<is_signed, int16_t, uint16_t>> v16;
     std::vector<std::conditional_t<is_signed, int32_t, uint32_t>> v32;
 
-    /* total number of elements (samples*atoms) */
-    size_t total_samples = acq_pre_samples + acq_post_samples,
-           elements = total_samples * channel_num_atoms;
-
-    size_t trigger_pos = bar4_read(&bars, addr + ACQ_CORE_TRIG_POS);
-
-    /* how we interpret the contents of FPGA memory depends on atom width */
+    /* allows the code below to be generic and only use data_pointer */
     void *data_pointer;
-    size_t data_size;
-    auto set_data = [&data_pointer, &data_size, elements](auto &v) {
+    auto set_data = [&data_pointer, elements](auto &v) {
         v.resize(elements);
         data_pointer = v.data();
-        data_size = sizeof v[0];
     };
     switch (channel_atom_width) {
         case 8:
@@ -382,12 +384,8 @@ std::vector<Data> Controller::get_result()
             throw std::runtime_error("unsupported channel atom width");
     }
 
-    size_t total_bytes = elements * data_size;
-    /* this is an identity, just want to be sure */
-    if (total_bytes != (total_samples) * sample_size)
-        throw std::logic_error("elements * data_size different from samples * sample_size");
-
     /* FIXME: perform circular buffer dance correctly */
+    size_t trigger_pos = bar4_read(&bars, addr + ACQ_CORE_TRIG_POS);
     size_t initial_pos = trigger_pos - sample_size * acq_pre_samples;
     bar2_read_v(&bars, initial_pos, data_pointer, total_bytes);
 
