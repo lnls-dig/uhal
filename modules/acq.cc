@@ -384,10 +384,36 @@ std::vector<Data> Controller::get_result()
             throw std::runtime_error("unsupported channel atom width");
     }
 
-    /* FIXME: perform circular buffer dance correctly */
     size_t trigger_pos = bar4_read(&bars, addr + ACQ_CORE_TRIG_POS);
-    size_t initial_pos = trigger_pos - sample_size * acq_pre_samples;
-    bar2_read_v(&bars, initial_pos, data_pointer, total_bytes);
+
+    /* these functions convert bytes (as an offset from ram_start_addr) into
+     * amount of samples */
+    auto bytes2samples = [this](ssize_t v) -> ssize_t { return v / sample_size; };
+    auto samples2bytes = [this](ssize_t v) -> ssize_t { return v * sample_size; };
+    const ssize_t max_bytes = ram_end_addr - ram_start_addr,
+          max_samples = bytes2samples(max_bytes);
+    /* in order to simplify working with the acquisition circular buffer, think
+     * first in terms of indexes into a circular buffer */
+    const ssize_t trigger_index = bytes2samples(trigger_pos - ram_start_addr);
+    ssize_t start_index = trigger_index - acq_pre_samples;
+    /* trigger_index is the position of the first post_sample, so we need to
+     * subtract one to get the end_index */
+    ssize_t end_index = trigger_index + acq_post_samples - 1;
+    /* convert from negative or >max_samples indexes */
+    start_index %= max_samples;
+    end_index %= max_samples;
+
+    if (end_index > start_index) {
+        /* copy when the acquisition sits in a contiguous segment in RAM */
+        bar2_read_v(&bars, ram_start_addr + samples2bytes(start_index), data_pointer, total_bytes);
+    } else {
+        /* copy when the acquisition wraps around the buffer */
+        const ssize_t first_read = samples2bytes(max_samples - start_index);
+        /* copy from the start of the acquisition to the end of the buffer */
+        bar2_read_v(&bars, ram_start_addr + samples2bytes(start_index), data_pointer, first_read);
+        /* copy from the start of the buffer to the end of the acquisition */
+        bar2_read_v(&bars, ram_start_addr, (unsigned char *)data_pointer + first_read, total_bytes - first_read);
+    }
 
     auto convert_result = [elements](auto &v) -> std::vector<Data> {
         if constexpr (sizeof v[0] == sizeof(Data)) return v;
