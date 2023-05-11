@@ -447,7 +447,7 @@ std::vector<Data> Controller::result(std::optional<std::chrono::milliseconds> wa
 
     acq_status r;
     do {
-        r = result_async();
+        r = get_acq_status();
         if (r == acq_status::in_progress) std::this_thread::sleep_for(acq_loop_time);
     } while (
         r == acq_status::in_progress &&
@@ -466,7 +466,7 @@ template std::vector<int32_t> Controller::result(std::optional<std::chrono::mill
 template std::vector<int16_t> Controller::result(std::optional<std::chrono::milliseconds>);
 template std::vector<int8_t> Controller::result(std::optional<std::chrono::milliseconds>);
 
-acq_status Controller::result_async()
+acq_status Controller::get_acq_status()
 {
     if (m_step == acq_step::stop) {
         return acq_status::idle;

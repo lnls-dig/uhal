@@ -100,8 +100,9 @@ class Controller: public RegisterController {
 
     template <class Data> [[nodiscard]]
     std::vector<Data> result(std::optional<std::chrono::milliseconds> wait_time=std::nullopt);
+    /** Get acquisition status. For asynchronous use */
     [[nodiscard]]
-    acq_status result_async();
+    acq_status get_acq_status();
 
     template<typename T>
     void print_csv(FILE *f, std::vector<T> &res);
