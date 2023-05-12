@@ -13,7 +13,7 @@
 #include "util.h"
 
 namespace lamp {
-#include "hw/wb_rtmlamp_ohwr_regs_v2.h"
+#include "hw/wb_rtmlamp_ohwr_regs.h"
 }
 
 #define channel_registers_v2_impl wb_rtmlamp_ohwr_regs::ch
