@@ -55,18 +55,22 @@ void RegisterDecoder::add_general_double(const char *name, double value, bool sk
 template <class T>
 void RegisterDecoder::add_channel_internal(const char *name, unsigned pos, T value, bool skip)
 {
+    if (!number_of_channels)
+        throw std::logic_error("number_of_channels must be set");
+    channel_data[name].resize(*number_of_channels);
+
     /* using .at() to explicitly catch out of bounds access */
     channel_data[name].at(pos) = value;
     if (!data_order_done && !skip)
         channel_data_order.push_back(name);
 }
 
-void RegisterDecoder::add_channel_impl(const char *name, unsigned pos, int32_t value, bool skip)
+void RegisterDecoder::add_channel(const char *name, unsigned pos, int32_t value, bool skip)
 {
     value = try_boolean_value(name, value);
     add_channel_internal(name, pos, value, skip);
 }
-void RegisterDecoder::add_channel_impl_double(const char *name, unsigned pos, double value, bool skip)
+void RegisterDecoder::add_channel_double(const char *name, unsigned pos, double value, bool skip)
 {
     add_channel_internal(name, pos, value, skip);
 }

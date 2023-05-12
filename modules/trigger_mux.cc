@@ -48,17 +48,12 @@ void Core::decode()
     number_of_channels = internal::number_of_channels;
 
     for (unsigned i = 0; i < *number_of_channels; i++) {
-        auto add_channel = [this, i](const char *name, auto value) {
-            channel_data[name].resize(*number_of_channels);
-            add_channel_impl(name, i, value);
-        };
-
         uint32_t t = regs.ch[i].ctl;
 
-        add_channel("RCV_SRC", t & WB_TRIG_MUX_CH0_CTL_RCV_SRC);
-        add_channel("RCV_IN_SEL", extract_value<uint32_t>(t, WB_TRIG_MUX_CH0_CTL_RCV_IN_SEL_MASK));
-        add_channel("TRANSM_SRC", t & WB_TRIG_MUX_CH0_CTL_TRANSM_SRC);
-        add_channel("TRANSM_OUT_SEL", extract_value<uint32_t>(t, WB_TRIG_MUX_CH0_CTL_TRANSM_OUT_SEL_MASK));
+        add_channel("RCV_SRC", i, t & WB_TRIG_MUX_CH0_CTL_RCV_SRC);
+        add_channel("RCV_IN_SEL", i, extract_value<uint32_t>(t, WB_TRIG_MUX_CH0_CTL_RCV_IN_SEL_MASK));
+        add_channel("TRANSM_SRC", i, t & WB_TRIG_MUX_CH0_CTL_TRANSM_SRC);
+        add_channel("TRANSM_OUT_SEL", i, extract_value<uint32_t>(t, WB_TRIG_MUX_CH0_CTL_TRANSM_OUT_SEL_MASK));
 
         data_order_done = true;
     }

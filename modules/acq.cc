@@ -192,18 +192,12 @@ void Core::decode()
     uint32_t p[MAX_NUM_CHAN * REGISTERS_PER_CHAN];
     memcpy(p, &regs.ch0_desc, sizeof p);
 
-    unsigned i;
-    auto add_channel = [this, &i](const char *name, auto value) {
-        channel_data[name].resize(*number_of_channels);
-        add_channel_impl(name, i, value);
-    };
-
-    for (i = 0; i < num_chan; i++) {
+    for (unsigned i = 0; i < num_chan; i++) {
         uint32_t desc = p[i*REGISTERS_PER_CHAN], adesc = p[i*REGISTERS_PER_CHAN + 1];
-        add_channel("INT_WIDTH", extract_value<uint32_t>(desc, ACQ_CORE_CH0_DESC_INT_WIDTH_MASK));
-        add_channel("NUM_COALESCE", extract_value<uint32_t>(desc, ACQ_CORE_CH0_DESC_NUM_COALESCE_MASK));
-        add_channel("NUM_ATOMS", extract_value<uint32_t>(adesc, ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_MASK));
-        add_channel("ATOM_WIDTH", extract_value<uint32_t>(adesc, ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_MASK));
+        add_channel("INT_WIDTH", i, extract_value<uint32_t>(desc, ACQ_CORE_CH0_DESC_INT_WIDTH_MASK));
+        add_channel("NUM_COALESCE", i, extract_value<uint32_t>(desc, ACQ_CORE_CH0_DESC_NUM_COALESCE_MASK));
+        add_channel("NUM_ATOMS", i, extract_value<uint32_t>(adesc, ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_MASK));
+        add_channel("ATOM_WIDTH", i, extract_value<uint32_t>(adesc, ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_MASK));
 
         data_order_done = true;
     }

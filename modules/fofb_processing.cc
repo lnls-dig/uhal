@@ -83,16 +83,7 @@ void Core::decode()
     coefficients_x.resize(MAX_NUM_CHAN);
     coefficients_y.resize(MAX_NUM_CHAN);
 
-    size_t i;
-    auto add_channel = [this, &i](const char *name, auto value, bool skip=false) {
-        channel_data[name].resize(*number_of_channels);
-        if constexpr (std::is_same_v<std::remove_reference_t<decltype(value)>, double>) {
-            add_channel_impl_double(name, i, value, skip);
-        } else {
-            add_channel_impl(name, i, value, skip);
-        }
-    };
-    for (i = 0; i < *number_of_channels; i++) {
+    for (unsigned i = 0; i < *number_of_channels; i++) {
         auto &ram_bank = regs.ch[i].coeff_ram_bank;
         const size_t elements = MAX_BPMS;
         coefficients_x[i].resize(elements);
@@ -105,12 +96,12 @@ void Core::decode()
         std::generate(coefficients_y[i].begin(), coefficients_y[i].end(),
             [&](){ return fixed2float(ram_bank[u++].data, fixed_point_coeff); });
 
-        add_channel("CH_ACC_CTL_FREEZE", get_bit(regs.ch[i].acc.ctl, WB_FOFB_PROCESSING_REGS_CH_ACC_CTL_FREEZE));
-        add_channel("CH_ACC_GAIN", fixed2float(regs.ch[i].acc.gain, fixed_point_gain));
-        add_channel("CH_ACC_LIMITS_MAX", extract_value<int32_t>(regs.ch[i].sp_limits.max, WB_FOFB_PROCESSING_REGS_CH_SP_LIMITS_MAX_VAL_MASK));
-        add_channel("CH_ACC_LIMITS_MIN", extract_value<int32_t>(regs.ch[i].sp_limits.min, WB_FOFB_PROCESSING_REGS_CH_SP_LIMITS_MIN_VAL_MASK));
-        add_channel("CH_SP_DECIM_DATA", extract_value<int32_t>(regs.ch[i].sp_decim.data, WB_FOFB_PROCESSING_REGS_CH_SP_DECIM_DATA_VAL_MASK));
-        add_channel("CH_SP_DECIM_RATIO", extract_value<int32_t>(regs.ch[i].sp_decim.ratio, WB_FOFB_PROCESSING_REGS_CH_SP_DECIM_RATIO_VAL_MASK) + 1);
+        add_channel("CH_ACC_CTL_FREEZE", i, get_bit(regs.ch[i].acc.ctl, WB_FOFB_PROCESSING_REGS_CH_ACC_CTL_FREEZE));
+        add_channel_double("CH_ACC_GAIN", i, fixed2float(regs.ch[i].acc.gain, fixed_point_gain));
+        add_channel("CH_ACC_LIMITS_MAX", i, extract_value<int32_t>(regs.ch[i].sp_limits.max, WB_FOFB_PROCESSING_REGS_CH_SP_LIMITS_MAX_VAL_MASK));
+        add_channel("CH_ACC_LIMITS_MIN", i, extract_value<int32_t>(regs.ch[i].sp_limits.min, WB_FOFB_PROCESSING_REGS_CH_SP_LIMITS_MIN_VAL_MASK));
+        add_channel("CH_SP_DECIM_DATA", i, extract_value<int32_t>(regs.ch[i].sp_decim.data, WB_FOFB_PROCESSING_REGS_CH_SP_DECIM_DATA_VAL_MASK));
+        add_channel("CH_SP_DECIM_RATIO", i, extract_value<int32_t>(regs.ch[i].sp_decim.ratio, WB_FOFB_PROCESSING_REGS_CH_SP_DECIM_RATIO_VAL_MASK) + 1);
 
         data_order_done = true;
     }
