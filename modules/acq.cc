@@ -403,7 +403,8 @@ std::vector<Data> Controller::get_result()
     start_index %= max_samples;
     end_index %= max_samples;
 
-    if (end_index > start_index) {
+    /* we have to use >= to account for acquisitions with just one sample */
+    if (end_index >= start_index) {
         /* copy when the acquisition sits in a contiguous segment in RAM */
         bar2_read_v(&bars, ram_start_addr + samples2bytes(start_index), data_pointer, total_bytes);
     } else {
