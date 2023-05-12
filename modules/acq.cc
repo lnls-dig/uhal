@@ -234,6 +234,15 @@ struct BadSampleSize: std::logic_error {
 struct BadAtomWidth: std::logic_error {
     BadAtomWidth(): std::logic_error("we only support 8, 16 and 32 bit atoms") {}
 };
+struct BadPostSamples: std::runtime_error {
+    BadPostSamples(): std::runtime_error("post samples should be 0") {}
+};
+struct TooManySamples: std::runtime_error {
+    TooManySamples(): std::runtime_error("too many samples") {}
+};
+struct NoSamples: std::runtime_error {
+    NoSamples(): std::runtime_error("no samples requested") {}
+};
 
 void Controller::get_internal_values()
 {
@@ -277,8 +286,21 @@ void Controller::encode_config()
             return value;
     };
 
-    regs.pre_samples = align_extend(pre_samples, alignment, false);
-    regs.post_samples = align_extend(post_samples, alignment, trigger_type == "now");
+    if (post_samples + pre_samples == 0)
+        throw NoSamples();
+
+    if (post_samples != 0 && trigger_type == "now")
+        throw BadPostSamples();
+
+    const size_t pre_samples_aligned = align_extend(pre_samples, alignment, false);
+    const size_t post_samples_aligned = align_extend(post_samples, alignment, trigger_type == "now");
+
+    const size_t max_samples = (ram_end_addr - ram_start_addr) / sample_size;
+    if (pre_samples_aligned + post_samples_aligned >= max_samples)
+        throw TooManySamples();
+
+    regs.pre_samples = pre_samples_aligned;
+    regs.post_samples = post_samples_aligned;
 
     clear_and_insert(regs.shots, number_shots, ACQ_CORE_SHOTS_NB_MASK);
 
