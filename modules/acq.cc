@@ -430,6 +430,8 @@ std::vector<Data> Controller::get_result()
     }
 
     size_t trigger_pos = bar4_read(&bars, addr + ACQ_CORE_TRIG_POS);
+    if (trigger_pos < ram_start_addr || trigger_pos >= ram_end_addr)
+        throw std::runtime_error("trigger_pos is outside of valid address range");
 
     /* these functions convert bytes (as an offset from ram_start_addr) into
      * amount of samples */
