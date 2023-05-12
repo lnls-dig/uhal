@@ -44,7 +44,7 @@ class Printer {
     Printer(const char *name, const char *description, PrinterType type, printing_function custom_fn);
     Printer(const char *name, const char *description, PrinterType type, const char *truth, const char *not_truth);
 
-    PrinterType get_type();
+    PrinterType get_type() const;
 
     template<typename T>
     void print(FILE *, bool, unsigned, T) const;
@@ -52,7 +52,5 @@ class Printer {
 
 /* helper for defining std::unordered_map<std::string_view, Printer> */
 #define PRINTER(name, ...) {name, {name, __VA_ARGS__}}
-
-void print_reg_impl(FILE *f, bool v, unsigned &indent, const char *reg, unsigned offset);
 
 #endif
