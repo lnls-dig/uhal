@@ -228,6 +228,13 @@ void Controller::set_devinfo_callback()
     stop_acquisition();
 }
 
+struct BadSampleSize: std::logic_error {
+    using std::logic_error::logic_error;
+};
+struct BadAtomWidth: std::logic_error {
+    BadAtomWidth(): std::logic_error("we only support 8, 16 and 32 bit atoms") {}
+};
+
 void Controller::get_internal_values()
 {
     uint32_t channel_desc = bar4_read(&bars, addr + ACQ_CORE_CH0_DESC + 8*channel);
@@ -237,13 +244,16 @@ void Controller::get_internal_values()
     /* int_width is in bits, so needs to be converted to bytes */
     sample_size = (int_width / 8) * num_coalesce;
     if (bit_popcount(sample_size) != 1)
-        throw std::logic_error("we can only handle power of 2 sample sizes");
+        throw BadSampleSize("we can only handle power of 2 sample sizes");
 
     alignment = (ddr3_payload_size > sample_size) ? ddr3_payload_size / sample_size : 1;
 
     uint32_t channel_atom_desc = bar4_read(&bars, addr + ACQ_CORE_CH0_ATOM_DESC + 8*channel);
     channel_atom_width = extract_value<uint32_t>(channel_atom_desc, ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_MASK);
     channel_num_atoms = extract_value<uint32_t>(channel_atom_desc, ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_MASK);
+
+    if (channel_atom_width != 8 && channel_atom_width != 16 && channel_atom_width != 32)
+        throw BadAtomWidth();
 }
 
 void Controller::encode_config()
@@ -380,8 +390,6 @@ std::vector<Data> Controller::get_result()
         case 32:
             set_data(v32);
             break;
-        default:
-            throw std::runtime_error("unsupported channel atom width");
     }
 
     size_t trigger_pos = bar4_read(&bars, addr + ACQ_CORE_TRIG_POS);
