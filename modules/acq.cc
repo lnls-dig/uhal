@@ -335,19 +335,34 @@ void Controller::write_config()
     bar4_write_v(&bars, addr, &regs, sizeof regs);
 }
 
-void Controller::start_acquisition()
+acq_error Controller::start_acquisition()
 {
     if (m_step != acq_step::stop)
         throw std::logic_error("acquisition should only be started if it's not currently running");
-    m_step = acq_step::started;
 
-    write_config();
+    try {
+        write_config();
+    } catch (BadPostSamples &e) {
+        return acq_error::bad_post_samples;
+    } catch (TooManySamples &e) {
+        return acq_error::too_many_samples;
+    } catch (NoSamples &e) {
+        return acq_error::no_samples;
+    } catch (std::exception &e) {
+        /* catch-all for exceptions that aren't handled in a specific way */
+        fprintf(stderr, "start_acquisition error: %s\n", e.what());
+        return acq_error::error;
+    }
+
+    m_step = acq_step::started;
 
     insert_bit(regs.ctl, true, ACQ_CORE_CTL_FSM_START_ACQ);
     bar4_write(&bars, addr + ACQ_CORE_CTL, regs.ctl);
 
     /* clear start for next acquisition */
     insert_bit(regs.ctl, false, ACQ_CORE_CTL_FSM_START_ACQ);
+
+    return acq_error::success;
 }
 
 void Controller::stop_acquisition()
