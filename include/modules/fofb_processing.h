@@ -29,7 +29,7 @@ class Core: public RegisterDecoder {
     struct wb_fofb_processing_regs &regs;
 
     void decode();
-    void print(FILE *, bool);
+    void print(FILE *, bool) const;
 
   public:
     Core(struct pcie_bars &);

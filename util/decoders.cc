@@ -18,7 +18,7 @@ RegisterDecoder::RegisterDecoder(struct pcie_bars &bars, std::unordered_map<std:
 }
 RegisterDecoder::~RegisterDecoder() = default;
 
-bool RegisterDecoder::is_boolean_value(const char *name)
+bool RegisterDecoder::is_boolean_value(const char *name) const
 {
     /* deal with values that don't have a printer defined for them */
     try {
@@ -29,7 +29,7 @@ bool RegisterDecoder::is_boolean_value(const char *name)
     }
 }
 
-int32_t RegisterDecoder::try_boolean_value(const char *name, int32_t value)
+int32_t RegisterDecoder::try_boolean_value(const char *name, int32_t value) const
 {
     return is_boolean_value(name) ? (bool)value : value;
 }
@@ -88,7 +88,7 @@ void RegisterDecoder::binary_dump(FILE *f) const
     fwrite(read_dest, 1, read_size, f);
 }
 
-void RegisterDecoder::print(FILE *f, bool verbose)
+void RegisterDecoder::print(FILE *f, bool verbose) const
 {
     unsigned indent = 0;
 
@@ -119,7 +119,7 @@ void RegisterDecoder::print(FILE *f, bool verbose)
 }
 
 template <class T>
-T RegisterDecoder::get_general_data(const char *name)
+T RegisterDecoder::get_general_data(const char *name) const
 {
     try {
         return std::get<T>(general_data.at(name));
@@ -128,11 +128,11 @@ T RegisterDecoder::get_general_data(const char *name)
         throw e;
     }
 }
-template int32_t RegisterDecoder::get_general_data(const char *);
-template double RegisterDecoder::get_general_data(const char *);
+template int32_t RegisterDecoder::get_general_data(const char *) const;
+template double RegisterDecoder::get_general_data(const char *) const;
 
 template <class T>
-T RegisterDecoder::get_channel_data(const char *name, unsigned channel_index)
+T RegisterDecoder::get_channel_data(const char *name, unsigned channel_index) const
 {
     try {
         return std::get<T>(channel_data.at(name).at(channel_index));
@@ -141,5 +141,5 @@ T RegisterDecoder::get_channel_data(const char *name, unsigned channel_index)
         throw e;
     }
 }
-template int32_t RegisterDecoder::get_channel_data(const char *, unsigned);
-template double RegisterDecoder::get_channel_data(const char *, unsigned);
+template int32_t RegisterDecoder::get_channel_data(const char *, unsigned) const;
+template double RegisterDecoder::get_channel_data(const char *, unsigned) const;

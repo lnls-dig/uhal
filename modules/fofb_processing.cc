@@ -121,7 +121,7 @@ void Core::decode()
     std::generate(ref_orb_y.begin(), ref_orb_y.end(), [&](){ return (int32_t)regs.sps_ram_bank[u++].data; });
 }
 
-void Core::print(FILE *f, bool verbose)
+void Core::print(FILE *f, bool verbose) const
 {
     const bool v = verbose;
 
