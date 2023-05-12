@@ -88,7 +88,7 @@ void Core::decode()
     }
 }
 
-void Core::print(FILE *f, bool verbose)
+void Core::print(FILE *f, bool verbose) const
 {
     RegisterDecoder::print(f, verbose);
 

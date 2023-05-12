@@ -32,8 +32,8 @@ bool device_match_impl(const struct sdb_device_info &devinfo)
 }
 
 class RegisterDecoder {
-    bool is_boolean_value(const char *);
-    int32_t try_boolean_value(const char *, int32_t);
+    bool is_boolean_value(const char *) const;
+    int32_t try_boolean_value(const char *, int32_t) const;
 
     template <class T>
     void add_general_internal(const char *, T, bool);
@@ -84,14 +84,14 @@ class RegisterDecoder {
     virtual ~RegisterDecoder();
     virtual void read();
     void binary_dump(FILE *) const;
-    virtual void print(FILE *, bool);
+    virtual void print(FILE *, bool) const;
 
     void set_devinfo(const struct sdb_device_info &);
 
     template <class T>
-    T get_general_data(const char *);
+    T get_general_data(const char *) const;
     template <class T>
-    T get_channel_data(const char *, unsigned);
+    T get_channel_data(const char *, unsigned) const;
 
     device_match_fn device_match;
 

@@ -40,7 +40,7 @@ class Core: public RegisterDecoder {
     Core(struct pcie_bars &);
     ~Core();
 
-    void print(FILE *, bool);
+    void print(FILE *, bool) const;
 
     distortion_levels setpoint_distortion;
     distortion_levels posx_distortion, posy_distortion;
