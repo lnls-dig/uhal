@@ -50,7 +50,7 @@ Printer::Printer(const char *name, const char *description, PrinterType type, co
     }
 }
 
-PrinterType Printer::get_type()
+PrinterType Printer::get_type() const
 {
     return type;
 }
@@ -100,11 +100,3 @@ void Printer::print(FILE *f, bool verbose, unsigned indent, T value) const
 }
 template void Printer::print(FILE *, bool, unsigned, int32_t) const;
 template void Printer::print(FILE *, bool, unsigned, double) const;
-
-void print_reg_impl(FILE *f, bool v, unsigned &indent, const char *reg, unsigned offset)
-{
-    if (v) {
-        fprintf(f, "%s (0x%02X)\n", reg, offset);
-        indent = 4;
-    }
-}
