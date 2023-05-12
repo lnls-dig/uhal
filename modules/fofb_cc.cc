@@ -151,19 +151,13 @@ void Core::decode()
 
     number_of_channels = NUMBER_OF_CHANS;
 
-    unsigned i;
-    auto add_channel = [this, &i](const char *name, auto value) {
-        channel_data[name].resize(*number_of_channels);
-        add_channel_impl(name, i, value);
-    };
-
-    for (i = 0; i < *number_of_channels; i++) {
-        add_channel("LINK_PARTNER", ram_reg(LINK_PARTNER_1 + i));
-        add_channel("HARD_ERR_CNT", ram_reg(HARD_ERR_CNT_1 + i));
-        add_channel("SOFT_ERR_CNT", ram_reg(SOFT_ERR_CNT_1 + i));
-        add_channel("FRAME_ERR_CNT", ram_reg(FRAME_ERR_CNT_1 + i));
-        add_channel("RX_PCK_CNT", ram_reg(RX_PCK_CNT_1 + i));
-        add_channel("TX_PCK_CNT", ram_reg(TX_PCK_CNT_1 + i));
+    for (unsigned i = 0; i < *number_of_channels; i++) {
+        add_channel("LINK_PARTNER", i, ram_reg(LINK_PARTNER_1 + i));
+        add_channel("HARD_ERR_CNT", i, ram_reg(HARD_ERR_CNT_1 + i));
+        add_channel("SOFT_ERR_CNT", i, ram_reg(SOFT_ERR_CNT_1 + i));
+        add_channel("FRAME_ERR_CNT", i, ram_reg(FRAME_ERR_CNT_1 + i));
+        add_channel("RX_PCK_CNT", i, ram_reg(RX_PCK_CNT_1 + i));
+        add_channel("TX_PCK_CNT", i, ram_reg(TX_PCK_CNT_1 + i));
 
         data_order_done = true;
     }

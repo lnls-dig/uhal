@@ -96,51 +96,46 @@ void CoreV2::decode()
     number_of_channels = NUM_CHAN;
 
     unsigned i = 0;
-    auto add_channel = [this, &i](const char *name, auto value, bool skip=false) {
-        channel_data[name].resize(*number_of_channels);
-        add_channel_impl(name, i, value, skip);
-    };
-
     for (const auto &channel_regs: regs->ch) {
         t = channel_regs.sta;
         /* we want AMP_STATUS to be 0 if everything is fine */
-        add_channel("AMP_STATUS", extract_value<uint8_t>(~t, STA_AMP_MASK));
-        add_channel("AMP_IFLAG_L", get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_L));
-        add_channel("AMP_TFLAG_L", get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_L));
-        add_channel("AMP_IFLAG_R", get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_R));
-        add_channel("AMP_TFLAG_R", get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_R));
+        add_channel("AMP_STATUS", i, extract_value<uint8_t>(~t, STA_AMP_MASK));
+        add_channel("AMP_IFLAG_L", i, get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_L));
+        add_channel("AMP_TFLAG_L", i, get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_L));
+        add_channel("AMP_IFLAG_R", i, get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_R));
+        add_channel("AMP_TFLAG_R", i, get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_R));
 
-        add_channel("AMP_STATUS_LATCH", extract_value<uint8_t>(~t, STA_AMP_LATCH_MASK));
-        add_channel("AMP_IFLAG_L_LATCH", get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_L_LATCH));
-        add_channel("AMP_TFLAG_L_LATCH", get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_L_LATCH));
-        add_channel("AMP_IFLAG_R_LATCH", get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_R_LATCH));
-        add_channel("AMP_TFLAG_R_LATCH", get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_R_LATCH));
+        add_channel("AMP_STATUS_LATCH", i, extract_value<uint8_t>(~t, STA_AMP_LATCH_MASK));
+        add_channel("AMP_IFLAG_L_LATCH", i, get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_L_LATCH));
+        add_channel("AMP_TFLAG_L_LATCH", i, get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_L_LATCH));
+        add_channel("AMP_IFLAG_R_LATCH", i, get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_R_LATCH));
+        add_channel("AMP_TFLAG_R_LATCH", i, get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_R_LATCH));
 
         t = channel_regs.ctl;
-        add_channel("AMP_EN", t & WB_RTMLAMP_OHWR_REGS_CH_CTL_AMP_EN);
-        add_channel("MODE", extract_value<uint32_t>(t, WB_RTMLAMP_OHWR_REGS_CH_CTL_MODE_MASK));
+        add_channel("AMP_EN", i, t & WB_RTMLAMP_OHWR_REGS_CH_CTL_AMP_EN);
+        add_channel("MODE", i, extract_value<uint32_t>(t, WB_RTMLAMP_OHWR_REGS_CH_CTL_MODE_MASK));
         if (devinfo.abi_ver_minor >= TRIGGER_ENABLE_VERSION) {
-            add_channel("TRIG_EN", t & WB_RTMLAMP_OHWR_REGS_CH_CTL_TRIG_EN);
+            add_channel("TRIG_EN", i, t & WB_RTMLAMP_OHWR_REGS_CH_CTL_TRIG_EN, false);
         } else {
-            add_channel("TRIG_EN", 0, true);
+            add_channel("TRIG_EN", i, 0, true);
         }
 
-        add_channel("PI_KP", extract_value<uint32_t>(channel_regs.pi_kp, WB_RTMLAMP_OHWR_REGS_CH_PI_KP_DATA_MASK));
-        add_channel("PI_TI", extract_value<uint32_t>(channel_regs.pi_ti, WB_RTMLAMP_OHWR_REGS_CH_PI_TI_DATA_MASK));
-        add_channel("PI_SP", extract_value<int16_t>(channel_regs.pi_sp, WB_RTMLAMP_OHWR_REGS_CH_PI_SP_DATA_MASK));
-        add_channel("DAC", extract_value<int16_t>(channel_regs.dac, WB_RTMLAMP_OHWR_REGS_CH_DAC_DATA_MASK));
+        add_channel("PI_KP", i, extract_value<uint32_t>(channel_regs.pi_kp, WB_RTMLAMP_OHWR_REGS_CH_PI_KP_DATA_MASK));
+        add_channel("PI_TI", i, extract_value<uint32_t>(channel_regs.pi_ti, WB_RTMLAMP_OHWR_REGS_CH_PI_TI_DATA_MASK));
+        add_channel("PI_SP", i, extract_value<int16_t>(channel_regs.pi_sp, WB_RTMLAMP_OHWR_REGS_CH_PI_SP_DATA_MASK));
+        add_channel("DAC", i, extract_value<int16_t>(channel_regs.dac, WB_RTMLAMP_OHWR_REGS_CH_DAC_DATA_MASK));
 
         t = channel_regs.lim;
-        add_channel("LIMIT_A", extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_LIM_A_MASK));
-        add_channel("LIMIT_B", extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_LIM_B_MASK));
+        add_channel("LIMIT_A", i, extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_LIM_A_MASK));
+        add_channel("LIMIT_B", i, extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_LIM_B_MASK));
 
-        add_channel("CNT", extract_value<uint32_t>(channel_regs.cnt, WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_MASK));
+        add_channel("CNT", i, extract_value<uint32_t>(channel_regs.cnt, WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_MASK));
 
         t = channel_regs.adc_dac_eff;
-        add_channel("ADC_INST", extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_ADC_MASK));
-        add_channel("DAC_EFF", extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_DAC_MASK));
+        add_channel("ADC_INST", i, extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_ADC_MASK));
+        add_channel("DAC_EFF", i, extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_DAC_MASK));
 
-        add_channel("SP_EFF", extract_value<int16_t>(channel_regs.sp_eff, WB_RTMLAMP_OHWR_REGS_CH_SP_EFF_SP_MASK));
+        add_channel("SP_EFF", i, extract_value<int16_t>(channel_regs.sp_eff, WB_RTMLAMP_OHWR_REGS_CH_SP_EFF_SP_MASK));
 
         /* after the first iteration, we are done adding things to the vector */
         data_order_done = true;

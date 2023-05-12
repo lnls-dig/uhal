@@ -50,23 +50,18 @@ void Core::decode()
     number_of_channels = internal::number_of_channels;
 
     for (unsigned i = 0; i < *number_of_channels; i++) {
-        auto add_channel = [this, i](const char *name, auto value) {
-            channel_data[name].resize(*number_of_channels);
-            add_channel_impl(name, i, value);
-        };
-
         uint32_t t = regs.ch[i].ctl;
 
-        add_channel("DIR", t & WB_TRIG_IFACE_CH0_CTL_DIR);
-        add_channel("DIR_POL", t & WB_TRIG_IFACE_CH0_CTL_DIR_POL);
+        add_channel("DIR", i, t & WB_TRIG_IFACE_CH0_CTL_DIR);
+        add_channel("DIR_POL", i, t & WB_TRIG_IFACE_CH0_CTL_DIR_POL);
 
         t = regs.ch[i].cfg;
-        add_channel("RCV_LEN", extract_value<uint8_t>(t, WB_TRIG_IFACE_CH0_CFG_RCV_LEN_MASK));
-        add_channel("TRANSM_LEN", extract_value<uint8_t>(t, WB_TRIG_IFACE_CH0_CFG_TRANSM_LEN_MASK));
+        add_channel("RCV_LEN", i, extract_value<uint8_t>(t, WB_TRIG_IFACE_CH0_CFG_RCV_LEN_MASK));
+        add_channel("TRANSM_LEN", i, extract_value<uint8_t>(t, WB_TRIG_IFACE_CH0_CFG_TRANSM_LEN_MASK));
 
         t = regs.ch[i].count;
-        add_channel("RCV_COUNT", extract_value<uint16_t>(t, WB_TRIG_IFACE_CH0_COUNT_RCV_MASK));
-        add_channel("TRANSM_COUNT", extract_value<uint16_t>(t, WB_TRIG_IFACE_CH0_COUNT_TRANSM_MASK));
+        add_channel("RCV_COUNT", i, extract_value<uint16_t>(t, WB_TRIG_IFACE_CH0_COUNT_RCV_MASK));
+        add_channel("TRANSM_COUNT", i, extract_value<uint16_t>(t, WB_TRIG_IFACE_CH0_COUNT_TRANSM_MASK));
 
         data_order_done = true;
     }
