@@ -53,7 +53,7 @@ class Controller: public RegisterController {
 
     unsigned channel = 0;
     /* per channel properties */
-    bool amp_enable = true;
+    bool amp_enable = false;
     std::string mode = "none";
     std::optional<int> mode_numeric;
     std::optional<bool> trigger_enable;
