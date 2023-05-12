@@ -32,6 +32,11 @@ CoreV2::CoreV2(struct pcie_bars &bars):
         PRINTER("AMP_TFLAG_L", "Amplifier Left Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),
         PRINTER("AMP_IFLAG_R", "Amplifier Right Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
         PRINTER("AMP_TFLAG_R", "Amplifier Right Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),
+        PRINTER("AMP_STATUS_LATCH", "Amplifier flags", PrinterType::value_hex),
+        PRINTER("AMP_IFLAG_L_LATCH", "Amplifier Left Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
+        PRINTER("AMP_TFLAG_L_LATCH", "Amplifier Left Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),
+        PRINTER("AMP_IFLAG_R_LATCH", "Amplifier Right Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
+        PRINTER("AMP_TFLAG_R_LATCH", "Amplifier Right Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),
         PRINTER("AMP_EN", "Amplifier Enable", PrinterType::boolean),
         /* TODO: add test mode when it becomes a single value */
         PRINTER("MODE", "Power supply operation mode", PrinterType::custom_function,
@@ -76,6 +81,9 @@ CoreV2::~CoreV2() = default;
 #define STA_AMP_MASK \
     (WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_L | WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_L | \
      WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_R | WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_R)
+#define STA_AMP_LATCH_MASK \
+    (WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_L_LATCH | WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_L_LATCH | \
+     WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_R_LATCH | WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_R_LATCH)
 
 void CoreV2::decode()
 {
@@ -96,11 +104,17 @@ void CoreV2::decode()
     for (const auto &channel_regs: regs->ch) {
         t = channel_regs.sta;
         /* we want AMP_STATUS to be 0 if everything is fine */
-        add_channel("AMP_STATUS", (~t) & STA_AMP_MASK);
-        add_channel("AMP_IFLAG_L", t & WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_L);
-        add_channel("AMP_TFLAG_L", t & WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_L);
-        add_channel("AMP_IFLAG_R", t & WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_R);
-        add_channel("AMP_TFLAG_R", t & WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_R);
+        add_channel("AMP_STATUS", extract_value<uint8_t>(~t, STA_AMP_MASK));
+        add_channel("AMP_IFLAG_L", get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_L));
+        add_channel("AMP_TFLAG_L", get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_L));
+        add_channel("AMP_IFLAG_R", get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_R));
+        add_channel("AMP_TFLAG_R", get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_R));
+
+        add_channel("AMP_STATUS_LATCH", extract_value<uint8_t>(~t, STA_AMP_LATCH_MASK));
+        add_channel("AMP_IFLAG_L_LATCH", get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_L_LATCH));
+        add_channel("AMP_TFLAG_L_LATCH", get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_L_LATCH));
+        add_channel("AMP_IFLAG_R_LATCH", get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_R_LATCH));
+        add_channel("AMP_TFLAG_R_LATCH", get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_R_LATCH));
 
         t = channel_regs.ctl;
         add_channel("AMP_EN", t & WB_RTMLAMP_OHWR_REGS_CH_CTL_AMP_EN);
@@ -175,6 +189,8 @@ void ControllerV2::encode_config()
             throw std::runtime_error("this core doesn't support trigger_enable");
     }
 
+    insert_bit(channel_regs->ctl, reset_latch, WB_RTMLAMP_OHWR_REGS_CH_CTL_RST_LATCH_STS);
+
     if (pi_kp) clear_and_insert(channel_regs->pi_kp, *pi_kp, WB_RTMLAMP_OHWR_REGS_CH_PI_KP_DATA_MASK);
     if (pi_ti) clear_and_insert(channel_regs->pi_ti, *pi_ti, WB_RTMLAMP_OHWR_REGS_CH_PI_TI_DATA_MASK);
     if (pi_sp) clear_and_insert(channel_regs->pi_sp, (uint16_t)*pi_sp, WB_RTMLAMP_OHWR_REGS_CH_PI_SP_DATA_MASK);
@@ -192,6 +208,9 @@ void ControllerV2::write_params()
     encode_config();
 
     bar4_write_v(&bars, addr + WB_RTMLAMP_OHWR_REGS_CH + channel * CHANNEL_DISTANCE, channel_regs.get(), CHANNEL_DISTANCE);
+
+    /* clear reset for next write */
+    reset_latch = false;
 }
 
 } /* namespace lamp */
