@@ -38,6 +38,14 @@ class Core: public RegisterDecoder {
     ~Core();
 };
 
+enum class acq_error {
+    success,
+    error,
+    bad_post_samples,
+    too_many_samples,
+    no_samples,
+};
+
 enum class acq_status {
     idle,
     success,
@@ -92,7 +100,7 @@ class Controller: public RegisterController {
     unsigned data_trigger_channel = 0;
     unsigned trigger_delay = 0;
 
-    void start_acquisition();
+    acq_error start_acquisition();
     void stop_acquisition();
 
     template <class Data>
