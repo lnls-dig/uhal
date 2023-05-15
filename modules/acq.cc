@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <charconv>
 #include <cstring>
 #include <stdexcept>
@@ -246,7 +247,7 @@ void Controller::get_internal_values()
 
     /* int_width is in bits, so needs to be converted to bytes */
     sample_size = (int_width / 8) * num_coalesce;
-    if (bit_popcount(sample_size) != 1)
+    if (std::popcount(sample_size) != 1)
         throw BadSampleSize("we can only handle power of 2 sample sizes");
 
     alignment = (ddr3_payload_size > sample_size) ? ddr3_payload_size / sample_size : 1;

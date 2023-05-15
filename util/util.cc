@@ -5,6 +5,7 @@
  * Released according to the GNU GPL, version 3 or any later version.
  */
 
+#include <bit>
 #include <numeric>
 #include <stdexcept>
 #include <type_traits>
@@ -14,34 +15,7 @@
 
 #include "util.h"
 
-/* XXX: replace with C++20's <bit> */
-
-static inline unsigned internal_bit_popcount(uint32_t x)
-{
-#ifdef __GNUC__
-    return __builtin_popcount(x);
-#else
-    /* From: https://graphics.stanford.edu/~seander/bithacks.html */
-    uint32_t v = x;
-    unsigned c;
-    for (c = 0; v; c++)
-        v &= v - 1; /* clear the least significant bit set */
-    return c;
-#endif
-}
-
-unsigned bit_popcount(uint32_t x)
-{
-    return internal_bit_popcount(x);
-}
-
-/* use only the inline version in this file */
-#define bit_popcount internal_bit_popcount
-
-static inline unsigned bit_countr_zero(uint32_t x)
-{
-    return ffs(x) - 1;
-}
+static_assert(__cpp_lib_bitops >= 201907L);
 
 static void clear_and_insert(uint32_t &dest, unsigned value, uint32_t mask, unsigned shift, uint32_t max, uint32_t min)
 {
@@ -57,15 +31,15 @@ static void clear_and_insert(uint32_t &dest, unsigned value, uint32_t mask, unsi
 /* TODO: template this as well */
 void clear_and_insert(uint32_t &dest, unsigned value, uint32_t mask)
 {
-    uint32_t max = ((uint64_t)1 << bit_popcount(mask)) - 1;
-    unsigned shift = bit_countr_zero(mask);
+    uint32_t max = ((uint64_t)1 << std::popcount(mask)) - 1;
+    unsigned shift = std::countr_zero(mask);
 
     clear_and_insert(dest, value, mask, shift, max, 0);
 }
 
 void insert_bit(uint32_t &dest, bool value, uint32_t mask)
 {
-    assert(bit_popcount(mask) == 1);
+    assert(std::popcount(mask) == 1);
     if (value)
         dest |= mask;
     else
@@ -74,14 +48,14 @@ void insert_bit(uint32_t &dest, bool value, uint32_t mask)
 
 bool get_bit(uint32_t value, uint32_t mask)
 {
-    assert(bit_popcount(mask) == 1);
+    assert(std::popcount(mask) == 1);
     return value & mask;
 }
 
 template<typename T>
 T extract_value(uint32_t value, uint32_t mask)
 {
-    unsigned shift = bit_countr_zero(mask);
+    unsigned shift = std::countr_zero(mask);
     uint32_t intermediary = (value & mask) >> shift;
 
     if constexpr (std::is_signed<T>()) {
