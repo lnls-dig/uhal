@@ -2,7 +2,7 @@ project(
   'μHAL',
   ['c','cpp'],
   version: '0.0.1',
-  default_options: ['c_std=gnu11', 'cpp_std=c++20', 'warning_level=3',],
+  default_options: ['c_std=gnu17', 'cpp_std=c++20', 'warning_level=3',],
 )
 
 languages = ['c', 'cpp']
