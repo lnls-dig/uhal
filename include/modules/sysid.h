@@ -76,6 +76,8 @@ class Controller: public RegisterController {
     bool bpm_pos_distort_en = false;
     /** Enable PRBS-based distortion on accumulator setpoints */
     bool sp_distort_en = false;
+    /** Set moving average samples for FOFBAcc distortion */
+    uint8_t sp_mov_avg_samples;
 
     /** Distortion levels to apply on setpoint for each PRBS state */
     distortion_levels setpoint_distortion;
