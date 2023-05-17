@@ -20,7 +20,7 @@ $ ninja -C build
 
 You can export `LDFLAGS=-static` to the `meson` command to create a static
 binary that can be exported to other machines. This is relevant because we use
-many C++17 features, which might not be available with the installed
+some C++20 features, which might not be available with the installed
 compiler/runtime on an older platform.
 
 ## How to install
