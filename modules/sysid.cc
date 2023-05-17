@@ -44,6 +44,8 @@ Core::Core(struct pcie_bars &bars):
         PRINTER("PRBS_CTL_LFSR_LENGTH", "Length of internal LFSR", PrinterType::value),
         PRINTER("PRBS_CTL_BPM_POS_DISTORT_EN", "Enable PRBS-based distortion on BPM positions", PrinterType::enable),
         PRINTER("PRBS_CTL_SP_DISTORT_EN", "Enable PRBS-based distortion on accumulator setpoints", PrinterType::enable),
+        PRINTER("SP_DISTORT_MOV_AVG_NUM_TAPS_SEL", "Setpoint distortion moving average taps selector", PrinterType::value),
+        PRINTER("SP_DISTORT_MOV_AVG_MAX_NUM_TAPS_SEL_CTE", "Max value for SP_DISTORT_MOV_AVG_NUM_TAPS_SEL field", PrinterType::value),
     }),
     regs_storage(new struct wb_fofb_sys_id_regs),
     regs(*regs_storage),
@@ -72,6 +74,9 @@ void Core::decode()
     add_general("PRBS_CTL_LFSR_LENGTH", extract_value<uint8_t>(t, WB_FOFB_SYS_ID_REGS_PRBS_CTL_LFSR_LENGTH_MASK) + 2);
     add_general("PRBS_CTL_BPM_POS_DISTORT_EN", get_bit(t, WB_FOFB_SYS_ID_REGS_PRBS_CTL_BPM_POS_DISTORT_EN));
     add_general("PRBS_CTL_SP_DISTORT_EN", get_bit(t, WB_FOFB_SYS_ID_REGS_PRBS_CTL_SP_DISTORT_EN));
+    add_general("SP_DISTORT_MOV_AVG_NUM_TAPS_SEL", extract_value<uint8_t>(t, WB_FOFB_SYS_ID_REGS_PRBS_CTL_SP_DISTORT_MOV_AVG_NUM_TAPS_SEL_MASK));
+
+    add_general("SP_DISTORT_MOV_AVG_MAX_NUM_TAPS_SEL_CTE", regs.prbs.sp_distort_mov_avg_max_num_taps_sel_cte);
 
     data_order_done = true;
 
@@ -126,6 +131,8 @@ void Controller::encode_config()
         throw std::runtime_error("step duration is outside of valid range");
     if (lfsr_length < 2 || lfsr_length > 0x1E + 2)
         throw std::runtime_error("lfsr length is outside of valid range");
+    if (sp_mov_avg_samples > regs.prbs.sp_distort_mov_avg_max_num_taps_sel_cte)
+        throw std::runtime_error("setpoint distortion moving average taps are outside of valid range");
 
     clear_and_insert(regs.bpm_pos_flatenizer.ctl, base_bpm_id, WB_FOFB_SYS_ID_REGS_BPM_POS_FLATENIZER_CTL_BASE_BPM_ID_MASK);
 
@@ -134,6 +141,7 @@ void Controller::encode_config()
     clear_and_insert(regs.prbs.ctl, lfsr_length - 2, WB_FOFB_SYS_ID_REGS_PRBS_CTL_LFSR_LENGTH_MASK);
     insert_bit(regs.prbs.ctl, bpm_pos_distort_en, WB_FOFB_SYS_ID_REGS_PRBS_CTL_BPM_POS_DISTORT_EN);
     insert_bit(regs.prbs.ctl, sp_distort_en, WB_FOFB_SYS_ID_REGS_PRBS_CTL_SP_DISTORT_EN);
+    clear_and_insert(regs.prbs.ctl, sp_mov_avg_samples, WB_FOFB_SYS_ID_REGS_PRBS_CTL_SP_DISTORT_MOV_AVG_NUM_TAPS_SEL_MASK);
 
     auto set_distortion = [](auto &levels, auto index, const auto &distort) {
         /* the uint16_t casts are necessary to avoid sign extension issues */
