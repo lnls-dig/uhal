@@ -1,0 +1,83 @@
+/*
+ * Copyright (C) 2023 CNPEM (cnpem.br)
+ * Author: Érico Nogueira <erico.rolim@lnls.br>
+ *
+ * Released according to the GNU GPL, version 3 or any later version.
+ */
+
+#ifndef AFC_TIMING_H
+#define AFC_TIMING_H
+
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "controllers.h"
+#include "decoders.h"
+
+namespace afc_timing {
+
+constexpr unsigned AFC_TIMING_DEVID = 0xbe10be10;
+
+inline const device_match_fn device_match_afc_timing =
+    device_match_impl<LNLS_VENDORID, AFC_TIMING_DEVID, 1>;
+
+/* forward declaration */
+struct afc_timing;
+
+class Core: public RegisterDecoder {
+    std::unique_ptr<struct afc_timing> regs_storage;
+    struct afc_timing &regs;
+
+    void decode();
+
+  public:
+    Core(struct pcie_bars &);
+    ~Core();
+};
+
+class Controller: public RegisterController {
+  protected:
+    std::unique_ptr<struct afc_timing> regs_storage;
+    struct afc_timing &regs;
+
+    void set_devinfo_callback();
+    void encode_config();
+
+  public:
+    Controller(struct pcie_bars &);
+    ~Controller();
+
+    static inline const device_match_fn device_match = device_match_afc_timing;
+
+    bool event_receiver_enable = true;
+    /** Configuration values for RTM and AFC reference clocks */
+    struct {
+        uint64_t rfreq;
+        uint8_t n1, hs_div;
+        struct {
+            uint16_t kp, ki;
+        } freq_loop, phase_loop;
+        struct {
+            uint16_t navg;
+            uint8_t div_exp;
+        } ddmtd_config;
+    } rtm_clock = {}, afc_clock = {};
+
+    struct parameters {
+        bool enable, polarity, log, interlock;
+        std::string source;
+        bool direction, count_reset;
+        uint16_t pulses;
+        uint8_t event_code;
+        uint32_t delay;
+        uint32_t width;
+    };
+    std::vector<struct parameters> parameters;
+
+    void write_params();
+};
+
+} /* namespace afc_timing */
+
+#endif
