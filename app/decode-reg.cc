@@ -22,6 +22,7 @@
 #include "pcie-open.h"
 #include "util_sdb.h"
 #include "modules/acq.h"
+#include "modules/afc_timing.h"
 #include "modules/fofb_cc.h"
 #include "modules/fofb_processing.h"
 #include "modules/lamp.h"
@@ -154,6 +155,8 @@ int main(int argc, char *argv[])
         std::unique_ptr<RegisterDecoder> dec;
         if (type == "acq") {
             dec = std::make_unique<acq::Core>(bars);
+        } else if (type == "timing") {
+            dec = std::make_unique<afc_timing::Core>(bars);
         } else if (type == "lamp") {
             dec = std::make_unique<lamp::CoreV2>(bars);
         } else if (type == "fofb_cc") {
