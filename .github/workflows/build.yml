@@ -1,0 +1,40 @@
+name: Build and run tests
+on:
+  push:
+    branches:
+      - master
+
+  pull_request:
+
+jobs:
+  ubuntu:
+    runs-on: ubuntu-latest
+    container:
+      image: debian:12
+      env:
+        LDFLAGS: ${{ matrix.linking.ldflags }}
+        CC: ${{ matrix.compiler.cc }}
+        CXX: ${{ matrix.compiler.cxx }}
+    strategy:
+      matrix:
+        compiler:
+          - { cc: gcc, cxx: g++ }
+          - { cc: clang, cxx: clang++ }
+        linking:
+          - { ldflags: "" }
+          - { ldflags: "-static" }
+        options:
+          - { pcie_opt: "true" }
+          - { pcie_opt: "false" }
+    steps:
+      - name: Install dependencies
+        run: apt update && apt install -y git meson ${{ matrix.compiler.cc }}
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Configure
+        run: meson setup -Dpcie_opt=${{ matrix.options.pcie_opt }} build || cat build/meson-logs/meson-log.txt /nonexistent
+      - name: Build
+        run: ninja -C build
+      - name: Run tests
+        run: ninja -C build test
