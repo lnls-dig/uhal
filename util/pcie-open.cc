@@ -31,6 +31,8 @@ void dev_open_slot(struct pcie_bars &bars, const char *slot)
     char slot_path[64];
     snprintf(slot_path, sizeof slot_path, "/sys/bus/pci/slots/%s/address", slot);
     std::ifstream fslot{slot_path};
+    if (fslot.fail())
+        throw std::runtime_error(std::string("couldn't open slot file: ") + slot_path);
     std::string pci_address;
     fslot >> pci_address;
     dev_open(bars, pci_address.c_str());
