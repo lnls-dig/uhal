@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
         fputs(
             "Usage: decode-reg mode <mode specific options>\n\n"
             "Positional arguments:\n"
-            "mode      mode of operation ('reset', 'build_info', 'decode', 'ram', 'acq', 'lamp')\n",
+            "mode      mode of operation ('reset', 'build_info', 'decode', 'ram', 'acq', 'lamp', 'timing')\n",
             stderr);
         return 1;
     }
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
     lamp_args.add_argument("-T").help("Trigger enable").scan<'u', unsigned>();
 
     argparse::ArgumentParser *pargs;
-    if (mode == "reset" || mode == "build_info") {
+    if (mode == "reset" || mode == "build_info" || mode == "timing") {
         pargs = &parent_args;
     } else if (mode == "decode") {
         pargs = &decode_args;
@@ -275,6 +275,35 @@ int main(int argc, char *argv[])
         if (auto trigger_enable = args.present<unsigned>("-T")) {
             ctl.trigger_enable = *trigger_enable;
         }
+
+        ctl.write_params();
+    }
+    if (mode == "timing") {
+        afc_timing::Controller ctl(bars);
+        if (auto v = read_sdb(&bars, ctl.device_match, dev_index)) {
+            ctl.set_devinfo(*v);
+        } else {
+            fprintf(stderr, "Couldn't find timing module index %u\n", dev_index);
+            return 1;
+        }
+
+        ctl.event_receiver_enable = true;
+
+        /* values taken from our BPM crates, calculated by tim-rx-epics-ioc */
+        ctl.afc_clock.n1 = 7;
+        ctl.afc_clock.hs_div = 5;
+        ctl.afc_clock.rfreq = (11192ULL << 20) | 428952;
+        ctl.rtm_clock.n1 = 3;
+        ctl.rtm_clock.hs_div = 7;
+        ctl.rtm_clock.rfreq = (12311ULL << 20) | 681645;
+
+        ctl.afc_clock.freq_loop.kp = 1;
+        ctl.afc_clock.freq_loop.ki = 1500;
+        ctl.afc_clock.phase_loop.kp = 10;
+        ctl.afc_clock.phase_loop.ki = 1;
+
+        ctl.afc_clock.ddmtd_config.div_exp = 1;
+        ctl.afc_clock.ddmtd_config.navg = 7;
 
         ctl.write_params();
     }
