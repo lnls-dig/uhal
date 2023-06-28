@@ -51,7 +51,8 @@ int main(int argc, char *argv[])
     std::string mode = argv[1];
 
     argparse::ArgumentParser parent_args("decode-reg", "1.0", argparse::default_arguments::none);
-    parent_args.add_argument("-b").help("device identifier").required();
+    parent_args.add_argument("--slot").help("device slot");
+    parent_args.add_argument("--address").help("device address");
     parent_args.add_argument("-a").help("enumerated position of device").required().scan<'u', unsigned>().default_value((unsigned)0);
     parent_args.add_argument("-v").help("verbose output").default_value(false).implicit_value(true);
 
@@ -120,12 +121,17 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    auto device_number = args.get<std::string>("-b");
     auto dev_index = args.get<unsigned>("-a");
     auto verbose = args.is_used("-v");
 
     struct pcie_bars bars;
-    dev_open_slot(bars, device_number.c_str());
+    if (auto v = args.present<std::string>("--slot")) dev_open_slot(bars, v->c_str());
+    else if (auto v = args.present<std::string>("--address")) dev_open(bars, v->c_str());
+    else {
+        fputs("no device specified (--slot, --address)\n", stderr);
+        return 1;
+    }
+
     defer _(nullptr, [&bars](...){dev_close(bars);});
 
     if (mode == "reset") {
