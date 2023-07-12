@@ -159,6 +159,52 @@ void Controller::set_devinfo_callback()
 {
 }
 
+bool Controller::set_rtm_freq(double freq)
+{
+    return set_freq(freq, rtm_clock);
+}
+bool Controller::set_afc_freq(double freq)
+{
+    return set_freq(freq, afc_clock);
+}
+
+bool Controller::set_freq(double freq, struct clock &clock)
+{
+    /* from Si57x datasheet */
+    const double fxtal = 114285000;
+    const double fdco_min = 4850000000;
+    const double fdco_max = 5670000000;
+
+    const uint32_t n1_max_val = 128;
+    const uint32_t n1_min_val = 2;
+    const uint32_t n1_step = 2;
+    const uint32_t hs_div_opts[] = {11, 9, 7, 6, 5, 4};
+
+    uint32_t n1, hs_div;
+    double fdco;
+    for (auto hs_div_opt: hs_div_opts) {
+        hs_div = hs_div_opt;
+        for (n1 = n1_min_val; n1 <= n1_max_val; n1 += n1_step) {
+            fdco = freq * hs_div_opt * n1;
+
+            if ((fdco >= fdco_min) && (fdco <= fdco_max)) goto found_freq;
+        }
+    }
+    /* getting here means we couldn't find register values */
+    return false;
+
+  found_freq:
+
+    uint64_t rfreq = (fdco / fxtal) * (1 << 28);
+
+    /* values to actually write into registers */
+    clock.n1 = n1 - 1;
+    clock.hs_div = hs_div - 4;
+    clock.rfreq = rfreq;
+
+    return true;
+}
+
 void Controller::encode_config()
 {
     insert_bit(regs.stat, event_receiver_enable, TIMING_STAT_EVREN);
