@@ -5,6 +5,7 @@
  * Released according to the GNU GPL, version 3 or any later version.
  */
 
+#include <algorithm>
 #include <cmath>
 #include <stdexcept>
 
@@ -153,8 +154,21 @@ Controller::Controller(struct pcie_bars &bars):
     regs_storage(new struct afc_timing()),
     regs(*regs_storage)
 {
+    parameters.resize(NUM_CHANNELS);
 }
 Controller::~Controller() = default;
+
+const std::vector<std::string> Controller::sources_list = {
+    "Trigger",
+    "Clock0",
+    "Clock1",
+    "Clock2",
+    "Clock3",
+    "Clock4",
+    "Clock5",
+    "Clock6",
+    "Clock7",
+};
 
 void Controller::set_devinfo_callback()
 {
@@ -236,6 +250,30 @@ void Controller::encode_config()
     };
     setup_clock(rtm_clock, regs.rtm_clock);
     setup_clock(afc_clock, regs.afc_clock);
+
+    auto setup_trigger = [](const auto &parameters, auto &registers) {
+        insert_bit(registers.config, parameters.enable, TIMING_AMC0_EN);
+        insert_bit(registers.config, parameters.polarity, TIMING_AMC0_POL);
+        insert_bit(registers.config, parameters.log, TIMING_AMC0_LOG);
+        insert_bit(registers.config, parameters.interlock, TIMING_AMC0_ITL);
+
+        auto source_it = std::find(sources_list.begin(), sources_list.end(), parameters.source);
+        if (source_it != sources_list.end())
+            clear_and_insert(registers.config, source_it - sources_list.begin(), TIMING_AMC0_SRC_MASK);
+        else
+            throw std::runtime_error("source must be one of " + list_of_keys(sources_list));
+
+        insert_bit(registers.config, parameters.direction, TIMING_AMC0_DIR);
+        insert_bit(registers.config, parameters.count_reset, TIMING_AMC0_COUNT_RST);
+
+        registers.pulses = parameters.pulses;
+        registers.evt = parameters.event_code;
+        registers.dly = parameters.delay;
+        registers.wdt = parameters.width;
+    };
+
+    for (unsigned i = 0; i < NUM_CHANNELS; i++)
+        setup_trigger(parameters[i], regs.trigger[i]);
 }
 
 void Controller::write_params()
@@ -243,6 +281,9 @@ void Controller::write_params()
     encode_config();
 
     bar4_write_v(&bars, addr, &regs, sizeof regs);
+
+    for (auto &p: parameters)
+        p.count_reset = false;
 }
 
 } /* namespace afc_timing */

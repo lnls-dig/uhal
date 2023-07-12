@@ -49,6 +49,7 @@ class Controller: public RegisterController {
     ~Controller();
 
     static inline const device_match_fn device_match = device_match_afc_timing;
+    static const std::vector<std::string> sources_list;
 
     bool event_receiver_enable = true;
     /** Configuration values for RTM and AFC reference clocks */
@@ -66,7 +67,7 @@ class Controller: public RegisterController {
 
     struct parameters {
         bool enable, polarity, log, interlock;
-        std::string source;
+        std::string source = "Trigger";
         bool direction, count_reset;
         uint16_t pulses;
         uint8_t event_code;
