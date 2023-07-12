@@ -52,7 +52,7 @@ class Controller: public RegisterController {
 
     bool event_receiver_enable = true;
     /** Configuration values for RTM and AFC reference clocks */
-    struct {
+    struct clock {
         uint64_t rfreq;
         uint8_t n1, hs_div;
         struct {
@@ -75,7 +75,13 @@ class Controller: public RegisterController {
     };
     std::vector<struct parameters> parameters;
 
+    bool set_rtm_freq(double);
+    bool set_afc_freq(double);
+
     void write_params();
+
+  private:
+    bool set_freq(double, struct Controller::clock &);
 };
 
 } /* namespace afc_timing */
