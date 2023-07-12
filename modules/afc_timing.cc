@@ -5,6 +5,7 @@
  * Released according to the GNU GPL, version 3 or any later version.
  */
 
+#include <cmath>
 #include <stdexcept>
 
 #include "pcie.h"
@@ -180,27 +181,34 @@ bool Controller::set_freq(double freq, struct clock &clock)
     const uint32_t n1_step = 2;
     const uint32_t hs_div_opts[] = {11, 9, 7, 6, 5, 4};
 
-    uint32_t n1, hs_div;
-    double fdco;
-    for (auto hs_div_opt: hs_div_opts) {
-        hs_div = hs_div_opt;
-        for (n1 = n1_min_val; n1 <= n1_max_val; n1 += n1_step) {
-            fdco = freq * hs_div_opt * n1;
+    const uint32_t rfreq_factor = 1 << 28;
+    const double freq_err_initial = 1e9;
 
-            if ((fdco >= fdco_min) && (fdco <= fdco_max)) goto found_freq;
+    uint32_t n1_best, hs_div_best;
+    uint64_t rfreq_best;
+    double freq_err_best = freq_err_initial;
+    for (auto hs_div_opt: hs_div_opts) {
+        for (uint32_t n1 = n1_min_val; n1 <= n1_max_val; n1 += n1_step) {
+            uint64_t rfreq = (freq * hs_div_opt * n1 * rfreq_factor / fxtal);
+            double fdco = (rfreq * fxtal) / rfreq_factor;
+
+            if ((fdco >= fdco_min) && (fdco <= fdco_max)) {
+                double freq_err = fabs(freq - (fdco / (hs_div_opt * n1)));
+                if (freq_err < freq_err_best) {
+                    freq_err_best = freq_err;
+                    n1_best = n1;
+                    hs_div_best = hs_div_opt;
+                    rfreq_best = rfreq;
+                }
+            }
         }
     }
-    /* getting here means we couldn't find register values */
-    return false;
-
-  found_freq:
-
-    uint64_t rfreq = (fdco / fxtal) * (1 << 28);
+    if (freq_err_best == freq_err_initial) return false;
 
     /* values to actually write into registers */
-    clock.n1 = n1 - 1;
-    clock.hs_div = hs_div - 4;
-    clock.rfreq = rfreq;
+    clock.n1 = n1_best - 1;
+    clock.hs_div = hs_div_best - 4;
+    clock.rfreq = rfreq_best;
 
     return true;
 }
