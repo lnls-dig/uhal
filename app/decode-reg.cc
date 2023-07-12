@@ -289,13 +289,8 @@ int main(int argc, char *argv[])
 
         ctl.event_receiver_enable = true;
 
-        /* values taken from our BPM crates, calculated by tim-rx-epics-ioc */
-        ctl.afc_clock.n1 = 7;
-        ctl.afc_clock.hs_div = 5;
-        ctl.afc_clock.rfreq = (11192ULL << 20) | 428952;
-        ctl.rtm_clock.n1 = 3;
-        ctl.rtm_clock.hs_div = 7;
-        ctl.rtm_clock.rfreq = (12311ULL << 20) | 681645;
+        ctl.set_rtm_freq(499667736.71/4.);
+        ctl.set_afc_freq(499667736.71/4. * 5./9.);
 
         ctl.afc_clock.freq_loop.kp = 1;
         ctl.afc_clock.freq_loop.ki = 1500;
