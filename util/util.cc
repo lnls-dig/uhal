@@ -136,3 +136,10 @@ std::string list_of_keys(const std::unordered_map<std::string_view, int> &m)
         /* we know b.first.data() is safe to use here because it's guaranteed to be null terminated */
         [](std::string a, auto b) { return a.append({", ", b.first.data()}); });
 }
+
+std::string list_of_keys(const std::vector<std::string> &v)
+{
+    auto b = v.begin();
+    return std::accumulate(std::next(b), v.end(), *b,
+        [](std::string a, std::string b) { return a + ", " + b ; });
+}
