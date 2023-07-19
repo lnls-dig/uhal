@@ -26,6 +26,7 @@ sign_extension_fn &sign_extend_function(unsigned width);
 uint32_t float2fixed(double v, unsigned point_pos, bool saturate=true);
 double fixed2float(uint32_t v, unsigned point_pos);
 
-std::string list_of_keys(const std::unordered_map<std::string_view, int> &m);
+std::string list_of_keys(const std::unordered_map<std::string_view, int> &);
+std::string list_of_keys(const std::vector<std::string> &);
 
 #endif
