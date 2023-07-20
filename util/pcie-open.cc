@@ -18,6 +18,22 @@
 
 #include "pcie-open.h"
 
+namespace {
+
+void configure_mutexes(struct pcie_bars &bars)
+{
+    pthread_mutexattr_t mattr;
+    if (pthread_mutexattr_init(&mattr) ||
+        pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE))
+        throw std::runtime_error("couldn't set mutexattr as recursive");
+
+    for (auto &lock: bars.locks)
+        if (pthread_mutex_init(&lock, &mattr))
+            throw std::runtime_error("couldn't initialize mutex");
+}
+
+}
+
 void dev_open_slot(struct pcie_bars &bars, int slot)
 {
     char slot_chars[64];
@@ -70,15 +86,7 @@ void dev_open(struct pcie_bars &bars, const char *pci_address)
     /* set -1 so it's always different on the first run */
     bars.last_bar4_page = -1;
 
-    pthread_mutexattr_t mattr;
-    if (pthread_mutexattr_init(&mattr) ||
-        pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE))
-        throw std::runtime_error("couldn't set mutexattr as recursive");
-
-    for (auto &lock: bars.locks) {
-        if (pthread_mutex_init(&lock, &mattr))
-            throw std::runtime_error("couldn't initialize mutex");
-    }
+    configure_mutexes(bars);
 }
 
 void dev_close(struct pcie_bars &bars)
