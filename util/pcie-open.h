@@ -22,6 +22,7 @@ void dev_open_slot(struct pcie_bars &bars, const char *slot);
 /** Memory map the BARs of PCIe device with address \p pci_address, found in
  * "/sys/bus/pci/devices/<pci_address>.0/" */
 void dev_open(struct pcie_bars &bars, const char *pci_address);
+void dev_open_serial(struct pcie_bars &bars, const char *dev_file);
 /** Unmap memory and destroy mutexes of pcie_bars */
 void dev_close(struct pcie_bars &bars);
 
