@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #if defined(__x86_64__) && defined(__SSE4_1__)
@@ -266,6 +267,9 @@ uint32_t bar4_read(struct pcie_bars *bars, size_t addr)
         uint32_t rv;
         int elements = sscanf(cmd+2, "%*d : %x OK", &rv);
         assert(elements == 1);
+
+        struct timespec sleep_time = {.tv_nsec = 1000000000 / 4};
+        clock_nanosleep(CLOCK_MONOTONIC, 0, &sleep_time, NULL);
 
         return rv;
     }
