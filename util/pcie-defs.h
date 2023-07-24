@@ -35,6 +35,8 @@ struct pcie_bars {
     /* we only need locking for bar2 and bar4, since they are paged.
      * these mutexes MUST be initialized as recursive */
     pthread_mutex_t locks[NUM_LOCKS];
+
+    int fd;
 };
 
 #endif

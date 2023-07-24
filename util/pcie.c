@@ -7,6 +7,8 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 
 #if defined(__x86_64__) && defined(__SSE4_1__)
 # define INCLUDE_IMMINTRIN
@@ -248,6 +250,25 @@ void bar4_write_v(struct pcie_bars *bars, size_t addr, const void *src, size_t n
 uint32_t bar4_read(struct pcie_bars *bars, size_t addr)
 {
     pthread_mutex_lock(&bars->locks[BAR4]);
+
+    if (bars->fd > -1) {
+        char cmd[32];
+        int chars = sprintf(cmd, "r %zx\r", addr);
+        write(bars->fd, cmd, chars);
+        read(bars->fd, cmd, chars);
+
+        /* response looks like:  */
+        const ssize_t expected_response_size = strlen("\r\n00000000 : 5344422D OK\r\n-> ");
+        ssize_t response_size = read(bars->fd, cmd, expected_response_size);
+        assert (expected_response_size == response_size);
+        cmd[expected_response_size] = 0;
+
+        uint32_t rv;
+        int elements = sscanf(cmd+2, "%*d : %x OK", &rv);
+        assert(elements == 1);
+
+        return rv;
+    }
 
     uint32_t rv = *bar4_get_u32p(bars, addr);
 
