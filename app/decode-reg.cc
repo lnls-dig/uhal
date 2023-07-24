@@ -56,6 +56,7 @@ int main(int argc, char *argv[])
     argparse::ArgumentParser parent_args("decode-reg", "1.0", argparse::default_arguments::none);
     parent_args.add_argument("--slot").help("device slot");
     parent_args.add_argument("--address").help("device address");
+    parent_args.add_argument("--serial").help("device serial port");
     parent_args.add_argument("-a").help("enumerated position of device").required().scan<'u', unsigned>().default_value((unsigned)0);
     parent_args.add_argument("-v").help("verbose output").default_value(false).implicit_value(true);
 
@@ -139,8 +140,9 @@ int main(int argc, char *argv[])
     struct pcie_bars bars;
     if (auto v = args.present<std::string>("--slot")) dev_open_slot(bars, v->c_str());
     else if (auto v = args.present<std::string>("--address")) dev_open(bars, v->c_str());
+    else if (auto v = args.present<std::string>("--serial")) dev_open_serial(bars, v->c_str());
     else {
-        fputs("no device specified (--slot, --address)\n", stderr);
+        fputs("no device specified (--slot, --address, --serial)\n", stderr);
         return 1;
     }
 
