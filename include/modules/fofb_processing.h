@@ -29,6 +29,7 @@ class Core: public RegisterDecoder {
     struct wb_fofb_processing_regs &regs;
 
     void decode();
+    void read_monitors();
     void print(FILE *, bool) const;
 
   public:

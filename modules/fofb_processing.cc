@@ -6,6 +6,7 @@
  */
 
 #include <algorithm>
+#include <cstring>
 #include <stdexcept>
 #include <type_traits>
 
@@ -56,6 +57,21 @@ Core::Core(struct pcie_bars &bars):
     number_of_channels = MAX_NUM_CHAN;
 }
 Core::~Core() = default;
+
+void Core::read_monitors()
+{
+    auto get_register = [this](size_t reg) {
+        auto r = bar4_read(&bars, devinfo.start_addr + reg);
+        memcpy(static_cast<unsigned char *>(read_dest) + reg, &r, sizeof r);
+    };
+
+    get_register(WB_FOFB_PROCESSING_REGS_LOOP_INTLK_STA);
+    for (unsigned i = 0; i < *number_of_channels; i++)
+        get_register(
+            WB_FOFB_PROCESSING_REGS_CH +
+            WB_FOFB_PROCESSING_REGS_CH_SP_DECIM_DATA +
+            i * WB_FOFB_PROCESSING_REGS_CH_SIZE);
+}
 
 void Core::decode()
 {
