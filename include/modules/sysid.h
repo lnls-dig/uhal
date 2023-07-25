@@ -35,6 +35,8 @@ class Core: public RegisterDecoder {
     struct wb_fofb_sys_id_regs &regs;
 
     void decode();
+    void read_monitors();
+    void decode_monitors();
 
   public:
     Core(struct pcie_bars &);
