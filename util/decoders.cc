@@ -83,8 +83,27 @@ void RegisterDecoder::set_devinfo(const struct sdb_device_info &new_devinfo)
 void RegisterDecoder::read()
 {
     bar4_read_v(&bars, devinfo.start_addr, read_dest, read_size);
+}
 
+void RegisterDecoder::read_monitors()
+{
+    read();
+}
+
+void RegisterDecoder::decode_monitors()
+{
     decode();
+}
+
+void RegisterDecoder::get_data(bool only_monitors)
+{
+    if (only_monitors) {
+        read_monitors();
+        decode_monitors();
+    } else {
+        read();
+        decode();
+    }
 }
 
 void RegisterDecoder::binary_dump(FILE *f) const

@@ -74,7 +74,6 @@ class RegisterDecoder {
     std::unordered_map<std::string_view, Printer> printers;
 
     RegisterDecoder(struct pcie_bars &, std::unordered_map<std::string_view, Printer>);
-    virtual void decode() = 0;
 
     /** Save an int32_t (or smaller) value to a key */
     void add_general(const char *, int32_t, bool = false);
@@ -87,9 +86,22 @@ class RegisterDecoder {
      * before this can be called */
     void add_channel_double(const char *, unsigned, double, bool = false);
 
+    /** Read values from BAR4 into read_dest */
+    virtual void read();
+    /** This simply calls read(), but can be specified by subclasses to read
+     * only changing values from BAR4 into read_dest */
+    virtual void read_monitors();
+    /** Decode registers into actual values. Implemented by subclasses */
+    virtual void decode() = 0;
+    /** This simply calls decode(), but can be specified by subclasses to
+     * decode only changing values */
+    virtual void decode_monitors();
+
   public:
     virtual ~RegisterDecoder();
-    virtual void read();
+    /** Read from device and decode registers. Choose between all values or
+     * only monitors*/
+    void get_data(bool=false);
     void binary_dump(FILE *) const;
     virtual void print(FILE *, bool) const;
 

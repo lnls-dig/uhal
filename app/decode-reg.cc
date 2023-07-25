@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
             dec->set_devinfo(*d);
 
             if (args.is_used("-B")) {
-                dec->read();
+                dec->get_data();
                 dec->binary_dump(stdout);
                 return 0;
             }
@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
                     }
                 }
 
-                dec->read();
+                dec->get_data();
                 dec->print(stdout, verbose);
             } while (watch);
         } else {
