@@ -112,6 +112,17 @@ Core::Core(struct pcie_bars &bars):
 }
 Core::~Core() = default;
 
+void Core::read()
+{
+    bar4_read_v(&bars, devinfo.start_addr, &regs, offsetof(fofb_cc_regs, __padding_0));
+    bar4_read_v(&bars, devinfo.start_addr + offsetof(fofb_cc_regs, ram_reg), &regs.ram_reg, (FOFB_DATA_SEL+1) * 4);
+    bar4_read_v(
+        &bars,
+        devinfo.start_addr + offsetof(fofb_cc_regs, ram_reg[FOFB_CC_REGS_STA_OFFS]),
+        &regs.ram_reg[FOFB_CC_REGS_STA_OFFS],
+        (FIRMWARE_VER + 1) * 4);
+}
+
 void Core::decode()
 {
     uint32_t t;
