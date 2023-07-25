@@ -60,6 +60,14 @@ Core::Core(struct pcie_bars &bars):
 }
 Core::~Core() = default;
 
+/* no monitored values */
+void Core::read_monitors()
+{
+}
+void Core::decode_monitors()
+{
+}
+
 void Core::decode()
 {
     uint32_t t;
