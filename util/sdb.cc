@@ -11,9 +11,12 @@
 
 extern "C" {
 /* library uses "this" as a struct member name */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wkeyword-macro"
 #define this thisp
 #include "libsdbfs.h"
 #undef this
+#pragma GCC diagnostic pop
 }
 
 #include "defer.h"
