@@ -28,9 +28,9 @@ class Core: public RegisterDecoder {
     std::unique_ptr<struct wb_fofb_processing_regs> regs_storage;
     struct wb_fofb_processing_regs &regs;
 
-    void decode();
-    void read_monitors();
-    void print(FILE *, bool) const;
+    void decode() override;
+    void read_monitors() override;
+    void print(FILE *, bool) const override;
 
   public:
     Core(struct pcie_bars &);
@@ -45,7 +45,7 @@ class Controller: public RegisterController {
     std::unique_ptr<struct wb_fofb_processing_regs> regs_storage;
     struct wb_fofb_processing_regs &regs;
 
-    void set_devinfo_callback();
+    void set_devinfo_callback() override;
     void encode_config();
 
     unsigned fixed_point_coeff, fixed_point_gains;

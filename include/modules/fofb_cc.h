@@ -28,12 +28,12 @@ class Core: public RegisterDecoder {
     std::unique_ptr<struct fofb_cc_regs> regs_storage;
     struct fofb_cc_regs &regs;
 
-    void read();
-    void decode();
+    void read() override;
+    void decode() override;
 
   public:
     Core(struct pcie_bars &);
-    ~Core();
+    ~Core() override;
 };
 
 class Controller: public RegisterController {

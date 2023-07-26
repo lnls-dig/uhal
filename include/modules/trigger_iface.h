@@ -29,7 +29,7 @@ class Core: public RegisterDecoder {
     std::unique_ptr<struct trigger_iface_regs> regs_storage;
     struct trigger_iface_regs &regs;
 
-    void decode();
+    void decode() override;
 
   public:
     Core(struct pcie_bars &);

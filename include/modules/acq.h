@@ -31,11 +31,11 @@ class Core: public RegisterDecoder {
     std::unique_ptr<struct acq_core> regs_storage;
     struct acq_core &regs;
 
-    void decode();
+    void decode() override;
 
   public:
     Core(struct pcie_bars &);
-    ~Core();
+    ~Core() override;
 };
 
 enum class acq_error {
@@ -73,7 +73,7 @@ class Controller: public RegisterController {
     void write_config();
     bool acquisition_ready();
 
-    void set_devinfo_callback();
+    void set_devinfo_callback() override;
 
     /* state variables for async */
     enum class acq_step {
