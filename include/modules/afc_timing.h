@@ -29,11 +29,11 @@ class Core: public RegisterDecoder {
     std::unique_ptr<struct afc_timing> regs_storage;
     struct afc_timing &regs;
 
-    void decode();
+    void decode() override;
 
   public:
     Core(struct pcie_bars &);
-    ~Core();
+    ~Core() override;
 };
 
 class Controller: public RegisterController {
@@ -41,7 +41,7 @@ class Controller: public RegisterController {
     std::unique_ptr<struct afc_timing> regs_storage;
     struct afc_timing &regs;
 
-    void set_devinfo_callback();
+    void set_devinfo_callback() override;
     void encode_config();
 
   public:

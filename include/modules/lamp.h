@@ -30,7 +30,7 @@ typedef struct channel_registers_v2_impl channel_registers_v2;
 class CoreV2: public RegisterDecoder {
     std::unique_ptr<struct wb_rtmlamp_ohwr_regs> regs;
 
-    void decode();
+    void decode() override;
 
   public:
     CoreV2(struct pcie_bars &);
@@ -71,13 +71,13 @@ class ControllerV2: public Controller {
     /* control registers */
     std::unique_ptr<channel_registers_v2> channel_regs;
 
-    void encode_config();
+    void encode_config() override;
 
   public:
     ControllerV2(struct pcie_bars &);
     ~ControllerV2();
 
-    void write_params();
+    void write_params() override;
 };
 
 } /* namespace lamp */

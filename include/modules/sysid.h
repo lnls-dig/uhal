@@ -34,15 +34,15 @@ class Core: public RegisterDecoder {
     std::unique_ptr<struct wb_fofb_sys_id_regs> regs_storage;
     struct wb_fofb_sys_id_regs &regs;
 
-    void decode();
-    void read_monitors();
-    void decode_monitors();
+    void decode() override;
+    void read_monitors() override;
+    void decode_monitors() override;
 
   public:
     Core(struct pcie_bars &);
     ~Core();
 
-    void print(FILE *, bool) const;
+    void print(FILE *, bool) const override;
 
     distortion_levels setpoint_distortion;
     distortion_levels posx_distortion, posy_distortion;
@@ -53,7 +53,7 @@ class Controller: public RegisterController {
     std::unique_ptr<struct wb_fofb_sys_id_regs> regs_storage;
     struct wb_fofb_sys_id_regs &regs;
 
-    void set_devinfo_callback();
+    void set_devinfo_callback() override;
     void encode_config();
 
   public:

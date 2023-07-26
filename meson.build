@@ -15,9 +15,11 @@ endif
 
 foreach lang : languages
   compiler = meson.get_compiler(lang)
-  if compiler.has_argument('-Wstrict-aliasing=3')
-    add_project_arguments('-Wstrict-aliasing=3', language: lang)
-  endif
+  foreach arg : ['-Wstrict-aliasing=3', '-Wsuggest-override']
+    if compiler.has_argument(arg)
+      add_project_arguments(arg, language: lang)
+    endif
+  endforeach
 endforeach
 
 
