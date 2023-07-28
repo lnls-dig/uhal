@@ -117,9 +117,9 @@ void dev_open_serial(struct pcie_bars &bars, const char *dev_file)
     xfail(cfsetispeed(&term, B115200));
 
     term.c_lflag &= ~ICANON;
+    cfmakeraw(&term);
     term.c_cc[VMIN] = 0;
     term.c_cc[VTIME] = 10;
-    cfmakeraw(&term);
 
     xfail(tcflush(bars.fd, TCIFLUSH));
     xfail(tcsetattr(bars.fd, TCSAFLUSH, &term));
