@@ -61,8 +61,13 @@ Core::Core(struct pcie_bars &bars):
     RegisterDecoder(bars, {
         PRINTER("STA_LINK", "Fiber link", PrinterType::enable),
         PRINTER("STA_RXEN", "RX Enable", PrinterType::enable),
-        PRINTER("STA_REFCLKLOCK", "Reference clock locked", PrinterType::boolean),
+        PRINTER("STA_REFCLKLOCK", "AFC clock locked", PrinterType::boolean),
         PRINTER("STA_EVREN", "Event receiver enable", PrinterType::boolean),
+        PRINTER("STA_LOCKED_RTM", "RTM clock locked", PrinterType::boolean),
+        PRINTER("STA_LOCKED_GT0", "GT0 clock locked", PrinterType::boolean),
+        PRINTER("STA_LOCKED_AFC_LATCH", "AFC clock locked (latch)", PrinterType::boolean),
+        PRINTER("STA_LOCKED_RTM_LATCH", "RTM clock locked (latch)", PrinterType::boolean),
+        PRINTER("STA_LOCKED_GT0_LATCH", "GT0 clock locked (latch)", PrinterType::boolean),
         PRINTER("ALIVE", "Alive counter", PrinterType::value),
 
         PRINTER("RFREQ_HI", "Si57x RFREQ MSB", PrinterType::value),
@@ -107,6 +112,11 @@ void Core::decode()
     add_general("STA_RXEN", get_bit(t, TIMING_STAT_RXEN));
     add_general("STA_REFCLKLOCK", get_bit(t, TIMING_STAT_REFCLKLOCK));
     add_general("STA_EVREN", get_bit(t, TIMING_STAT_EVREN));
+    add_general("STA_LOCKED_RTM", get_bit(t, TIMING_STAT_LOCKED_RTM));
+    add_general("STA_LOCKED_GT0", get_bit(t, TIMING_STAT_LOCKED_GT0));
+    add_general("STA_LOCKED_AFC_LATCH", get_bit(t, TIMING_STAT_LOCKED_AFC_LATCH));
+    add_general("STA_LOCKED_RTM_LATCH", get_bit(t, TIMING_STAT_LOCKED_RTM_LATCH));
+    add_general("STA_LOCKED_GT0_LATCH", get_bit(t, TIMING_STAT_LOCKED_GT0_LATCH));
 
     add_general("ALIVE", regs.alive);
 
@@ -230,6 +240,7 @@ bool Controller::set_freq(double freq, struct clock &clock)
 void Controller::encode_config()
 {
     insert_bit(regs.stat, event_receiver_enable, TIMING_STAT_EVREN);
+    insert_bit(regs.stat, reset_latches, TIMING_STAT_RST_LATCH);
 
     auto setup_clock = [](const auto &parameters, auto &registers) {
         registers.rfreq_hi = parameters.rfreq >> 20;
@@ -282,6 +293,7 @@ void Controller::write_params()
 
     bar4_write_v(&bars, addr, &regs, sizeof regs);
 
+    reset_latches = false;
     for (auto &p: parameters)
         p.count_reset = false;
 }
