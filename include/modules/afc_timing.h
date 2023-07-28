@@ -52,6 +52,7 @@ class Controller: public RegisterController {
     static const std::vector<std::string> sources_list;
 
     bool event_receiver_enable = true;
+    bool reset_latches = false;
     /** Configuration values for RTM and AFC reference clocks */
     struct clock {
         uint64_t rfreq;
