@@ -20,6 +20,7 @@ namespace internal {
 }
 
 namespace {
+    constexpr unsigned TRIGGER_MUX_DEVID = 0x84b6a5ac;
     struct sdb_device_info ref_devinfo = {
         .vendor_id = LNLS_VENDORID,
         .device_id = TRIGGER_MUX_DEVID,

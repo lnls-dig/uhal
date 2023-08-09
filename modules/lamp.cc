@@ -26,6 +26,7 @@ namespace {
     static constexpr unsigned NUM_CHAN = 12;
     static constexpr unsigned TRIGGER_ENABLE_VERSION = 1;
 
+    constexpr unsigned LAMP_DEVID = 0xa1248bec;
     struct sdb_device_info ref_devinfo = {
         .vendor_id = LNLS_VENDORID,
         .device_id = LAMP_DEVID,

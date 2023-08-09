@@ -19,8 +19,6 @@
 
 namespace acq {
 
-constexpr unsigned ACQ_DEVID = 0x4519a0ad;
-
 /* forward declaration */
 struct acq_core;
 

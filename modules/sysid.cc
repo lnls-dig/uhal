@@ -29,6 +29,7 @@ static_assert(WB_FOFB_SYS_ID_REGS_PRBS_SP_DISTORT_CH_LEVELS_LEVEL_1_MASK ==
 namespace {
     const size_t NUM_SETPOINTS = 12, NUM_POSITIONS = 256;
 
+    constexpr unsigned SYS_ID_DEVID = 0x4b2f4872;
     struct sdb_device_info ref_devinfo = {
         .vendor_id = LNLS_VENDORID,
         .device_id = SYS_ID_DEVID,

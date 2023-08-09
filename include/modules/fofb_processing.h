@@ -16,8 +16,6 @@
 
 namespace fofb_processing {
 
-constexpr unsigned FOFB_PROCESSING_DEVID = 0x49681ca6;
-
 /* forward declaration */
 struct wb_fofb_processing_regs;
 

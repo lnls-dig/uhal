@@ -40,6 +40,7 @@ static_assert(TIMING_AMC0_COUNT_RST == TIMING_FMC2CH4_COUNT_RST);
 namespace {
     constexpr unsigned NUM_CHANNELS = 18;
 
+    constexpr unsigned AFC_TIMING_DEVID = 0xbe10be10;
     struct sdb_device_info ref_devinfo = {
         .vendor_id = LNLS_VENDORID,
         .device_id = AFC_TIMING_DEVID,

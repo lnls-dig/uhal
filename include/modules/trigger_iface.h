@@ -17,8 +17,6 @@
 
 namespace trigger_iface {
 
-constexpr unsigned TRIGGER_IFACE_DEVID = 0xbcbb78d2;
-
 /* forward declaration */
 struct trigger_iface_regs;
 

@@ -17,8 +17,6 @@
 
 namespace afc_timing {
 
-constexpr unsigned AFC_TIMING_DEVID = 0xbe10be10;
-
 /* forward declaration */
 struct afc_timing;
 
