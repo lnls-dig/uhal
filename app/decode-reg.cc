@@ -241,7 +241,7 @@ int main(int argc, char *argv[])
     }
     if (mode == "acq") {
         acq::Controller ctl{bars};
-        if (auto v = read_sdb(&bars, ctl.device_match, dev_index)) {
+        if (auto v = read_sdb(&bars, ctl.match_devinfo_lambda, dev_index)) {
             ctl.set_devinfo(*v);
         } else {
             fprintf(stderr, "Couldn't find acq module index %u\n", dev_index);
@@ -265,7 +265,7 @@ int main(int argc, char *argv[])
     }
     if (mode == "lamp") {
         lamp::ControllerV2 ctl{bars};
-        if (auto v = read_sdb(&bars, ctl.device_match, dev_index)) {
+        if (auto v = read_sdb(&bars, ctl.match_devinfo_lambda, dev_index)) {
             ctl.set_devinfo(*v);
         } else {
             fprintf(stderr, "Couldn't find lamp module index %u\n", dev_index);
@@ -292,7 +292,7 @@ int main(int argc, char *argv[])
     }
     if (mode == "timing") {
         afc_timing::Controller ctl(bars);
-        if (auto v = read_sdb(&bars, ctl.device_match, dev_index)) {
+        if (auto v = read_sdb(&bars, ctl.match_devinfo_lambda, dev_index)) {
             ctl.set_devinfo(*v);
         } else {
             fprintf(stderr, "Couldn't find timing module index %u\n", dev_index);

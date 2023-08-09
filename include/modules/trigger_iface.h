@@ -19,9 +19,6 @@ namespace trigger_iface {
 
 constexpr unsigned TRIGGER_IFACE_DEVID = 0xbcbb78d2;
 
-inline const device_match_fn device_match_trigger_iface =
-    device_match_impl<LNLS_VENDORID, TRIGGER_IFACE_DEVID, 1>;
-
 /* forward declaration */
 struct trigger_iface_regs;
 
@@ -47,8 +44,6 @@ class Controller: public RegisterController {
   public:
     Controller(struct pcie_bars &);
     ~Controller();
-
-    static inline const device_match_fn device_match = device_match_trigger_iface;
 
     void write_params();
 

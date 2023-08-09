@@ -150,14 +150,13 @@ void CoreV2::decode()
     }
 }
 
-Controller::Controller(struct pcie_bars &bars, device_match_fn device_match):
-    RegisterController(bars, ref_devinfo),
-    device_match(device_match)
+Controller::Controller(struct pcie_bars &bars):
+    RegisterController(bars, ref_devinfo)
 {
 }
 
 ControllerV2::ControllerV2(struct pcie_bars &bars):
-    Controller(bars, device_match_v2)
+    Controller(bars)
 {
     channel_regs = std::make_unique<channel_registers_v2>();
 }

@@ -19,9 +19,6 @@ namespace lamp {
 
 constexpr unsigned LAMP_DEVID = 0xa1248bec;
 
-inline const device_match_fn device_match_v2 =
-    device_match_impl<LNLS_VENDORID, LAMP_DEVID, 2>;
-
 struct wb_rtmlamp_ohwr_regs;
 
 /* v2 forward declaration */
@@ -42,10 +39,8 @@ class Controller: public RegisterController {
     virtual void encode_config() = 0;
 
   public:
-    Controller(struct pcie_bars &, device_match_fn);
+    Controller(struct pcie_bars &);
     virtual ~Controller() = default;
-
-    const device_match_fn device_match;
 
     unsigned channel = 0;
     /* per channel properties */

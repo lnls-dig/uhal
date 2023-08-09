@@ -19,9 +19,6 @@ namespace trigger_mux {
 
 constexpr unsigned TRIGGER_MUX_DEVID = 0x84b6a5ac;
 
-inline const device_match_fn device_match_trigger_mux =
-    device_match_impl<LNLS_VENDORID, TRIGGER_MUX_DEVID, 1>;
-
 /* forward declaration */
 struct trigger_mux_regs;
 
@@ -47,8 +44,6 @@ class Controller: public RegisterController {
   public:
     Controller(struct pcie_bars &);
     ~Controller();
-
-    static inline const device_match_fn device_match = device_match_trigger_mux;
 
     void write_params();
 

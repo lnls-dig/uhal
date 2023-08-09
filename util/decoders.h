@@ -24,13 +24,6 @@
 
 class Printer;
 
-template<uint64_t t_vendor_id, uint32_t t_device_id, uint8_t major_version>
-bool device_match_impl(const struct sdb_device_info &devinfo)
-{
-    return (devinfo.vendor_id == t_vendor_id) && (devinfo.device_id == t_device_id) &&
-      (devinfo.abi_ver_major == major_version);
-}
-
 class RegisterDecoderBase {
     /** Is set to true when set_devinfo() is called, used to protect us from
      * using uninitialized device information */

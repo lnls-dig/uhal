@@ -18,9 +18,6 @@ namespace sys_id {
 
 constexpr unsigned SYS_ID_DEVID = 0x4b2f4872;
 
-inline const device_match_fn device_match_sys_id =
-    device_match_impl<LNLS_VENDORID, SYS_ID_DEVID, 1>;
-
 /* forward declaration */
 struct wb_fofb_sys_id_regs;
 
@@ -59,8 +56,6 @@ class Controller: public RegisterController {
   public:
     Controller(struct pcie_bars &);
     ~Controller();
-
-    static inline const device_match_fn device_match = device_match_sys_id;
 
     void write_params();
 

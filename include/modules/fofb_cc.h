@@ -18,9 +18,6 @@ namespace fofb_cc {
 constexpr uint64_t DLS_VENDORID = 0x1000000000000d15;
 constexpr unsigned FOFB_CC_DEVID = 0x4a1df147;
 
-inline const device_match_fn device_match_fofb_cc =
-    device_match_impl<DLS_VENDORID, FOFB_CC_DEVID, 1>;
-
 /* forward declaration */
 struct fofb_cc_regs;
 
@@ -58,8 +55,6 @@ class Controller: public RegisterController {
     std::optional<uint16_t> time_frame_delay;
     std::optional<bool> rx_polarity;
     std::optional<uint32_t> payload_sel, fofb_data_sel;
-
-    static inline const device_match_fn device_match = device_match_fofb_cc;
 
     void write_params();
 };
