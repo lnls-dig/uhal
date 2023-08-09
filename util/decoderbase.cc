@@ -10,11 +10,6 @@
 #include "pcie.h"
 #include "decoders.h"
 
-RegisterDecoderBase::RegisterDecoderBase(struct pcie_bars &bars):
-    bars(bars)
-{
-}
-
 RegisterDecoderBase::RegisterDecoderBase(struct pcie_bars &bars, const struct sdb_device_info &ref_devinfo):
     vendor_id(ref_devinfo.vendor_id),
     device_id(ref_devinfo.device_id),

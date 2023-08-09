@@ -47,7 +47,6 @@ class RegisterDecoderBase {
     struct sdb_device_info devinfo;
     size_t addr;
 
-    RegisterDecoderBase(struct pcie_bars &);
     /** Initializer that sets the device information supported by the
      * implementation */
     RegisterDecoderBase(struct pcie_bars &, const struct sdb_device_info &);
