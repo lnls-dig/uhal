@@ -150,6 +150,12 @@ void CoreV2::decode()
     }
 }
 
+Controller::Controller(struct pcie_bars &bars, device_match_fn device_match):
+    RegisterController(bars, ref_devinfo),
+    device_match(device_match)
+{
+}
+
 ControllerV2::ControllerV2(struct pcie_bars &bars):
     Controller(bars, device_match_v2)
 {

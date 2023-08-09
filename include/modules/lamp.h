@@ -42,11 +42,7 @@ class Controller: public RegisterController {
     virtual void encode_config() = 0;
 
   public:
-    Controller(struct pcie_bars &bars, device_match_fn device_match):
-        RegisterController(bars),
-        device_match(device_match)
-    {
-    }
+    Controller(struct pcie_bars &, device_match_fn);
     virtual ~Controller() = default;
 
     const device_match_fn device_match;

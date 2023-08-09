@@ -7,8 +7,8 @@
 
 #include "controllers.h"
 
-RegisterController::RegisterController(struct pcie_bars &bars):
-    RegisterDecoderBase(bars)
+RegisterController::RegisterController(struct pcie_bars &bars, const struct sdb_device_info &ref_devinfo):
+    RegisterDecoderBase(bars, ref_devinfo)
 {
 }
 

@@ -13,7 +13,7 @@
 
 class RegisterController: public RegisterDecoderBase {
   protected:
-    RegisterController(struct pcie_bars &bars);
+    RegisterController(struct pcie_bars &bars, const struct sdb_device_info &);
 
     /** Child classes should implement this function to capture one-time values
      * from hardware and perform any other necessary initialization */
