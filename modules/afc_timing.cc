@@ -105,8 +105,6 @@ Core::Core(struct pcie_bars &bars):
     read_size = sizeof regs;
     read_dest = &regs;
 
-    device_match = device_match_afc_timing;
-
     number_of_channels = NUM_CHANNELS;
 }
 Core::~Core() = default;

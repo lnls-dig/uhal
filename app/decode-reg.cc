@@ -194,7 +194,7 @@ int main(int argc, char *argv[])
 
         dec->channel = args.present<unsigned>("-c");
 
-        if (auto d = read_sdb(&bars, dec->device_match, dev_index)) {
+        if (auto d = read_sdb(&bars, dec->match_devinfo_lambda, dev_index)) {
             if (verbose) {
                 fprintf(stdout, "Found device in %08jx\n", (uintmax_t)d->start_addr);
             }

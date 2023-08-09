@@ -141,8 +141,6 @@ class RegisterDecoder: public RegisterDecoderBase {
     template <class T>
     T get_channel_data(const char *, unsigned) const;
 
-    device_match_fn device_match;
-
     std::optional<unsigned> channel;
 };
 
