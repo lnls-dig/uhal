@@ -18,9 +18,6 @@ namespace fofb_processing {
 
 constexpr unsigned FOFB_PROCESSING_DEVID = 0x49681ca6;
 
-inline const device_match_fn device_match_fofb_processing =
-    device_match_impl<LNLS_VENDORID, FOFB_PROCESSING_DEVID, 4>;
-
 /* forward declaration */
 struct wb_fofb_processing_regs;
 
@@ -53,8 +50,6 @@ class Controller: public RegisterController {
   public:
     Controller(struct pcie_bars &);
     ~Controller();
-
-    static inline const device_match_fn device_match = device_match_fofb_processing;
 
     bool intlk_sta_clr = false, intlk_en_orb_distort = false, intlk_en_packet_loss = false;
     unsigned orb_distort_limit = 0, min_num_packets = 0;

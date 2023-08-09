@@ -19,9 +19,6 @@ namespace afc_timing {
 
 constexpr unsigned AFC_TIMING_DEVID = 0xbe10be10;
 
-inline const device_match_fn device_match_afc_timing =
-    device_match_impl<LNLS_VENDORID, AFC_TIMING_DEVID, 1>;
-
 /* forward declaration */
 struct afc_timing;
 
@@ -48,7 +45,6 @@ class Controller: public RegisterController {
     Controller(struct pcie_bars &);
     ~Controller();
 
-    static inline const device_match_fn device_match = device_match_afc_timing;
     static const std::vector<std::string> sources_list;
 
     bool event_receiver_enable = true;

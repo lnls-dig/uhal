@@ -21,9 +21,6 @@ namespace acq {
 
 constexpr unsigned ACQ_DEVID = 0x4519a0ad;
 
-inline const device_match_fn device_match_acq =
-    device_match_impl<LNLS_VENDORID, ACQ_DEVID, 2>;
-
 /* forward declaration */
 struct acq_core;
 
@@ -85,8 +82,6 @@ class Controller: public RegisterController {
   public:
     Controller(struct pcie_bars &);
     ~Controller();
-
-    static inline const device_match_fn device_match = device_match_acq;
 
     unsigned channel = 0;
     unsigned pre_samples = 4;
