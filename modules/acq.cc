@@ -407,7 +407,7 @@ std::vector<Data> Controller::get_result()
     std::vector<std::conditional_t<is_signed, int32_t, uint32_t>> v32;
 
     /* allows the code below to be generic and only use data_pointer */
-    void *data_pointer;
+    void *data_pointer = nullptr;
     auto set_data = [&data_pointer, elements](auto &v) {
         v.resize(elements);
         data_pointer = v.data();
