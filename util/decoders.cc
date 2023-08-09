@@ -12,7 +12,7 @@
 #include "decoders.h"
 
 RegisterDecoder::RegisterDecoder(struct pcie_bars &bars, std::unordered_map<std::string_view, Printer> printers):
-    bars(bars),
+    RegisterDecoderBase(bars),
     printers(printers)
 {
 }
@@ -76,16 +76,6 @@ void RegisterDecoder::add_channel_double(const char *name, unsigned pos, double 
     add_channel_internal(name, pos, value, skip);
 }
 
-void RegisterDecoder::set_devinfo(const struct sdb_device_info &new_devinfo)
-{
-    devinfo = new_devinfo;
-}
-
-void RegisterDecoder::read()
-{
-    bar4_read_v(&bars, devinfo.start_addr, read_dest, read_size);
-}
-
 void RegisterDecoder::read_monitors()
 {
     read();
@@ -98,6 +88,8 @@ void RegisterDecoder::decode_monitors()
 
 void RegisterDecoder::get_data(bool only_monitors)
 {
+    check_devinfo_is_set();
+
     if (only_monitors) {
         read_monitors();
         decode_monitors();
