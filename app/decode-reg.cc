@@ -57,6 +57,9 @@ int main(int argc, char *argv[])
     parent_args.add_argument("-a").help("enumerated position of device").required().scan<'u', unsigned>().default_value((unsigned)0);
     parent_args.add_argument("-v").help("verbose output").default_value(false).implicit_value(true);
 
+    argparse::ArgumentParser parent_args_with_help("decode-reg <action>", "1.0", argparse::default_arguments::help);
+    parent_args_with_help.add_parents(parent_args);
+
     argparse::ArgumentParser decode_args("decode-reg decode", "1.0", argparse::default_arguments::help);
     decode_args.add_parents(parent_args);
     decode_args.add_argument("-q").help("type of registers").required();
@@ -100,7 +103,7 @@ int main(int argc, char *argv[])
 
     argparse::ArgumentParser *pargs;
     if (mode == "reset" || mode == "build_info" || mode == "timing") {
-        pargs = &parent_args;
+        pargs = &parent_args_with_help;
     } else if (mode == "decode") {
         pargs = &decode_args;
     } else if (mode == "ram") {
