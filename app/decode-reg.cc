@@ -60,6 +60,10 @@ int main(int argc, char *argv[])
     argparse::ArgumentParser parent_args_with_help("decode-reg <action>", "1.0", argparse::default_arguments::help);
     parent_args_with_help.add_parents(parent_args);
 
+    argparse::ArgumentParser build_info_args("decode-reg build_info", "1.0", argparse::default_arguments::help);
+    build_info_args.add_parents(parent_args);
+    build_info_args.add_argument("-q").help("quiet: print only main synthesis name").default_value(false).implicit_value(true);
+
     argparse::ArgumentParser decode_args("decode-reg decode", "1.0", argparse::default_arguments::help);
     decode_args.add_parents(parent_args);
     decode_args.add_argument("-q").help("type of registers").required();
@@ -102,8 +106,10 @@ int main(int argc, char *argv[])
     lamp_args.add_argument("-T").help("Trigger enable").scan<'u', unsigned>();
 
     argparse::ArgumentParser *pargs;
-    if (mode == "reset" || mode == "build_info" || mode == "timing") {
+    if (mode == "reset" || mode == "timing") {
         pargs = &parent_args_with_help;
+    } else if (mode == "build_info") {
+        pargs = &build_info_args;
     } else if (mode == "decode") {
         pargs = &decode_args;
     } else if (mode == "ram") {
@@ -145,14 +151,17 @@ int main(int argc, char *argv[])
     if (mode == "build_info") {
         auto build_info = get_synthesis_info(&bars);
 
-        for (auto &b: build_info) {
-            printf("name %s\n", b.name);
-            printf("    commit-id %s\n", b.commit);
-            if (b.tool_name[0]) printf("    tool-name %s\n", b.tool_name);
-            if (b.tool_version) printf("    tool-version 0x%08x\n", (unsigned)b.tool_version);
-            if (b.date) printf("    date 0x%08x\n", (unsigned)b.date);
-            if (b.user_name[0]) printf("    user-name %s\n", b.user_name);
-        }
+        if (args.is_used("-q"))
+            puts(build_info[0].name);
+        else
+            for (auto &b: build_info) {
+                printf("name %s\n", b.name);
+                printf("    commit-id %s\n", b.commit);
+                if (b.tool_name[0]) printf("    tool-name %s\n", b.tool_name);
+                if (b.tool_version) printf("    tool-version 0x%08x\n", (unsigned)b.tool_version);
+                if (b.date) printf("    date 0x%08x\n", (unsigned)b.date);
+                if (b.user_name[0]) printf("    user-name %s\n", b.user_name);
+            }
 
         return 0;
     }
