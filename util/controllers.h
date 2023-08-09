@@ -8,14 +8,11 @@
 #ifndef CONTROLLERS_H
 #define CONTROLLERS_H
 
+#include "decoders.h"
 #include "sdb-defs.h"
 
-class RegisterController {
+class RegisterController: public RegisterDecoderBase {
   protected:
-    struct pcie_bars &bars;
-    struct sdb_device_info devinfo;
-    size_t addr;
-
     RegisterController(struct pcie_bars &bars);
 
     /** Child classes should implement this function to capture one-time values
@@ -23,7 +20,7 @@ class RegisterController {
     virtual void set_devinfo_callback() { }
 
   public:
-    void set_devinfo(const struct sdb_device_info &);
+    void set_devinfo(const struct sdb_device_info &) override;
 };
 
 #endif
