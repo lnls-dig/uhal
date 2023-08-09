@@ -1,0 +1,59 @@
+/*
+ * Copyright (C) 2023 CNPEM (cnpem.br)
+ * Author: Érico Nogueira <erico.rolim@lnls.br>
+ *
+ * Released according to the GNU GPL, version 3 or any later version.
+ */
+
+#include <cmath>
+#include <stdexcept>
+
+#include "pcie.h"
+#include "printer.h"
+#include "util.h"
+#include "modules/bpm_swap.h"
+
+namespace bpm_swap {
+
+#include "hw/wb_bpm_swap_regs.h"
+
+namespace {
+    constexpr unsigned BPM_SWAP_DEVID = 0x12897592;
+    struct sdb_device_info ref_devinfo = {
+        .vendor_id = LNLS_VENDORID,
+        .device_id = BPM_SWAP_DEVID,
+        .abi_ver_major = 1
+    };
+}
+
+struct bpm_swap_regs {
+    uint32_t ctrl, dly;
+};
+
+Core::Core(struct pcie_bars &bars):
+    RegisterDecoder(bars, ref_devinfo, {
+        PRINTER("MODE", "Operation mode of first pair", PrinterType::value),
+        PRINTER("DIV_F_CNT_EN", "Swap phase sync enable", PrinterType::enable),
+        PRINTER("DIV_F", "Swap divisor", PrinterType::value),
+        PRINTER("DLY", "Swap delay", PrinterType::value),
+    }),
+    CONSTRUCTOR_REGS(struct bpm_swap_regs)
+{
+    set_read_dest(regs);
+}
+Core::~Core() = default;
+
+void Core::decode()
+{
+    uint32_t t;
+
+    t = regs.ctrl;
+    add_general("MODE", extract_value<uint8_t>(t, BPM_SWAP_CTRL_MODE_MASK));
+    add_general("DIV_F_CNT_EN", get_bit(t, BPM_SWAP_CTRL_SWAP_DIV_F_CNT_EN));
+    add_general("DIV_F", extract_value<uint16_t>(t, BPM_SWAP_CTRL_SWAP_DIV_F_MASK));
+
+    t = regs.dly;
+    add_general("DLY", extract_value<uint16_t>(t, BPM_SWAP_DLY_DESWAP_MASK));
+}
+
+} /* namespace bpm_swap */
