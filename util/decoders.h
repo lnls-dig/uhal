@@ -31,7 +31,45 @@ bool device_match_impl(const struct sdb_device_info &devinfo)
       (devinfo.abi_ver_major == major_version);
 }
 
-class RegisterDecoder {
+class RegisterDecoderBase {
+    /** Is set to true when set_devinfo() is called, used to protect us from
+     * using uninitialized device information */
+    bool devinfo_is_set = false;
+
+    uint64_t vendor_id;
+    uint32_t device_id;
+    uint8_t major_version;
+    /** Is set to true when we use the
+     * RegisterDecoderBase(struct pcie_bars &, const struct sdb_device_info &)
+     * initializer */
+    bool check_devinfo = false;
+
+    bool match_devinfo(const struct sdb_device_info &) const;
+
+  protected:
+    size_t read_size;
+    void *read_dest;
+
+    struct pcie_bars &bars;
+    struct sdb_device_info devinfo;
+    size_t addr;
+
+    RegisterDecoderBase(struct pcie_bars &);
+    /** Initializer that sets the device information supported by the
+     * implementation */
+    RegisterDecoderBase(struct pcie_bars &, const struct sdb_device_info &);
+
+    /** Read values from BAR4 into #read_dest */
+    virtual void read();
+
+  public:
+    void check_devinfo_is_set() const;
+    virtual void set_devinfo(const struct sdb_device_info &);
+
+    const device_match_fn match_devinfo_lambda;
+};
+
+class RegisterDecoder: public RegisterDecoderBase {
     bool is_boolean_value(const char *) const;
     int32_t try_boolean_value(const char *, int32_t) const;
 
@@ -58,12 +96,6 @@ class RegisterDecoder {
     void add_channel_internal(const char *, unsigned, T, bool);
 
   protected:
-    size_t read_size;
-    void *read_dest;
-
-    struct pcie_bars &bars;
-    struct sdb_device_info devinfo;
-
     /** Flag to indicate that the #general_data_order and #channel_data_order
      * vectors have been populated: it should only happen once, and is cheaper
      * than checking for membership of strings */
@@ -87,8 +119,6 @@ class RegisterDecoder {
      * before this can be called */
     void add_channel_double(const char *, unsigned, double, bool = false);
 
-    /** Read values from BAR4 into #read_dest */
-    virtual void read();
     /** This simply calls read(), but can be specified by subclasses to read
      * only changing values from BAR4 into #read_dest */
     virtual void read_monitors();
@@ -105,8 +135,6 @@ class RegisterDecoder {
     void get_data(bool=false);
     void binary_dump(FILE *) const;
     virtual void print(FILE *, bool) const;
-
-    void set_devinfo(const struct sdb_device_info &);
 
     template <class T>
     T get_general_data(const char *) const;

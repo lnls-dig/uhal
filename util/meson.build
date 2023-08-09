@@ -1,4 +1,4 @@
-utilities_src = ['controllers.cc', 'decoders.cc', 'pcie.c', 'pcie-open.cc', 'printer.cc', 'sdb.cc', 'util.cc']
+utilities_src = ['controllers.cc', 'decoderbase.cc', 'decoders.cc', 'pcie.c', 'pcie-open.cc', 'printer.cc', 'sdb.cc', 'util.cc']
 utilities_lib = static_library(
   'uhal-utilities',
   utilities_src,
