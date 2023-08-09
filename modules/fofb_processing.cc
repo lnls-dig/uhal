@@ -24,10 +24,18 @@ static_assert(WB_FOFB_PROCESSING_REGS_SPS_RAM_BANK == offsetof(wb_fofb_processin
 static_assert(WB_FOFB_PROCESSING_REGS_CH + WB_FOFB_PROCESSING_REGS_CH_COEFF_RAM_BANK + WB_FOFB_PROCESSING_REGS_CH_SIZE ==
     offsetof(wb_fofb_processing_regs, ch[1].coeff_ram_bank));
 
-static constexpr unsigned MAX_NUM_CHAN = 12, MAX_BPMS = 256;
+namespace {
+    constexpr unsigned MAX_NUM_CHAN = 12, MAX_BPMS = 256;
+
+    struct sdb_device_info ref_devinfo = {
+        .vendor_id = LNLS_VENDORID,
+        .device_id = FOFB_PROCESSING_DEVID,
+        .abi_ver_major = 4
+    };
+}
 
 Core::Core(struct pcie_bars &bars):
-    RegisterDecoder(bars, {
+    RegisterDecoder(bars, ref_devinfo, {
         PRINTER("FIXED_POINT_POS_COEFF", "Position of point in fixed point representation of coefficientes", PrinterType::value),
         PRINTER("FIXED_POINT_POS_GAINS", "Position of point in fixed point representation of gains", PrinterType::value),
         PRINTER("INTLK_CTL_SRC_EN_ORB_DISTORT", "Enable orbit distortion interlock source", PrinterType::enable),

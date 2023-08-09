@@ -19,6 +19,14 @@ namespace internal {
     static constexpr unsigned number_of_channels = 24;
 }
 
+namespace {
+    struct sdb_device_info ref_devinfo = {
+        .vendor_id = LNLS_VENDORID,
+        .device_id = TRIGGER_MUX_DEVID,
+        .abi_ver_major = 1
+    };
+}
+
 /* hw header didn't have a struct so we write it by hand */
 struct trigger_mux_regs {
     struct {
@@ -27,7 +35,7 @@ struct trigger_mux_regs {
 };
 
 Core::Core(struct pcie_bars &bars):
-    RegisterDecoder(bars, {
+    RegisterDecoder(bars, ref_devinfo, {
         PRINTER("RCV_SRC", "Receiver Source", PrinterType::boolean, "Internal Signals", "Triggers"),
         PRINTER("RCV_IN_SEL", "Select Receiver Input", PrinterType::value),
         PRINTER("TRANSM_SRC", "Transmitter Source", PrinterType::boolean, "Internal Signals", "Triggers"),

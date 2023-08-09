@@ -21,12 +21,20 @@ namespace lamp {
 
 namespace lamp {
 
-static constexpr unsigned CHANNEL_DISTANCE = sizeof(channel_registers_v2);
-static constexpr unsigned NUM_CHAN = 12;
-static constexpr unsigned TRIGGER_ENABLE_VERSION = 1;
+namespace {
+    static constexpr unsigned CHANNEL_DISTANCE = sizeof(channel_registers_v2);
+    static constexpr unsigned NUM_CHAN = 12;
+    static constexpr unsigned TRIGGER_ENABLE_VERSION = 1;
+
+    struct sdb_device_info ref_devinfo = {
+        .vendor_id = LNLS_VENDORID,
+        .device_id = LAMP_DEVID,
+        .abi_ver_major = 2
+    };
+}
 
 CoreV2::CoreV2(struct pcie_bars &bars):
-    RegisterDecoder(bars, {
+    RegisterDecoder(bars, ref_devinfo, {
         PRINTER("AMP_STATUS", "Amplifier flags", PrinterType::value_hex),
         PRINTER("AMP_IFLAG_L", "Amplifier Left Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
         PRINTER("AMP_TFLAG_L", "Amplifier Left Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),

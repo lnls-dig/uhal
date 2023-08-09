@@ -28,6 +28,12 @@ static_assert(WB_FOFB_SYS_ID_REGS_PRBS_SP_DISTORT_CH_LEVELS_LEVEL_1_MASK ==
 
 namespace {
     const size_t NUM_SETPOINTS = 12, NUM_POSITIONS = 256;
+
+    struct sdb_device_info ref_devinfo = {
+        .vendor_id = LNLS_VENDORID,
+        .device_id = SYS_ID_DEVID,
+        .abi_ver_major = 1
+    };
 }
 
 distortion_levels::distortion_levels(size_t size):
@@ -36,7 +42,7 @@ distortion_levels::distortion_levels(size_t size):
 }
 
 Core::Core(struct pcie_bars &bars):
-    RegisterDecoder(bars, {
+    RegisterDecoder(bars, ref_devinfo, {
         PRINTER("MAX_NUM_CTE", "Maximum number of BPMs that can be flattenized", PrinterType::value),
         PRINTER("BASE_BPM_ID", "First BPM ID to be flattenized", PrinterType::value),
         PRINTER("PRBS_CTL_RST", "Enable triggered reset for PRBS", PrinterType::enable),

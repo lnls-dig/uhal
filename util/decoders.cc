@@ -11,8 +11,12 @@
 #include "printer.h"
 #include "decoders.h"
 
-RegisterDecoder::RegisterDecoder(struct pcie_bars &bars, std::unordered_map<std::string_view, Printer> printers):
-    RegisterDecoderBase(bars),
+RegisterDecoder::RegisterDecoder(
+    struct pcie_bars &bars,
+    const struct sdb_device_info &ref_devinfo,
+    std::unordered_map<std::string_view, Printer> printers):
+
+    RegisterDecoderBase(bars, ref_devinfo),
     printers(printers)
 {
 }
