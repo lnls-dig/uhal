@@ -27,6 +27,7 @@ static_assert(WB_FOFB_PROCESSING_REGS_CH + WB_FOFB_PROCESSING_REGS_CH_COEFF_RAM_
 namespace {
     constexpr unsigned MAX_NUM_CHAN = 12, MAX_BPMS = 256;
 
+    constexpr unsigned FOFB_PROCESSING_DEVID = 0x49681ca6;
     struct sdb_device_info ref_devinfo = {
         .vendor_id = LNLS_VENDORID,
         .device_id = FOFB_PROCESSING_DEVID,

@@ -20,6 +20,7 @@ namespace internal {
 }
 
 namespace {
+    constexpr unsigned TRIGGER_IFACE_DEVID = 0xbcbb78d2;
     struct sdb_device_info ref_devinfo = {
         .vendor_id = LNLS_VENDORID,
         .device_id = TRIGGER_IFACE_DEVID,

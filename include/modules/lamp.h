@@ -17,8 +17,6 @@
 
 namespace lamp {
 
-constexpr unsigned LAMP_DEVID = 0xa1248bec;
-
 struct wb_rtmlamp_ohwr_regs;
 
 /* v2 forward declaration */

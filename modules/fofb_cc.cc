@@ -68,6 +68,8 @@ static_assert(FOFB_CC_REGS_RAM_REG == offsetof(fofb_cc_regs, ram_reg));
 namespace {
     const unsigned NUMBER_OF_CHANS = 8;
 
+    constexpr uint64_t DLS_VENDORID = 0x1000000000000d15;
+    constexpr unsigned FOFB_CC_DEVID = 0x4a1df147;
     struct sdb_device_info ref_devinfo = {
         .vendor_id = DLS_VENDORID,
         .device_id = FOFB_CC_DEVID,

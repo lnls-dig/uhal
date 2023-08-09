@@ -15,9 +15,6 @@
 
 namespace fofb_cc {
 
-constexpr uint64_t DLS_VENDORID = 0x1000000000000d15;
-constexpr unsigned FOFB_CC_DEVID = 0x4a1df147;
-
 /* forward declaration */
 struct fofb_cc_regs;
 

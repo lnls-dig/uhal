@@ -17,8 +17,6 @@
 
 namespace trigger_mux {
 
-constexpr unsigned TRIGGER_MUX_DEVID = 0x84b6a5ac;
-
 /* forward declaration */
 struct trigger_mux_regs;
 

@@ -66,6 +66,7 @@ namespace {
     using namespace std::chrono_literals;
     const auto acq_loop_time = 1ms;
 
+    constexpr unsigned ACQ_DEVID = 0x4519a0ad;
     struct sdb_device_info ref_devinfo = {
         .vendor_id = LNLS_VENDORID,
         .device_id = ACQ_DEVID,

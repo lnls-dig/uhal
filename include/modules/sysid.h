@@ -16,8 +16,6 @@
 
 namespace sys_id {
 
-constexpr unsigned SYS_ID_DEVID = 0x4b2f4872;
-
 /* forward declaration */
 struct wb_fofb_sys_id_regs;
 
