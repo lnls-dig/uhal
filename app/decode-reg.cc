@@ -30,6 +30,8 @@
 #include "modules/trigger_iface.h"
 #include "modules/trigger_mux.h"
 
+#include "modules/bpm_swap.h"
+
 using namespace std::chrono_literals;
 
 static void try_unsigned(unsigned &dest, const argparse::ArgumentParser &args, const char *flag)
@@ -187,6 +189,8 @@ int main(int argc, char *argv[])
             dec = std::make_unique<trigger_iface::Core>(bars);
         } else if (type == "trigger_mux") {
             dec = std::make_unique<trigger_mux::Core>(bars);
+        } else if (type == "bpm_swap") {
+            dec = std::make_unique<bpm_swap::Core>(bars);
         } else {
             fprintf(stderr, "Unknown type: '%s'\n", type.c_str());
             return 1;
