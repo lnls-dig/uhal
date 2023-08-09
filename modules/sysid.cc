@@ -136,7 +136,7 @@ void Controller::set_devinfo_callback()
     bar4_read_v(&bars, addr, &regs, sizeof regs);
 }
 
-void Controller::encode_config()
+void Controller::encode_params()
 {
     if (step_duration < 1 || step_duration > 0x3FF + 1)
         throw std::runtime_error("step duration is outside of valid range");
@@ -170,7 +170,7 @@ void Controller::encode_config()
 
 void Controller::write_params()
 {
-    encode_config();
+    encode_params();
     bar4_write_v(&bars, addr, &regs, sizeof regs);
 }
 

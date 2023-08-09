@@ -36,7 +36,7 @@ class Controller: public RegisterController {
     struct fofb_cc_regs &regs;
 
     void get_internal_values();
-    void encode_config();
+    void encode_params();
 
   public:
     Controller(struct pcie_bars &);

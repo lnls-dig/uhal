@@ -41,7 +41,7 @@ class Controller: public RegisterController {
     struct wb_fofb_processing_regs &regs;
 
     void set_devinfo_callback() override;
-    void encode_config();
+    void encode_params();
 
     unsigned fixed_point_coeff, fixed_point_gains;
 

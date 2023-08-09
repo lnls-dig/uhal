@@ -240,7 +240,7 @@ bool Controller::set_freq(double freq, struct clock &clock)
     return true;
 }
 
-void Controller::encode_config()
+void Controller::encode_params()
 {
     insert_bit(regs.stat, event_receiver_enable, TIMING_STAT_EVREN);
     insert_bit(regs.stat, reset_latches, TIMING_STAT_RST_LATCH);
@@ -292,7 +292,7 @@ void Controller::encode_config()
 
 void Controller::write_params()
 {
-    encode_config();
+    encode_params();
 
     bar4_write_v(&bars, addr, &regs, sizeof regs);
 

@@ -37,7 +37,7 @@ class Controller: public RegisterController {
     struct afc_timing &regs;
 
     void set_devinfo_callback() override;
-    void encode_config();
+    void encode_params();
 
   public:
     Controller(struct pcie_bars &);

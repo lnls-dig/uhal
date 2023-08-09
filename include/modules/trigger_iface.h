@@ -37,7 +37,7 @@ class Controller: public RegisterController {
     struct trigger_iface_regs &regs;
 
     void get_internal_values();
-    void encode_config();
+    void encode_params();
 
   public:
     Controller(struct pcie_bars &);

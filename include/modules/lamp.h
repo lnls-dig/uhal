@@ -34,7 +34,7 @@ class CoreV2: public RegisterDecoder {
 
 class Controller: public RegisterController {
   protected:
-    virtual void encode_config() = 0;
+    virtual void encode_params() = 0;
 
   public:
     Controller(struct pcie_bars &);
@@ -60,7 +60,7 @@ class ControllerV2: public Controller {
     /* control registers */
     std::unique_ptr<channel_registers_v2> channel_regs;
 
-    void encode_config() override;
+    void encode_params() override;
 
   public:
     ControllerV2(struct pcie_bars &);
