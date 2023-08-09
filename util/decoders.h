@@ -106,7 +106,7 @@ class RegisterDecoder: public RegisterDecoderBase {
 
     std::unordered_map<std::string_view, Printer> printers;
 
-    RegisterDecoder(struct pcie_bars &, std::unordered_map<std::string_view, Printer>);
+    RegisterDecoder(struct pcie_bars &, const struct sdb_device_info &, std::unordered_map<std::string_view, Printer>);
 
     /** Save an int32_t (or smaller) value to a key */
     void add_general(const char *, int32_t, bool = false);

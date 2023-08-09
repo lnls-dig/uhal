@@ -61,13 +61,21 @@ namespace acq {
 #define MAX_NUM_CHAN 24
 #define REGISTERS_PER_CHAN 2
 
-static const unsigned ddr3_payload_size = 32;
+namespace {
+    const unsigned ddr3_payload_size = 32;
+    using namespace std::chrono_literals;
+    const auto acq_loop_time = 1ms;
 
-using namespace std::chrono_literals;
-static const auto acq_loop_time = 1ms;
+    struct sdb_device_info ref_devinfo = {
+        .vendor_id = LNLS_VENDORID,
+        .device_id = ACQ_DEVID,
+        .abi_ver_major = 2
+    };
+}
+
 
 Core::Core(struct pcie_bars &bars):
-    RegisterDecoder(bars, {
+    RegisterDecoder(bars, ref_devinfo, {
         PRINTER("FSQ_ACQ_NOW", "Acquire data immediately and don't wait for any trigger", PrinterType::boolean, "acquire immediately", "wait on trigger"),
         PRINTER("FSM_STATE", "State machine status", PrinterType::custom_function,
             [](FILE *f, bool v, uint32_t value){

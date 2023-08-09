@@ -67,10 +67,16 @@ static_assert(FOFB_CC_REGS_RAM_REG == offsetof(fofb_cc_regs, ram_reg));
 
 namespace {
     const unsigned NUMBER_OF_CHANS = 8;
+
+    struct sdb_device_info ref_devinfo = {
+        .vendor_id = DLS_VENDORID,
+        .device_id = FOFB_CC_DEVID,
+        .abi_ver_major = 1
+    };
 }
 
 Core::Core(struct pcie_bars &bars):
-    RegisterDecoder(bars, {
+    RegisterDecoder(bars, ref_devinfo, {
         /* normal wishbone registers */
         PRINTER("CC_ENABLE", "Enable CC module", PrinterType::enable),
         PRINTER("TFS_OVERRIDE", "Timeframe start override", PrinterType::boolean, "override, use external signal", "normal, use internal signal"),

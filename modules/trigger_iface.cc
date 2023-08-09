@@ -19,6 +19,14 @@ namespace internal {
     static constexpr unsigned number_of_channels = 24;
 }
 
+namespace {
+    struct sdb_device_info ref_devinfo = {
+        .vendor_id = LNLS_VENDORID,
+        .device_id = TRIGGER_IFACE_DEVID,
+        .abi_ver_major = 1
+    };
+}
+
 /* hw header didn't have a struct so we write it by hand */
 struct trigger_iface_regs {
     struct {
@@ -27,7 +35,7 @@ struct trigger_iface_regs {
 };
 
 Core::Core(struct pcie_bars &bars):
-    RegisterDecoder(bars, {
+    RegisterDecoder(bars, ref_devinfo, {
         PRINTER("DIR", "Trigger Direction", PrinterType::boolean, "Receiver Mode", "Transmitter Mode"),
         PRINTER("DIR_POL", "Trigger Direction Polarity", PrinterType::boolean, "Reversed backplane trigger direction", "Same backplane trigger direction"),
         PRINTER("RCV_LEN", "Receiver Pulse Length", PrinterType::value),

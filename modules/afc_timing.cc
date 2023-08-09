@@ -39,6 +39,12 @@ static_assert(TIMING_AMC0_COUNT_RST == TIMING_FMC2CH4_COUNT_RST);
 
 namespace {
     constexpr unsigned NUM_CHANNELS = 18;
+
+    struct sdb_device_info ref_devinfo = {
+        .vendor_id = LNLS_VENDORID,
+        .device_id = AFC_TIMING_DEVID,
+        .abi_ver_major = 1
+    };
 }
 
 /* Make sure we have the right number of channels by using:
@@ -58,7 +64,7 @@ struct afc_timing {
 };
 
 Core::Core(struct pcie_bars &bars):
-    RegisterDecoder(bars, {
+    RegisterDecoder(bars, ref_devinfo, {
         PRINTER("STA_LINK", "Fiber link", PrinterType::enable),
         PRINTER("STA_RXEN", "RX Enable", PrinterType::enable),
         PRINTER("STA_REFCLKLOCK", "AFC clock locked", PrinterType::boolean),
