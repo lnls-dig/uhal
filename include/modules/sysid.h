@@ -49,7 +49,7 @@ class Controller: public RegisterController {
     struct wb_fofb_sys_id_regs &regs;
 
     void set_devinfo_callback() override;
-    void encode_config();
+    void encode_params();
 
   public:
     Controller(struct pcie_bars &);

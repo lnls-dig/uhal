@@ -179,7 +179,7 @@ void Controller::set_devinfo_callback()
     fixed_point_gains = extract_value<uint32_t>(regs.fixed_point_pos.accs_gains, WB_FOFB_PROCESSING_REGS_FIXED_POINT_POS_ACCS_GAINS_VAL_MASK);
 }
 
-void Controller::encode_config()
+void Controller::encode_params()
 {
     insert_bit(regs.loop_intlk.ctl, intlk_sta_clr, WB_FOFB_PROCESSING_REGS_LOOP_INTLK_CTL_STA_CLR);
     insert_bit(regs.loop_intlk.ctl, intlk_en_orb_distort, WB_FOFB_PROCESSING_REGS_LOOP_INTLK_CTL_SRC_EN_ORB_DISTORT);
@@ -214,7 +214,7 @@ void Controller::encode_config()
 
 void Controller::write_params()
 {
-    encode_config();
+    encode_params();
 
     bar4_write_v(&bars, addr, &regs, sizeof regs);
 

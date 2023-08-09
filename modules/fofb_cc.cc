@@ -191,7 +191,7 @@ void Controller::get_internal_values()
     bar4_read_v(&bars, addr, &regs, sizeof regs);
 }
 
-void Controller::encode_config()
+void Controller::encode_params()
 {
     get_internal_values();
 
@@ -237,7 +237,7 @@ void Controller::encode_config()
 
 void Controller::write_params()
 {
-    encode_config();
+    encode_params();
 
     bar4_write_v(&bars, addr, &regs, sizeof regs);
 

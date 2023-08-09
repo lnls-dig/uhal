@@ -266,7 +266,7 @@ void Controller::get_internal_values()
         throw BadAtomWidth();
 }
 
-void Controller::encode_config()
+void Controller::encode_params()
 {
     get_internal_values();
     acq_pre_samples = pre_samples;
@@ -330,9 +330,9 @@ void Controller::encode_config()
     regs.ddr3_end_addr = ram_end_addr - sample_size;
 }
 
-void Controller::write_config()
+void Controller::write_params()
 {
-    encode_config();
+    encode_params();
     bar4_write_v(&bars, addr, &regs, sizeof regs);
 }
 
@@ -342,7 +342,7 @@ acq_error Controller::start_acquisition()
         throw std::logic_error("acquisition should only be started if it's not currently running");
 
     try {
-        write_config();
+        write_params();
     } catch (BadPostSamples &e) {
         return acq_error::bad_post_samples;
     } catch (TooManySamples &e) {

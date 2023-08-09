@@ -163,7 +163,7 @@ ControllerV2::ControllerV2(struct pcie_bars &bars):
 }
 ControllerV2::~ControllerV2() = default;
 
-void ControllerV2::encode_config()
+void ControllerV2::encode_params()
 {
     static const std::unordered_map<std::string_view, int> mode_options({
         {"open-loop-dac", 0},
@@ -212,7 +212,7 @@ void ControllerV2::encode_config()
 
 void ControllerV2::write_params()
 {
-    encode_config();
+    encode_params();
 
     bar4_write_v(&bars, addr + WB_RTMLAMP_OHWR_REGS_CH + channel * CHANNEL_DISTANCE, channel_regs.get(), CHANNEL_DISTANCE);
 
