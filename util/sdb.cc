@@ -12,7 +12,9 @@
 extern "C" {
 /* library uses "this" as a struct member name */
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wkeyword-macro"
+#ifdef __clang__
+# pragma GCC diagnostic ignored "-Wkeyword-macro"
+#endif
 #define this thisp
 #include "libsdbfs.h"
 #undef this
