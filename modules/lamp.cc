@@ -81,8 +81,6 @@ CoreV2::CoreV2(struct pcie_bars &bars):
     read_size = sizeof *regs;
     regs = std::make_unique<struct wb_rtmlamp_ohwr_regs>();
     read_dest = regs.get();
-
-    device_match = device_match_v2;
 }
 CoreV2::~CoreV2() = default;
 

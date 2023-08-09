@@ -127,8 +127,6 @@ Core::Core(struct pcie_bars &bars):
 {
     read_size = sizeof regs;
     read_dest = &regs;
-
-    device_match = device_match_acq;
 }
 Core::~Core() = default;
 
