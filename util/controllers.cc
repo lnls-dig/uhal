@@ -8,14 +8,13 @@
 #include "controllers.h"
 
 RegisterController::RegisterController(struct pcie_bars &bars):
-    bars(bars)
+    RegisterDecoderBase(bars)
 {
 }
 
 void RegisterController::set_devinfo(const struct sdb_device_info &new_devinfo)
 {
-    devinfo = new_devinfo;
-    addr = devinfo.start_addr;
+    RegisterDecoderBase::set_devinfo(new_devinfo);
 
     set_devinfo_callback();
 }
