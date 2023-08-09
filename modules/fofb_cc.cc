@@ -179,7 +179,7 @@ void Core::decode()
 }
 
 Controller::Controller(struct pcie_bars &bars):
-    RegisterController(bars),
+    RegisterController(bars, ref_devinfo),
     regs_storage(new struct fofb_cc_regs),
     regs(*regs_storage)
 {

@@ -66,7 +66,7 @@ void Core::decode()
 }
 
 Controller::Controller(struct pcie_bars &bars):
-    RegisterController(bars),
+    RegisterController(bars, ref_devinfo),
     regs_storage(new struct trigger_mux_regs),
     regs(*regs_storage),
     parameters(internal::number_of_channels)

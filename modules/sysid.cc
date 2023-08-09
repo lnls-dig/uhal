@@ -122,7 +122,7 @@ void Core::print(FILE *f, bool verbose) const
 }
 
 Controller::Controller(struct pcie_bars &bars):
-    RegisterController(bars),
+    RegisterController(bars, ref_devinfo),
     regs_storage(new struct wb_fofb_sys_id_regs),
     regs(*regs_storage),
     setpoint_distortion(NUM_SETPOINTS),

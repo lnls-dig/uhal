@@ -160,7 +160,7 @@ void Core::print(FILE *f, bool verbose) const
 }
 
 Controller::Controller(struct pcie_bars &bars):
-    RegisterController(bars),
+    RegisterController(bars, ref_devinfo),
     regs_storage(new struct wb_fofb_processing_regs),
     regs(*regs_storage),
     ref_orb_x(MAX_BPMS), ref_orb_y(MAX_BPMS),

@@ -164,7 +164,7 @@ void Core::decode()
 }
 
 Controller::Controller(struct pcie_bars &bars):
-    RegisterController(bars),
+    RegisterController(bars, ref_devinfo),
     regs_storage(new struct afc_timing()),
     regs(*regs_storage)
 {
