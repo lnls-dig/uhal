@@ -4,3 +4,5 @@ INPUT = README.md app/ include/modules/ modules/ util/
 USE_MDFILE_AS_MAINPAGE = README.md
 
 BUILTIN_STL_SUPPORT = YES
+
+EXTRACT_PRIVATE = YES
