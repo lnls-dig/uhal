@@ -123,11 +123,9 @@ Core::Core(struct pcie_bars &bars):
         PRINTER("NUM_ATOMS", "Number of atoms inside the complete data word", PrinterType::value),
         PRINTER("ATOM_WIDTH", "Atom width in bits", PrinterType::value),
     }),
-    regs_storage(new struct acq_core),
-    regs(*regs_storage)
+    CONSTRUCTOR_REGS(struct acq_core)
 {
-    read_size = sizeof regs;
-    read_dest = &regs;
+    set_read_dest(regs);
 }
 Core::~Core() = default;
 
@@ -213,9 +211,10 @@ void Core::decode()
 
 Controller::Controller(struct pcie_bars &bars):
     RegisterController(bars, ref_devinfo),
-    regs_storage(new struct acq_core()),
-    regs(*regs_storage)
+    CONSTRUCTOR_REGS(struct acq_core)
 {
+    set_read_dest(regs);
+
     auto addrs = MemoryAllocator::get_memory_allocator().get_range(bars);
     ram_start_addr = addrs[0];
     ram_end_addr = addrs[1];

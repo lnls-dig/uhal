@@ -100,11 +100,9 @@ Core::Core(struct pcie_bars &bars):
         PRINTER("CH_DLY", "Channel delay to trigger output", PrinterType::value),
         PRINTER("CH_WDT", "Channel trigger output width", PrinterType::value),
     }),
-    regs_storage(new struct afc_timing),
-    regs(*regs_storage)
+    CONSTRUCTOR_REGS(struct afc_timing)
 {
-    read_size = sizeof regs;
-    read_dest = &regs;
+    set_read_dest(regs);
 
     number_of_channels = NUM_CHANNELS;
 }
@@ -166,9 +164,9 @@ void Core::decode()
 
 Controller::Controller(struct pcie_bars &bars):
     RegisterController(bars, ref_devinfo),
-    regs_storage(new struct afc_timing()),
-    regs(*regs_storage)
+    CONSTRUCTOR_REGS(struct afc_timing)
 {
+    set_read_dest(regs);
     parameters.resize(NUM_CHANNELS);
 }
 Controller::~Controller() = default;

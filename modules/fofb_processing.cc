@@ -55,11 +55,9 @@ Core::Core(struct pcie_bars &bars):
         PRINTER("CH_SP_DECIM_DATA", "Decimated setpoint", PrinterType::value),
         PRINTER("CH_SP_DECIM_RATIO", "Setpoint decimation ratio", PrinterType::value),
     }),
-    regs_storage(new struct wb_fofb_processing_regs),
-    regs(*regs_storage)
+    CONSTRUCTOR_REGS(struct wb_fofb_processing_regs)
 {
-    read_size = sizeof regs;
-    read_dest = &regs;
+    set_read_dest(regs);
 
     number_of_channels = MAX_NUM_CHAN;
 }
@@ -162,11 +160,11 @@ void Core::print(FILE *f, bool verbose) const
 
 Controller::Controller(struct pcie_bars &bars):
     RegisterController(bars, ref_devinfo),
-    regs_storage(new struct wb_fofb_processing_regs),
-    regs(*regs_storage),
+    CONSTRUCTOR_REGS(struct wb_fofb_processing_regs),
     ref_orb_x(MAX_BPMS), ref_orb_y(MAX_BPMS),
     parameters(MAX_NUM_CHAN)
 {
+    set_read_dest(regs);
     for (auto &p: parameters) {
         p.coefficients_x.resize(MAX_BPMS);
         p.coefficients_y.resize(MAX_BPMS);
