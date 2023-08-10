@@ -8,7 +8,6 @@
 #include <cmath>
 #include <stdexcept>
 
-#include "pcie.h"
 #include "printer.h"
 #include "util.h"
 #include "modules/sysid.h"
@@ -133,7 +132,7 @@ Controller::~Controller() = default;
 
 void Controller::set_devinfo_callback()
 {
-    bar4_read_v(&bars, addr, &regs, sizeof regs);
+    read();
 }
 
 void Controller::encode_params()
