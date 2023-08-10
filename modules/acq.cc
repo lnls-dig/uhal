@@ -330,12 +330,6 @@ void Controller::encode_params()
     regs.ddr3_end_addr = ram_end_addr - sample_size;
 }
 
-void Controller::write_params()
-{
-    encode_params();
-    bar4_write_v(&bars, addr, &regs, sizeof regs);
-}
-
 acq_error Controller::start_acquisition()
 {
     if (m_step != acq_step::stop)

@@ -41,7 +41,7 @@ class Controller: public RegisterController {
     struct wb_fofb_processing_regs &regs;
 
     void set_devinfo_callback() override;
-    void encode_params();
+    void encode_params() override;
 
     unsigned fixed_point_coeff, fixed_point_gains;
 
@@ -64,7 +64,7 @@ class Controller: public RegisterController {
     };
     std::vector<struct parameters> parameters;
 
-    void write_params();
+    void write_params() override;
 };
 
 } /* namespace fofb_processing */

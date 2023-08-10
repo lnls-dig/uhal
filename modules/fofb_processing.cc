@@ -214,9 +214,7 @@ void Controller::encode_params()
 
 void Controller::write_params()
 {
-    encode_params();
-
-    bar4_write_v(&bars, addr, &regs, sizeof regs);
+    RegisterController::write_params();
 
     /* reset clear flags */
     intlk_sta_clr = false;

@@ -64,8 +64,7 @@ class Controller: public RegisterController {
     struct acq_core &regs;
 
     void get_internal_values();
-    void encode_params();
-    void write_params();
+    void encode_params() override;
     bool acquisition_ready();
 
     void set_devinfo_callback() override;

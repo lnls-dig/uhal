@@ -37,7 +37,7 @@ class Controller: public RegisterController {
     struct afc_timing &regs;
 
     void set_devinfo_callback() override;
-    void encode_params();
+    void encode_params() override;
 
   public:
     Controller(struct pcie_bars &);
@@ -74,7 +74,7 @@ class Controller: public RegisterController {
     bool set_rtm_freq(double);
     bool set_afc_freq(double);
 
-    void write_params();
+    void write_params() override;
 
   private:
     bool set_freq(double, struct Controller::clock &);

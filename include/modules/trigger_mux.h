@@ -37,13 +37,11 @@ class Controller: public RegisterController {
     struct trigger_mux_regs &regs;
 
     void get_internal_values();
-    void encode_params();
+    void encode_params() override;
 
   public:
     Controller(struct pcie_bars &);
     ~Controller();
-
-    void write_params();
 
     struct parameters {
         std::optional<bool> rcv_src, transm_src;

@@ -36,7 +36,7 @@ class Controller: public RegisterController {
     struct fofb_cc_regs &regs;
 
     void get_internal_values();
-    void encode_params();
+    void encode_params() override;
 
   public:
     Controller(struct pcie_bars &);
@@ -53,7 +53,7 @@ class Controller: public RegisterController {
     std::optional<bool> rx_polarity;
     std::optional<uint32_t> payload_sel, fofb_data_sel;
 
-    void write_params();
+    void write_params() override;
 };
 
 } /* namespace fofb_cc */
