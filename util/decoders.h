@@ -24,6 +24,8 @@
 
 class Printer;
 
+#define CONSTRUCTOR_REGS(type) regs_storage(new type ()), regs(*regs_storage)
+
 class RegisterDecoderBase {
     /** Is set to true when set_devinfo() is called, used to protect us from
      * using uninitialized device information */
@@ -42,6 +44,12 @@ class RegisterDecoderBase {
   protected:
     size_t read_size;
     void *read_dest;
+
+    void set_read_dest(auto &dest)
+    {
+        read_dest = &dest;
+        read_size = sizeof dest;
+    }
 
     struct pcie_bars &bars;
     struct sdb_device_info devinfo;

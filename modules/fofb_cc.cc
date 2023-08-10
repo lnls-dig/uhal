@@ -110,11 +110,9 @@ Core::Core(struct pcie_bars &bars):
         PRINTER("RX_PCK_CNT", "Received packet count", PrinterType::value),
         PRINTER("TX_PCK_CNT", "Transmitted packet count", PrinterType::value),
     }),
-    regs_storage(new struct fofb_cc_regs),
-    regs(*regs_storage)
+    CONSTRUCTOR_REGS(struct fofb_cc_regs)
 {
-    read_size = sizeof regs;
-    read_dest = &regs;
+    set_read_dest(regs);
 }
 Core::~Core() = default;
 
@@ -182,9 +180,9 @@ void Core::decode()
 
 Controller::Controller(struct pcie_bars &bars):
     RegisterController(bars, ref_devinfo),
-    regs_storage(new struct fofb_cc_regs),
-    regs(*regs_storage)
+    CONSTRUCTOR_REGS(struct fofb_cc_regs)
 {
+    set_read_dest(regs);
 }
 Controller::~Controller() = default;
 

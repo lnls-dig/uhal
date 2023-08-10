@@ -44,11 +44,9 @@ Core::Core(struct pcie_bars &bars):
         PRINTER("RCV_COUNT", "Receiver Counter", PrinterType::value),
         PRINTER("TRANSM_COUNT", "Transmitter Counter", PrinterType::value),
     }),
-    regs_storage(new struct trigger_iface_regs),
-    regs(*regs_storage)
+    CONSTRUCTOR_REGS(struct trigger_iface_regs)
 {
-    read_size = sizeof regs;
-    read_dest = &regs;
+    set_read_dest(regs);
 }
 Core::~Core() = default;
 
@@ -76,10 +74,10 @@ void Core::decode()
 
 Controller::Controller(struct pcie_bars &bars):
     RegisterController(bars, ref_devinfo),
-    regs_storage(new struct trigger_iface_regs),
-    regs(*regs_storage),
+    CONSTRUCTOR_REGS(struct trigger_iface_regs),
     parameters(internal::number_of_channels)
 {
+    set_read_dest(regs);
 }
 Controller::~Controller() = default;
 

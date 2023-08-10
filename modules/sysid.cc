@@ -54,14 +54,12 @@ Core::Core(struct pcie_bars &bars):
         PRINTER("SP_DISTORT_MOV_AVG_NUM_TAPS_SEL", "Setpoint distortion moving average taps selector", PrinterType::value),
         PRINTER("SP_DISTORT_MOV_AVG_MAX_NUM_TAPS_SEL_CTE", "Max value for SP_DISTORT_MOV_AVG_NUM_TAPS_SEL field", PrinterType::value),
     }),
-    regs_storage(new struct wb_fofb_sys_id_regs),
-    regs(*regs_storage),
+    CONSTRUCTOR_REGS(struct wb_fofb_sys_id_regs),
     setpoint_distortion(NUM_SETPOINTS),
     posx_distortion(NUM_POSITIONS),
     posy_distortion(NUM_POSITIONS)
 {
-    read_size = sizeof regs;
-    read_dest = &regs;
+    set_read_dest(regs);
 }
 Core::~Core() = default;
 
@@ -124,12 +122,12 @@ void Core::print(FILE *f, bool verbose) const
 
 Controller::Controller(struct pcie_bars &bars):
     RegisterController(bars, ref_devinfo),
-    regs_storage(new struct wb_fofb_sys_id_regs),
-    regs(*regs_storage),
+    CONSTRUCTOR_REGS(struct wb_fofb_sys_id_regs),
     setpoint_distortion(NUM_SETPOINTS),
     posx_distortion(NUM_POSITIONS),
     posy_distortion(NUM_POSITIONS)
 {
+    set_read_dest(regs);
 }
 Controller::~Controller() = default;
 
