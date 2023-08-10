@@ -174,7 +174,7 @@ Controller::~Controller() = default;
 
 void Controller::set_devinfo_callback()
 {
-    bar4_read_v(&bars, addr, &regs, sizeof regs);
+    read();
     fixed_point_coeff = extract_value<uint32_t>(regs.fixed_point_pos.coeff, WB_FOFB_PROCESSING_REGS_FIXED_POINT_POS_COEFF_VAL_MASK);
     fixed_point_gains = extract_value<uint32_t>(regs.fixed_point_pos.accs_gains, WB_FOFB_PROCESSING_REGS_FIXED_POINT_POS_ACCS_GAINS_VAL_MASK);
 }

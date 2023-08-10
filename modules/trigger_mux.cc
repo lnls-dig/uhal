@@ -7,7 +7,6 @@
 
 #include "util.h"
 
-#include "pcie.h"
 #include "printer.h"
 #include "modules/trigger_mux.h"
 
@@ -73,14 +72,9 @@ Controller::Controller(struct pcie_bars &bars):
 }
 Controller::~Controller() = default;
 
-void Controller::get_internal_values()
-{
-    bar4_read_v(&bars, addr, &regs, sizeof regs);
-}
-
 void Controller::encode_params()
 {
-    get_internal_values();
+    read();
 
     for (unsigned i = 0; i < internal::number_of_channels; i++) {
         auto insert_val = [this, i](auto value, uint32_t mask) {

@@ -36,7 +36,6 @@ class Controller: public RegisterController {
     std::unique_ptr<struct trigger_iface_regs> regs_storage;
     struct trigger_iface_regs &regs;
 
-    void get_internal_values();
     void encode_params() override;
 
   public:
