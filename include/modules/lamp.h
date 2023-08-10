@@ -34,7 +34,7 @@ class CoreV2: public RegisterDecoder {
 
 class Controller: public RegisterController {
   protected:
-    virtual void encode_params() = 0;
+    virtual void encode_params() override = 0;
 
   public:
     Controller(struct pcie_bars &);
@@ -53,7 +53,7 @@ class Controller: public RegisterController {
     std::optional<int16_t> limit_a, limit_b;
     std::optional<uint32_t> cnt;
 
-    virtual void write_params() = 0;
+    virtual void write_params() override = 0;
 };
 
 class ControllerV2: public Controller {

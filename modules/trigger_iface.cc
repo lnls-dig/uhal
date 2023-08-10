@@ -106,9 +106,7 @@ void Controller::encode_params()
 
 void Controller::write_params()
 {
-    encode_params();
-
-    bar4_write_v(&bars, addr, &regs, sizeof regs);
+    RegisterController::write_params();
 
     /* reset these strobe values */
     for (unsigned i = 0; i < internal::number_of_channels; i++) {

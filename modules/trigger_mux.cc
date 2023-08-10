@@ -97,11 +97,4 @@ void Controller::encode_params()
     }
 }
 
-void Controller::write_params()
-{
-    encode_params();
-
-    bar4_write_v(&bars, addr, &regs, sizeof regs);
-}
-
 } /* namespace trigger_mux */

@@ -237,9 +237,7 @@ void Controller::encode_params()
 
 void Controller::write_params()
 {
-    encode_params();
-
-    bar4_write_v(&bars, addr, &regs, sizeof regs);
+    RegisterController::write_params();
 
     /* clear these values after writing so they aren't copied into the next write */
     err_clr = toa_rd_str = rcb_rd_str = std::nullopt;

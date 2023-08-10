@@ -37,13 +37,13 @@ class Controller: public RegisterController {
     struct trigger_iface_regs &regs;
 
     void get_internal_values();
-    void encode_params();
+    void encode_params() override;
 
   public:
     Controller(struct pcie_bars &);
     ~Controller();
 
-    void write_params();
+    void write_params() override;
 
     struct parameters {
         /* rcv_count_rst and transm_count_rst are cleared automatically */

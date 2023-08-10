@@ -49,13 +49,11 @@ class Controller: public RegisterController {
     struct wb_fofb_sys_id_regs &regs;
 
     void set_devinfo_callback() override;
-    void encode_params();
+    void encode_params() override;
 
   public:
     Controller(struct pcie_bars &);
     ~Controller();
-
-    void write_params();
 
     /** First BPM ID whose position will be stored in SYSID acquisitions;
      * MAX_NUM_CTE BPMs will be stored */
