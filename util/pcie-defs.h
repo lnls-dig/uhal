@@ -5,6 +5,10 @@
  * Released according to the GNU GPL, version 3 or any later version.
  */
 
+/** \file
+ * This file contains the definition of pcie_bars, so that library users can
+ * use the struct without also having access to the functions from pcie.h. */
+
 #ifndef PCIE_STRUCT_H
 #define PCIE_STRUCT_H
 
