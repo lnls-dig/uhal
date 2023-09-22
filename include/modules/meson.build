@@ -5,6 +5,7 @@ install_headers(
     'bpm_swap.h',
     'fofb_cc.h',
     'fofb_processing.h',
+    'fofb_shaper_filt.h',
     'lamp.h',
     'orbit_intlk.h',
     'pos_calc.h',
