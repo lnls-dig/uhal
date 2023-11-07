@@ -64,7 +64,7 @@ void dev_open(struct pcie_bars &bars, const char *pci_address)
     char resource_path[sizeof resource_path_fmt + 32];
 
     /* error out if any function tries to use this */
-    bars.fd = -1;
+    bars.fserport = NULL;
 
     for (unsigned i = 0; i < 3; i++) {
         unsigned bar = i * 2; // bars 0, 2, 4
@@ -102,8 +102,8 @@ void dev_open_serial(struct pcie_bars &bars, const char *dev_file)
     /* segfault if any function tries to use these */
     bars.bar0 = bars.bar2 = bars.bar4 = nullptr;
 
-    bars.fd = open(dev_file, O_RDWR | O_CLOEXEC | O_NOCTTY);
-    if (bars.fd < 0)
+    int fd = open(dev_file, O_RDWR | O_CLOEXEC | O_NOCTTY);
+    if (fd < 0)
         throw std::runtime_error(std::string("couldn't open serial port: ") + dev_file);
 
     auto xfail = [](int rv) {
@@ -112,28 +112,31 @@ void dev_open_serial(struct pcie_bars &bars, const char *dev_file)
     };
 
     struct termios term;
-    xfail(tcgetattr(bars.fd, &term));
-    xfail(cfsetospeed(&term, B115200));
-    xfail(cfsetispeed(&term, B115200));
+    xfail(tcgetattr(fd, &term));
+    xfail(cfsetospeed(&term, B500000));
+    xfail(cfsetispeed(&term, B500000));
 
     term.c_lflag &= ~ICANON;
     cfmakeraw(&term);
     term.c_cc[VMIN] = 0;
     term.c_cc[VTIME] = 10;
 
-    xfail(tcflush(bars.fd, TCIFLUSH));
-    xfail(tcsetattr(bars.fd, TCSAFLUSH, &term));
+    xfail(tcflush(fd, TCIFLUSH));
+    xfail(tcsetattr(fd, TCSAFLUSH, &term));
+
+    bars.fserport = fdopen(fd, "r+");
+    setvbuf(bars.fserport, NULL, _IOLBF, 0);
 
     // TODO: add read for echo
-    //xfail(write(bars.fd, "\r", 1));
+    //xfail(write(fd, "\r", 1));
 
     configure_mutexes(bars);
 }
 
 void dev_close(struct pcie_bars &bars)
 {
-    if (bars.fd > -1) {
-        close(bars.fd);
+    if (bars.fserport) {
+        fclose(bars.fserport);
         return;
     }
 
