@@ -56,4 +56,42 @@ void Core::decode()
     add_general("DLY", extract_value<uint16_t>(t, BPM_SWAP_DLY_DESWAP_MASK));
 }
 
+Controller::Controller(struct pcie_bars &bars):
+    RegisterController(bars, ref_devinfo),
+    CONSTRUCTOR_REGS(struct bpm_swap_regs)
+{
+    set_read_dest(regs);
+}
+Controller::~Controller() = default;
+
+const std::vector<std::string> Controller::mode_list = {
+    "rffe_switching",
+    "direct",
+    "inverted",
+    "switching",
+};
+
+void Controller::encode_params()
+{
+    insert_bit(regs.ctrl, reset, BPM_SWAP_CTRL_RST);
+
+    auto mode_it = std::find(mode_list.begin(), mode_list.end(), mode);
+    if (mode_it != mode_list.end())
+        clear_and_insert(regs.ctrl, mode_it - mode_list.begin(), BPM_SWAP_CTRL_MODE_MASK);
+    else
+        throw std::runtime_error("mode must be one of " + list_of_keys(mode_list));
+
+    insert_bit(regs.ctrl, swap_div_f_cnt_en, BPM_SWAP_CTRL_SWAP_DIV_F_CNT_EN);
+    clear_and_insert(regs.ctrl, swap_div_f, BPM_SWAP_CTRL_SWAP_DIV_F_MASK);
+
+    clear_and_insert(regs.dly, deswap_delay, BPM_SWAP_DLY_DESWAP_MASK);
+}
+
+void Controller::write_params()
+{
+    RegisterController::write_params();
+
+    reset = false;
+}
+
 } /* namespace bpm_swap */
