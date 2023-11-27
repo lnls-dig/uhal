@@ -139,7 +139,7 @@ void Core::decode()
         data_order_done = true;
     }
 
-    data_order_done = false;
+    if (first_run) data_order_done = false;
     for (unsigned i = 0; i < *number_of_channels; i++) {
         auto const &trigger = regs.trigger[i];
 
@@ -159,6 +159,8 @@ void Core::decode()
 
         data_order_done = true;
     }
+
+    first_run = false;
 }
 
 Controller::Controller(struct pcie_bars &bars):
