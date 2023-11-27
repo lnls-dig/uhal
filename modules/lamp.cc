@@ -144,9 +144,6 @@ void CoreV2::decode()
 
         add_channel("SP_EFF", i, extract_value<int16_t>(channel_regs.sp_eff, WB_RTMLAMP_OHWR_REGS_CH_SP_EFF_SP_MASK));
 
-        /* after the first iteration, we are done adding things to the vector */
-        data_order_done = true;
-
         i++;
     }
 }

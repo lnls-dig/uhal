@@ -66,8 +66,6 @@ void Core::decode()
         t = regs.ch[i].count;
         add_channel("RCV_COUNT", i, extract_value<uint16_t>(t, WB_TRIG_IFACE_CH0_COUNT_RCV_MASK));
         add_channel("TRANSM_COUNT", i, extract_value<uint16_t>(t, WB_TRIG_IFACE_CH0_COUNT_TRANSM_MASK));
-
-        data_order_done = true;
     }
 }
 

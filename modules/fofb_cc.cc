@@ -173,8 +173,6 @@ void Core::decode()
         add_channel("FRAME_ERR_CNT", i, ram_reg(FRAME_ERR_CNT_1 + i));
         add_channel("RX_PCK_CNT", i, ram_reg(RX_PCK_CNT_1 + i));
         add_channel("TX_PCK_CNT", i, ram_reg(TX_PCK_CNT_1 + i));
-
-        data_order_done = true;
     }
 }
 

@@ -123,8 +123,6 @@ void Core::decode()
         add_channel("CH_ACC_LIMITS_MIN", i, extract_value<int32_t>(regs.ch[i].sp_limits.min, WB_FOFB_PROCESSING_REGS_CH_SP_LIMITS_MIN_VAL_MASK));
         add_channel("CH_SP_DECIM_DATA", i, extract_value<int32_t>(regs.ch[i].sp_decim.data, WB_FOFB_PROCESSING_REGS_CH_SP_DECIM_DATA_VAL_MASK));
         add_channel("CH_SP_DECIM_RATIO", i, extract_value<int32_t>(regs.ch[i].sp_decim.ratio, WB_FOFB_PROCESSING_REGS_CH_SP_DECIM_RATIO_VAL_MASK) + 1);
-
-        data_order_done = true;
     }
 
     size_t u = 0;
