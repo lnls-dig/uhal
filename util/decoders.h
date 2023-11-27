@@ -73,6 +73,9 @@ class RegisterDecoder: public RegisterDecoderBase {
     bool is_boolean_value(const char *) const;
     int32_t try_boolean_value(const char *, int32_t) const;
 
+    /** Flag to indicate whether decode() has run for the first time */
+    bool first_decode = true;
+
     /** int32_t is so far a generic enough type to be used here, but int64_t
      * can be considered if it ever becomes an issue. We use double for
      * floating point values */
@@ -85,10 +88,14 @@ class RegisterDecoder: public RegisterDecoderBase {
     /** Hold the order in which data has been added to #general_data, which
      * allows us to implement printing prettily and in order while also using
      * an unordered_map */
-    std::vector<const char *> general_data_order;
+    std::vector<std::string_view> general_data_order;
     /** Hold the order in which data has been added to #channel_data, like
      * #general_data_order */
-    std::vector<const char *> channel_data_order;
+    std::vector<std::string_view> channel_data_order;
+
+    /** Implements the logic for adding names to #general_data_order and
+     * #channel_data_order, depending on the value of #first_decode */
+    void add_name_to_order(std::vector<std::string_view> &, const char *, bool);
 
     template <class T>
     void add_general_internal(const char *, T, bool);

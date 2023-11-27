@@ -5,6 +5,7 @@
  * Released according to the GNU GPL, version 3 or any later version.
  */
 
+#include <algorithm>
 #include <stdexcept>
 
 #include "pcie.h"
@@ -39,12 +40,20 @@ int32_t RegisterDecoder::try_boolean_value(const char *name, int32_t value) cons
     return is_boolean_value(name) ? (bool)value : value;
 }
 
+void RegisterDecoder::add_name_to_order(std::vector<std::string_view> &order, const char *name, bool skip)
+{
+    if (first_decode && !skip) {
+        auto name_it = std::find(order.begin(), order.end(), name);
+        if (name_it == order.end())
+            order.push_back(name);
+    }
+}
+
 template <class T>
 void RegisterDecoder::add_general_internal(const char *name, T value, bool skip)
 {
     general_data[name] = value;
-    if (!data_order_done && !skip)
-        general_data_order.push_back(name);
+    add_name_to_order(general_data_order, name, skip);
 }
 
 void RegisterDecoder::add_general(const char *name, int32_t value, bool skip)
@@ -66,8 +75,7 @@ void RegisterDecoder::add_channel_internal(const char *name, unsigned pos, T val
 
     /* using .at() to explicitly catch out of bounds access */
     channel_data[name].at(pos) = value;
-    if (!data_order_done && !skip)
-        channel_data_order.push_back(name);
+    add_name_to_order(channel_data_order, name, skip);
 }
 
 void RegisterDecoder::add_channel(const char *name, unsigned pos, int32_t value, bool skip)
@@ -100,6 +108,8 @@ void RegisterDecoder::get_data(bool only_monitors)
     } else {
         read();
         decode();
+
+        first_decode = false;
     }
 }
 
@@ -112,7 +122,7 @@ void RegisterDecoder::print(FILE *f, bool verbose) const
 {
     unsigned indent = 0;
 
-    auto print = [this, f, verbose, &indent](const char *name, auto value) {
+    auto print = [this, f, verbose, &indent](auto const &name, auto value) {
         if (auto vp = std::get_if<int32_t>(&value))
             printers.at(name).print(f, verbose, indent, *vp);
         else if (auto vp = std::get_if<double>(&value))
