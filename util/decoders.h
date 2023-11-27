@@ -103,11 +103,6 @@ class RegisterDecoder: public RegisterDecoderBase {
     void add_channel_internal(const char *, unsigned, T, bool);
 
   protected:
-    /** Flag to indicate that the #general_data_order and #channel_data_order
-     * vectors have been populated: it should only happen once, and is cheaper
-     * than checking for membership of strings */
-    bool data_order_done = false;
-
     /** A device that has multiple channels will set this */
     std::optional<unsigned> number_of_channels;
 

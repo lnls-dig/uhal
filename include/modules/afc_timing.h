@@ -23,7 +23,6 @@ struct afc_timing;
 class Core: public RegisterDecoder {
     std::unique_ptr<struct afc_timing> regs_storage;
     struct afc_timing &regs;
-    bool first_run = true;
 
     void decode() override;
 

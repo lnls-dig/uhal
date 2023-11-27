@@ -135,11 +135,8 @@ void Core::decode()
         add_channel("MAF_NAVG", i, extract_value<uint16_t>(clockp->maf, TIMING_RTM_MAF_NAVG_MASK));
         add_channel("MAF_DIV_EXP", i, extract_value<uint16_t>(clockp->maf, TIMING_RTM_MAF_DIV_EXP_MASK));
         i++;
-
-        data_order_done = true;
     }
 
-    if (first_run) data_order_done = false;
     for (unsigned i = 0; i < *number_of_channels; i++) {
         auto const &trigger = regs.trigger[i];
 
@@ -156,11 +153,7 @@ void Core::decode()
         add_channel("CH_EVT", i, trigger.evt);
         add_channel("CH_DLY", i, trigger.dly);
         add_channel("CH_WDT", i, trigger.wdt);
-
-        data_order_done = true;
     }
-
-    first_run = false;
 }
 
 Controller::Controller(struct pcie_bars &bars):

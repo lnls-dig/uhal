@@ -204,8 +204,6 @@ void Core::decode()
         add_channel("NUM_COALESCE", i, extract_value<uint32_t>(desc, ACQ_CORE_CH0_DESC_NUM_COALESCE_MASK));
         add_channel("NUM_ATOMS", i, extract_value<uint32_t>(adesc, ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_MASK));
         add_channel("ATOM_WIDTH", i, extract_value<uint32_t>(adesc, ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_MASK));
-
-        data_order_done = true;
     }
 }
 

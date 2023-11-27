@@ -88,8 +88,6 @@ void Core::decode()
 
     add_general("SP_DISTORT_MOV_AVG_MAX_NUM_TAPS_SEL_CTE", regs.prbs.sp_distort_mov_avg_max_num_taps_sel_cte);
 
-    data_order_done = true;
-
     auto get_distortion = [](const auto levels, const auto index, auto &distort) {
         distort.prbs_0[index] = extract_value<int16_t>(levels, LEVEL_0_MASK);
         distort.prbs_1[index] = extract_value<int16_t>(levels, LEVEL_1_MASK);
