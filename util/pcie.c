@@ -232,7 +232,7 @@ void bar4_write(struct pcie_bars *bars, size_t addr, uint32_t value)
     if (line[0] == 'O') {
     }
     else if (line[0] == 'E') {
-        fprintf(stderr, "Read error\n");
+        fprintf(stderr, "Write error\n");
     } else if (line[0] == 'T') {
         fprintf(stderr, "Wishbone timeout\n");
     } else {
