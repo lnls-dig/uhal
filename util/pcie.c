@@ -224,7 +224,7 @@ static volatile uint32_t *bar4_get_u32p(struct pcie_bars *bars, size_t addr)
 void bar4_write(struct pcie_bars *bars, size_t addr, uint32_t value)
 {
     pthread_mutex_lock(&bars->locks[BAR4]);
-    fprintf(bars->fserport, "W%08zX%08uX\n", addr, value);
+    fprintf(bars->fserport, "W%08zX%08X\n", addr, value);
     char *line = NULL;
     size_t buff_size = 0;
     ssize_t ans_str_size = getline(&line, &buff_size, bars->fserport);
