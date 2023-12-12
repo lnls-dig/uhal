@@ -5,11 +5,11 @@
  * Released according to the GNU GPL, version 3 or any later version.
  */
 
-#include <algorithm>
 #include <array>
 #include <bit>
 #include <charconv>
 #include <cstring>
+#include <ranges>
 #include <stdexcept>
 #include <thread>
 #include <type_traits>
@@ -460,7 +460,7 @@ std::vector<Data> Controller::get_result()
         if constexpr (sizeof v[0] == sizeof(Data)) return v;
         std::vector<Data> result;
         result.resize(elements);
-        std::copy(v.begin(), v.end(), result.begin());
+        std::ranges::copy(v, result.begin());
         return result;
     };
     switch (channel_atom_width) {
