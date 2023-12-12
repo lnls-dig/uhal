@@ -104,6 +104,8 @@ void Core::decode()
     coefficients_x.resize(MAX_NUM_CHAN);
     coefficients_y.resize(MAX_NUM_CHAN);
 
+    /* XXX: use C++20's std::ranges::generate when available */
+
     for (unsigned i = 0; i < *number_of_channels; i++) {
         auto &ram_bank = regs.ch[i].coeff_ram_bank;
         const size_t elements = MAX_BPMS;
