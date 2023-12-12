@@ -131,10 +131,9 @@ double fixed2float(uint32_t v, unsigned point_pos)
 
 std::string list_of_keys(const std::unordered_map<std::string_view, int> &m)
 {
-    auto b = m.begin();
-    return std::accumulate(std::next(b), m.end(), std::string(b->first),
-        /* we know b.first.data() is safe to use here because it's guaranteed to be null terminated */
-        [](std::string a, auto b) { return a.append({", ", b.first.data()}); });
+    auto begin = m.begin();
+    return std::accumulate(std::next(begin), m.end(), std::string(begin->first),
+        [](std::string a, auto b) { return a.append(", ").append(b.first); });
 }
 
 std::string list_of_keys(const std::vector<std::string> &v)
