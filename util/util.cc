@@ -7,6 +7,7 @@
 
 #include <bit>
 #include <numeric>
+#include <ranges>
 #include <stdexcept>
 #include <type_traits>
 
@@ -35,6 +36,15 @@ void clear_and_insert(uint32_t &dest, unsigned value, uint32_t mask)
     unsigned shift = std::countr_zero(mask);
 
     clear_and_insert(dest, value, mask, shift, max, 0);
+}
+
+void clear_and_insert_index(uint32_t &dest, uint32_t mask, std::string_view value, std::vector<std::string> value_list)
+{
+    auto it = std::ranges::find(value_list, value);
+    if (it != value_list.end())
+        clear_and_insert(dest, it - value_list.begin(), mask);
+    else
+        throw std::runtime_error("option must be one of " + list_of_keys(value_list));
 }
 
 void insert_bit(uint32_t &dest, bool value, uint32_t mask)
