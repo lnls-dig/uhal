@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <memory>
 #include <optional>
 #include <string_view>
 #include <unordered_map>
@@ -18,12 +19,11 @@
 
 #include <sys/types.h>
 
-#include <tsl/ordered_map.h>
-
 #include "sdb-defs.h"
 
 #define LNLS_VENDORID 0x1000000000001215
 
+struct RegisterDecoderPrivate;
 class Printer;
 
 #define CONSTRUCTOR_REGS(type) regs_storage(new type ()), regs(*regs_storage)
@@ -75,14 +75,7 @@ class RegisterDecoder: public RegisterDecoderBase {
     bool is_boolean_value(const char *) const;
     int32_t try_boolean_value(const char *, int32_t) const;
 
-    /** int32_t is so far a generic enough type to be used here, but int64_t
-     * can be considered if it ever becomes an issue. We use double for
-     * floating point values */
-    using data_type = std::variant<std::int32_t, double>;
-    /** Hold decoded data from normal registers */
-    tsl::ordered_map<std::string_view, data_type> general_data;
-    /** Hold decoded data from registers that are repeated for each channel */
-    tsl::ordered_map<std::string_view, std::vector<data_type>> channel_data;
+    std::unique_ptr<RegisterDecoderPrivate> data;
 
     template <class T>
     void add_general_internal(const char *, T);
