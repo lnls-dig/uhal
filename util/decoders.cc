@@ -8,9 +8,22 @@
 #include <algorithm>
 #include <stdexcept>
 
+#include <tsl/ordered_map.h>
+
 #include "pcie.h"
 #include "printer.h"
 #include "decoders.h"
+
+struct RegisterDecoderPrivate {
+    /** int32_t is so far a generic enough type to be used here, but int64_t
+     * can be considered if it ever becomes an issue. We use double for
+     * floating point values */
+    using data_type = std::variant<std::int32_t, double>;
+    /** Hold decoded data from normal registers */
+    tsl::ordered_map<std::string_view, data_type> general_data;
+    /** Hold decoded data from registers that are repeated for each channel */
+    tsl::ordered_map<std::string_view, std::vector<data_type>> channel_data;
+};
 
 RegisterDecoder::RegisterDecoder(
     struct pcie_bars &bars,
@@ -18,6 +31,7 @@ RegisterDecoder::RegisterDecoder(
     std::unordered_map<std::string_view, Printer> printers):
 
     RegisterDecoderBase(bars, ref_devinfo),
+    data(new RegisterDecoderPrivate()),
     printers(printers)
 {
 }
@@ -43,7 +57,7 @@ int32_t RegisterDecoder::try_boolean_value(const char *name, int32_t value) cons
 template <class T>
 void RegisterDecoder::add_general_internal(const char *name, T value)
 {
-    general_data[name] = value;
+    data->general_data[name] = value;
 }
 
 void RegisterDecoder::add_general(const char *name, int32_t value)
@@ -61,10 +75,10 @@ void RegisterDecoder::add_channel_internal(const char *name, unsigned pos, T val
 {
     if (!number_of_channels)
         throw std::logic_error("number_of_channels must be set");
-    channel_data[name].resize(*number_of_channels);
+    data->channel_data[name].resize(*number_of_channels);
 
     /* using .at() to explicitly catch out of bounds access */
-    channel_data[name].at(pos) = value;
+    data->channel_data[name].at(pos) = value;
 }
 
 void RegisterDecoder::add_channel(const char *name, unsigned pos, int32_t value)
@@ -122,7 +136,7 @@ void RegisterDecoder::print(FILE *f, bool verbose) const
         }
     };
 
-    for (const auto &[name, value]: general_data) {
+    for (const auto &[name, value]: data->general_data) {
         print(name, value);
     }
 
@@ -133,7 +147,7 @@ void RegisterDecoder::print(FILE *f, bool verbose) const
         fprintf(f, "channel %u:\n", i);
         indent = 4;
 
-        for (const auto &[name, values]: channel_data) {
+        for (const auto &[name, values]: data->channel_data) {
             print(name, values.at(i));
         }
     }
@@ -143,7 +157,7 @@ template <class T>
 T RegisterDecoder::get_general_data(const char *name) const
 {
     try {
-        return std::get<T>(general_data.at(name));
+        return std::get<T>(data->general_data.at(name));
     } catch (std::out_of_range &e) {
         fprintf(stderr, "%s: bad key '%s'\n", __func__, name);
         throw e;
@@ -156,7 +170,7 @@ template <class T>
 T RegisterDecoder::get_channel_data(const char *name, unsigned channel_index) const
 {
     try {
-        return std::get<T>(channel_data.at(name).at(channel_index));
+        return std::get<T>(data->channel_data.at(name).at(channel_index));
     } catch (std::out_of_range &e) {
         fprintf(stderr, "%s: bad key '%s'\n", __func__, name);
         throw e;
