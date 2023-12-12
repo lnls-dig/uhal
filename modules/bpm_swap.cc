@@ -75,11 +75,7 @@ void Controller::encode_params()
 {
     insert_bit(regs.ctrl, reset, BPM_SWAP_CTRL_RST);
 
-    auto mode_it = std::find(mode_list.begin(), mode_list.end(), mode);
-    if (mode_it != mode_list.end())
-        clear_and_insert(regs.ctrl, mode_it - mode_list.begin(), BPM_SWAP_CTRL_MODE_MASK);
-    else
-        throw std::runtime_error("mode must be one of " + list_of_keys(mode_list));
+    clear_and_insert_index(regs.ctrl, BPM_SWAP_CTRL_MODE_MASK, mode, mode_list);
 
     insert_bit(regs.ctrl, swap_div_f_cnt_en, BPM_SWAP_CTRL_SWAP_DIV_F_CNT_EN);
     clear_and_insert(regs.ctrl, swap_div_f, BPM_SWAP_CTRL_SWAP_DIV_F_MASK);
