@@ -13,3 +13,5 @@ sdbfs_lib = static_library(
   c_args: c_args
 )
 sdbfs = declare_dependency(link_with: sdbfs_lib, include_directories: sdbfs_inc)
+
+ordered_map_inc = include_directories('ordered-map/include')
