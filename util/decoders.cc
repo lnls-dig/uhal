@@ -40,20 +40,10 @@ int32_t RegisterDecoder::try_boolean_value(const char *name, int32_t value) cons
     return is_boolean_value(name) ? (bool)value : value;
 }
 
-void RegisterDecoder::add_name_to_order(std::vector<std::string_view> &order, const char *name, bool skip)
-{
-    if (first_decode && !skip) {
-        auto name_it = std::find(order.begin(), order.end(), name);
-        if (name_it == order.end())
-            order.push_back(name);
-    }
-}
-
 template <class T>
 void RegisterDecoder::add_general_internal(const char *name, T value, bool skip)
 {
     general_data[name] = value;
-    add_name_to_order(general_data_order, name, skip);
 }
 
 void RegisterDecoder::add_general(const char *name, int32_t value, bool skip)
@@ -75,7 +65,6 @@ void RegisterDecoder::add_channel_internal(const char *name, unsigned pos, T val
 
     /* using .at() to explicitly catch out of bounds access */
     channel_data[name].at(pos) = value;
-    add_name_to_order(channel_data_order, name, skip);
 }
 
 void RegisterDecoder::add_channel(const char *name, unsigned pos, int32_t value, bool skip)
@@ -108,8 +97,6 @@ void RegisterDecoder::get_data(bool only_monitors)
     } else {
         read();
         decode();
-
-        first_decode = false;
     }
 }
 
@@ -135,8 +122,8 @@ void RegisterDecoder::print(FILE *f, bool verbose) const
         }
     };
 
-    for (const auto name: general_data_order) {
-        print(name, general_data.at(name));
+    for (const auto &[name, value]: general_data) {
+        print(name, value);
     }
 
     if (number_of_channels) for (unsigned i = 0; i < *number_of_channels; i++) {
@@ -146,8 +133,8 @@ void RegisterDecoder::print(FILE *f, bool verbose) const
         fprintf(f, "channel %u:\n", i);
         indent = 4;
 
-        for (const auto name: channel_data_order) {
-            print(name, channel_data.at(name).at(i));
+        for (const auto &[name, values]: channel_data) {
+            print(name, values.at(i));
         }
     }
 }
