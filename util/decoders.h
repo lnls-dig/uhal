@@ -18,6 +18,8 @@
 
 #include <sys/types.h>
 
+#include <tsl/ordered_map.h>
+
 #include "sdb-defs.h"
 
 #define LNLS_VENDORID 0x1000000000001215
@@ -81,9 +83,9 @@ class RegisterDecoder: public RegisterDecoderBase {
      * floating point values */
     using data_type = std::variant<std::int32_t, double>;
     /** Hold decoded data from normal registers */
-    std::unordered_map<std::string_view, data_type> general_data;
+    tsl::ordered_map<std::string_view, data_type> general_data;
     /** Hold decoded data from registers that are repeated for each channel */
-    std::unordered_map<std::string_view, std::vector<data_type>> channel_data;
+    tsl::ordered_map<std::string_view, std::vector<data_type>> channel_data;
 
     /** Hold the order in which data has been added to #general_data, which
      * allows us to implement printing prettily and in order while also using

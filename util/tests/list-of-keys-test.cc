@@ -2,21 +2,20 @@
 
 #include "util.h"
 
-TEST_CASE("std::unordered_map with multiple entries", "[list-of-keys]")
+TEST_CASE("tsl::ordered_map with multiple entries", "[list-of-keys]")
 {
-    std::unordered_map<std::string_view, int> map = {
+    tsl::ordered_map<std::string_view, int> map = {
         {"first", 0},
         {"second", 0},
+        {"third", 0},
     };
 
-    auto s = list_of_keys(map);
-    auto rv = s == "first, second" || s == "second, first";
-    REQUIRE(rv == true);
+    REQUIRE(list_of_keys(map) == "first, second, third");
 }
 
-TEST_CASE("std::unordered_map with single entry", "[list-of-keys]")
+TEST_CASE("tsl::ordered_map with single entry", "[list-of-keys]")
 {
-    std::unordered_map<std::string_view, int> map = {
+    tsl::ordered_map<std::string_view, int> map = {
         {"first", 0},
     };
 

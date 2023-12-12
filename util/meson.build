@@ -3,10 +3,11 @@ utilities_lib = static_library(
   'uhal-utilities',
   utilities_src,
   dependencies: [sdbfs],
+  include_directories: ordered_map_inc,
   install: true
 )
 utilities_inc = include_directories('.')
-utilities = declare_dependency(link_with: utilities_lib, include_directories: utilities_inc)
+utilities = declare_dependency(link_with: utilities_lib, include_directories: [utilities_inc, ordered_map_inc])
 
 subdir('tests')
 

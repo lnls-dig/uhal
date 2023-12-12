@@ -6,7 +6,6 @@
  */
 
 #include <cstring>
-#include <unordered_map>
 
 #include "pcie.h"
 #include "printer.h"
@@ -162,7 +161,7 @@ ControllerV2::~ControllerV2() = default;
 
 void ControllerV2::encode_params()
 {
-    static const std::unordered_map<std::string_view, int> mode_options({
+    static const tsl::ordered_map<std::string_view, int> mode_options({
         {"open-loop-dac", 0},
         {"open-loop-square", 1},
         {"closed-loop-pi_sp", 2},
