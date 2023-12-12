@@ -123,12 +123,16 @@ void RegisterDecoder::print(FILE *f, bool verbose) const
     unsigned indent = 0;
 
     auto print = [this, f, verbose, &indent](auto const &name, auto value) {
-        if (auto vp = std::get_if<int32_t>(&value))
-            printers.at(name).print(f, verbose, indent, *vp);
-        else if (auto vp = std::get_if<double>(&value))
-            printers.at(name).print(f, verbose, indent, *vp);
-        else
-            throw std::logic_error("unhandled data type from *_data");
+        try {
+            if (auto vp = std::get_if<int32_t>(&value))
+                printers.at(name).print(f, verbose, indent, *vp);
+            else if (auto vp = std::get_if<double>(&value))
+                printers.at(name).print(f, verbose, indent, *vp);
+            else
+                throw std::logic_error("unhandled data type from *_data");
+        } catch (std::out_of_range &) {
+            /* automatically skip values for which a printer isn't defined */
+        }
     };
 
     for (const auto name: general_data_order) {
