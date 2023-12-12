@@ -5,7 +5,6 @@
  * Released according to the GNU GPL, version 3 or any later version.
  */
 
-#include <algorithm>
 #include <cmath>
 #include <stdexcept>
 
@@ -265,11 +264,7 @@ void Controller::encode_params()
         insert_bit(registers.config, parameters.log, TIMING_AMC0_LOG);
         insert_bit(registers.config, parameters.interlock, TIMING_AMC0_ITL);
 
-        auto source_it = std::find(sources_list.begin(), sources_list.end(), parameters.source);
-        if (source_it != sources_list.end())
-            clear_and_insert(registers.config, source_it - sources_list.begin(), TIMING_AMC0_SRC_MASK);
-        else
-            throw std::runtime_error("source must be one of " + list_of_keys(sources_list));
+        clear_and_insert_index(registers.config, TIMING_AMC0_SRC_MASK, parameters.source, sources_list);
 
         insert_bit(registers.config, parameters.direction, TIMING_AMC0_DIR);
         insert_bit(registers.config, parameters.count_reset, TIMING_AMC0_COUNT_RST);
