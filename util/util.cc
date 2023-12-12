@@ -139,6 +139,8 @@ double fixed2float(uint32_t v, unsigned point_pos)
     return (double)(int32_t)v / ((uint64_t)1 << point_pos);
 }
 
+/* XXX: replace with C++23's std::ranges::fold_left_first */
+
 std::string list_of_keys(const std::unordered_map<std::string_view, int> &m)
 {
     auto begin = m.begin();
