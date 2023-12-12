@@ -12,8 +12,9 @@
 #include <functional>
 #include <string>
 #include <string_view>
-#include <unordered_map>
 #include <vector>
+
+#include <tsl/ordered_map.h>
 
 void clear_and_insert(uint32_t &dest, unsigned value, uint32_t mask);
 void insert_bit(uint32_t &dest, bool value, uint32_t mask);
@@ -29,7 +30,7 @@ sign_extension_fn &sign_extend_function(unsigned width);
 uint32_t float2fixed(double v, unsigned point_pos, bool saturate=true);
 double fixed2float(uint32_t v, unsigned point_pos);
 
-std::string list_of_keys(const std::unordered_map<std::string_view, int> &);
+std::string list_of_keys(const tsl::ordered_map<std::string_view, int> &);
 std::string list_of_keys(const std::vector<std::string> &);
 
 #endif
