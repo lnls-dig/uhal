@@ -97,7 +97,7 @@ void CoreV2::decode()
 
     /* add printer if this value ever gets flags;
      * this is being done for IOC compatibility */
-    add_general("PS_STATUS", regs->sta, true);
+    add_general("PS_STATUS", regs->sta);
 
     number_of_channels = NUM_CHAN;
 
@@ -121,9 +121,9 @@ void CoreV2::decode()
         add_channel("AMP_EN", i, t & WB_RTMLAMP_OHWR_REGS_CH_CTL_AMP_EN);
         add_channel("MODE", i, extract_value<uint32_t>(t, WB_RTMLAMP_OHWR_REGS_CH_CTL_MODE_MASK));
         if (devinfo.abi_ver_minor >= TRIGGER_ENABLE_VERSION) {
-            add_channel("TRIG_EN", i, t & WB_RTMLAMP_OHWR_REGS_CH_CTL_TRIG_EN, false);
+            add_channel("TRIG_EN", i, t & WB_RTMLAMP_OHWR_REGS_CH_CTL_TRIG_EN);
         } else {
-            add_channel("TRIG_EN", i, 0, true);
+            add_channel("TRIG_EN", i, 0);
         }
 
         add_channel("PI_KP", i, extract_value<uint32_t>(channel_regs.pi_kp, WB_RTMLAMP_OHWR_REGS_CH_PI_KP_DATA_MASK));

@@ -85,9 +85,9 @@ class RegisterDecoder: public RegisterDecoderBase {
     tsl::ordered_map<std::string_view, std::vector<data_type>> channel_data;
 
     template <class T>
-    void add_general_internal(const char *, T, bool);
+    void add_general_internal(const char *, T);
     template <class T>
-    void add_channel_internal(const char *, unsigned, T, bool);
+    void add_channel_internal(const char *, unsigned, T);
 
   protected:
     /** A device that has multiple channels will set this */
@@ -98,15 +98,15 @@ class RegisterDecoder: public RegisterDecoderBase {
     RegisterDecoder(struct pcie_bars &, const struct sdb_device_info &, std::unordered_map<std::string_view, Printer>);
 
     /** Save an int32_t (or smaller) value to a key */
-    void add_general(const char *, int32_t, bool = false);
+    void add_general(const char *, int32_t);
     /** Save a double value to a key */
-    void add_general_double(const char *, double, bool = false);
+    void add_general_double(const char *, double);
     /** Save an int32_t (or smaller) value to a key and index.
      * #number_of_channels must be set before this can be called */
-    void add_channel(const char *, unsigned, int32_t, bool = false);
+    void add_channel(const char *, unsigned, int32_t);
     /** Save a double value to a key and index. #number_of_channels must be set
      * before this can be called */
-    void add_channel_double(const char *, unsigned, double, bool = false);
+    void add_channel_double(const char *, unsigned, double);
 
     /** This simply calls read(), but can be specified by subclasses to read
      * only changing values from BAR4 into #read_dest */

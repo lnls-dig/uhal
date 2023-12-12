@@ -41,23 +41,23 @@ int32_t RegisterDecoder::try_boolean_value(const char *name, int32_t value) cons
 }
 
 template <class T>
-void RegisterDecoder::add_general_internal(const char *name, T value, bool skip)
+void RegisterDecoder::add_general_internal(const char *name, T value)
 {
     general_data[name] = value;
 }
 
-void RegisterDecoder::add_general(const char *name, int32_t value, bool skip)
+void RegisterDecoder::add_general(const char *name, int32_t value)
 {
     value = try_boolean_value(name, value);
-    add_general_internal(name, value, skip);
+    add_general_internal(name, value);
 }
-void RegisterDecoder::add_general_double(const char *name, double value, bool skip)
+void RegisterDecoder::add_general_double(const char *name, double value)
 {
-    add_general_internal(name, value, skip);
+    add_general_internal(name, value);
 }
 
 template <class T>
-void RegisterDecoder::add_channel_internal(const char *name, unsigned pos, T value, bool skip)
+void RegisterDecoder::add_channel_internal(const char *name, unsigned pos, T value)
 {
     if (!number_of_channels)
         throw std::logic_error("number_of_channels must be set");
@@ -67,14 +67,14 @@ void RegisterDecoder::add_channel_internal(const char *name, unsigned pos, T val
     channel_data[name].at(pos) = value;
 }
 
-void RegisterDecoder::add_channel(const char *name, unsigned pos, int32_t value, bool skip)
+void RegisterDecoder::add_channel(const char *name, unsigned pos, int32_t value)
 {
     value = try_boolean_value(name, value);
-    add_channel_internal(name, pos, value, skip);
+    add_channel_internal(name, pos, value);
 }
-void RegisterDecoder::add_channel_double(const char *name, unsigned pos, double value, bool skip)
+void RegisterDecoder::add_channel_double(const char *name, unsigned pos, double value)
 {
-    add_channel_internal(name, pos, value, skip);
+    add_channel_internal(name, pos, value);
 }
 
 void RegisterDecoder::read_monitors()
