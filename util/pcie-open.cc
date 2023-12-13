@@ -73,7 +73,7 @@ void dev_open(struct pcie_bars &bars, const char *pci_address)
         struct stat st;
         fstat(fd, &st);
         bars.sizes[i] = st.st_size;
-        void *ptr = mmap(NULL, st.st_size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+        void *ptr = mmap(nullptr, st.st_size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
         close(fd);
         if (ptr == MAP_FAILED) {
             throw std::runtime_error(std::string("couldn't mmap resource file: ") + pci_address);
