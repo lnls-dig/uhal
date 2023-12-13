@@ -271,14 +271,15 @@ void bar4_write_v(struct pcie_bars *bars, size_t addr, const void *src, size_t n
 
 uint32_t bar4_read(struct pcie_bars *bars, size_t addr)
 {
-    uint32_t ret;
+    uint32_t rv;
     pthread_mutex_lock(&bars->locks[BAR4]);
 
-    bar4_read_v(bars, addr, &ret, 1);
+    if (bars->fserport) bar4_read_v(bars, addr, &rv, 1);
+    else rv = *bar4_get_u32p(bars, addr);
 
     pthread_mutex_unlock(&bars->locks[BAR4]);
 
-    return ret;
+    return rv;
 }
 
 /*
