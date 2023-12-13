@@ -64,7 +64,7 @@ void dev_open(struct pcie_bars &bars, const char *pci_address)
     char resource_path[sizeof resource_path_fmt + 32];
 
     /* error out if any function tries to use this */
-    bars.fserport = NULL;
+    bars.fserport = nullptr;
 
     for (unsigned i = 0; i < 3; i++) {
         unsigned bar = i * 2; // bars 0, 2, 4
@@ -79,7 +79,7 @@ void dev_open(struct pcie_bars &bars, const char *pci_address)
         struct stat st;
         fstat(fd, &st);
         bars.sizes[i] = st.st_size;
-        void *ptr = mmap(NULL, st.st_size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
+        void *ptr = mmap(nullptr, st.st_size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
         close(fd);
         if (ptr == MAP_FAILED) {
             throw std::runtime_error(std::string("couldn't mmap resource file: ") + pci_address);

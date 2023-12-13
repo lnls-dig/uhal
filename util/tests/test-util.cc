@@ -32,4 +32,6 @@ void dummy_dev_open(struct pcie_bars &bars)
     allocate_bar(bars.bar0, bars.sizes[0], 2048);
     allocate_bar(bars.bar2, bars.sizes[1], 1048576);
     allocate_bar(bars.bar4, bars.sizes[2], 524288);
+
+    bars.fserport = nullptr;
 }
