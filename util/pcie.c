@@ -286,7 +286,7 @@ uint32_t bar4_read(struct pcie_bars *bars, size_t addr)
 /*
  * Read 32 bits words, max length is 256 words
  */
-ssize_t uart_read_cmd(struct pcie_bars *bars, size_t addr, void *dest, ssize_t num_words)
+static ssize_t uart_read_cmd(struct pcie_bars *bars, size_t addr, void *dest, ssize_t num_words)
 {
     uint32_t* dest_u32 = (uint32_t*)dest;
     ssize_t words_read = 0;
@@ -328,33 +328,39 @@ ssize_t uart_read_cmd(struct pcie_bars *bars, size_t addr, void *dest, ssize_t n
 void bar4_read_v(struct pcie_bars *bars, size_t addr, void *dest, size_t n)
 {
     pthread_mutex_lock(&bars->locks[BAR4]);
-    const size_t max_word_blk_size = 256;
 
-    /*
-     * Assert that the address is 32 bits aligned an the size is a
-     * multiple of 4
-     */
-    assert((addr & 0x3) == 0);
-    assert((n & 0x3) == 0);
+    if (bars->fserport) {
+        const size_t max_word_blk_size = 256;
 
-    uint32_t* dest_u32 = (uint32_t*)dest;
+        /* Assert that the address is 32 bits aligned and the size is a multiple
+         * of 4 */
+        assert((addr & 0x3) == 0);
+        assert((n & 0x3) == 0);
 
-    size_t words_left = n / 4;
-    while(words_left > 0) {
-        ssize_t words_to_read;
-        if(words_left > max_word_blk_size) {
-            words_to_read = max_word_blk_size;
-            words_left -= max_word_blk_size;
-        } else {
-            words_to_read = words_left;
-            words_left = 0;
+        uint32_t* dest_u32 = (uint32_t*)dest;
+
+        size_t words_left = n / 4;
+        while (words_left > 0) {
+            ssize_t words_to_read;
+            if (words_left > max_word_blk_size) {
+                words_to_read = max_word_blk_size;
+                words_left -= max_word_blk_size;
+            } else {
+                words_to_read = words_left;
+                words_left = 0;
+            }
+            ssize_t words_read = uart_read_cmd(bars, addr, (void*)dest_u32, words_to_read);
+            assert(words_read == words_to_read);
+            addr += words_to_read*4;
+            dest_u32 += words_to_read;
         }
-        ssize_t words_read = uart_read_cmd(bars, addr, (void*)dest_u32, words_to_read);
-        assert(words_read == words_to_read);
-        addr += words_to_read*4;
-        dest_u32 += words_to_read;
+
+        goto unlock;
     }
 
+    bar_generic_read_v(bars, addr, dest, n, bar4_read);
+
+  unlock:
     pthread_mutex_unlock(&bars->locks[BAR4]);
 }
 
