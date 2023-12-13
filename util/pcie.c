@@ -242,7 +242,7 @@ void bar4_write(struct pcie_bars *bars, size_t addr, uint32_t value)
         }
         if (line) free(line);
 
-        return;
+        goto unlock;
     }
 
     *bar4_get_u32p(bars, addr) = value;
@@ -254,6 +254,7 @@ void bar4_write(struct pcie_bars *bars, size_t addr, uint32_t value)
      * timeouts in this layer. */
     *bar4_get_u32p(bars, addr);
 
+  unlock:
     pthread_mutex_unlock(&bars->locks[BAR4]);
 }
 
