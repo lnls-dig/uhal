@@ -60,6 +60,9 @@ void dev_open(struct pcie_bars &bars, const char *pci_address)
     const char wc_resource_path_fmt[] = "/sys/bus/pci/devices/%s.0/resource%d_wc";
     char resource_path[sizeof resource_path_fmt + 32];
 
+    /* error out if any function tries to use this */
+    bars.fserport = nullptr;
+
     for (unsigned i = 0; i < 3; i++) {
         unsigned bar = i * 2; // bars 0, 2, 4
         snprintf(resource_path, sizeof resource_path, wc_resource_path_fmt, pci_address, bar);

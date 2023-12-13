@@ -7,6 +7,10 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <errno.h>
 
 #if defined(__x86_64__) && defined(__SSE4_1__)
 # define INCLUDE_IMMINTRIN
@@ -221,6 +225,26 @@ void bar4_write(struct pcie_bars *bars, size_t addr, uint32_t value)
 {
     pthread_mutex_lock(&bars->locks[BAR4]);
 
+    if (bars->fserport) {
+        fprintf(bars->fserport, "W%08zX%08X\n", addr, value);
+        char *line = NULL;
+        size_t buff_size = 0;
+        ssize_t ans_str_size = getline(&line, &buff_size, bars->fserport);
+        assert(ans_str_size == 2);
+        if (line[0] == 'O') {
+        }
+        else if (line[0] == 'E') {
+            fprintf(stderr, "Write error\n");
+        } else if (line[0] == 'T') {
+            fprintf(stderr, "Wishbone timeout\n");
+        } else {
+            fprintf(stderr, "Unknown response: %c\n", line[0]);
+        }
+        if (line) free(line);
+
+        goto unlock;
+    }
+
     *bar4_get_u32p(bars, addr) = value;
 
     /* generate a read so the write is flushed;
@@ -230,6 +254,7 @@ void bar4_write(struct pcie_bars *bars, size_t addr, uint32_t value)
      * timeouts in this layer. */
     *bar4_get_u32p(bars, addr);
 
+  unlock:
     pthread_mutex_unlock(&bars->locks[BAR4]);
 }
 
@@ -249,19 +274,90 @@ uint32_t bar4_read(struct pcie_bars *bars, size_t addr)
 {
     pthread_mutex_lock(&bars->locks[BAR4]);
 
-    uint32_t rv = *bar4_get_u32p(bars, addr);
+    uint32_t rv;
+    if (bars->fserport) bar4_read_v(bars, addr, &rv, 4);
+    else rv = *bar4_get_u32p(bars, addr);
 
     pthread_mutex_unlock(&bars->locks[BAR4]);
 
     return rv;
 }
 
+/** Max number of words that uart_read_cmd() can read at once */
+static const size_t max_word_blk_size = 256;
+
+/** Read 32 bits words, max num_words is #max_word_blk_size */
+static ssize_t uart_read_cmd(struct pcie_bars *bars, size_t addr, void *dest, ssize_t num_words)
+{
+    assert(num_words <= (ssize_t)max_word_blk_size);
+
+    uint32_t *dest_u32 = (uint32_t*)dest;
+    ssize_t words_read = 0;
+    if (bars->fserport && num_words > 0) {
+        fprintf(bars->fserport, "R%08zX%02zX\n", addr, num_words - 1);
+        char *line = NULL;
+        size_t buff_size = 0;
+        ssize_t ans_str_size = getline(&line, &buff_size, bars->fserport);
+        if (ans_str_size > 0) {
+            if (line[0] == 'O') {
+                char *data = line + 1;
+                for (ssize_t i = 0; i < ((ans_str_size - 2) / 8) && i < num_words; i++) {
+                    int elements = sscanf(data + i*8, "%8x", dest_u32);
+                    dest_u32 += 1;
+                    words_read += 1;
+                    assert(elements == 1);
+                }
+            } else if (line[0] == 'E') {
+                fprintf(stderr, "Read error\n");
+                words_read = -EIO;
+            } else if (line[0] == 'T') {
+                fprintf(stderr, "Wishbone timeout\n");
+                words_read = -ETIMEDOUT;
+            } else {
+                fprintf(stderr, "Unknown response: %c\n", line[0]);
+                words_read = -EIO;
+            }
+        } else {
+            fprintf(stderr, "UART Timeout\n");
+            words_read = -ETIMEDOUT;
+        }
+        if (line) free(line);
+    }
+    return words_read;
+}
+
 void bar4_read_v(struct pcie_bars *bars, size_t addr, void *dest, size_t n)
 {
     pthread_mutex_lock(&bars->locks[BAR4]);
 
+    if (bars->fserport) {
+        /* Assert that the address is 32 bits aligned and the size is a multiple
+         * of 4 */
+        assert((addr & 0x3) == 0);
+        assert((n & 0x3) == 0);
+
+        size_t words_left = n / 4;
+        while (words_left > 0) {
+            ssize_t words_to_read;
+            if (words_left > max_word_blk_size) {
+                words_to_read = max_word_blk_size;
+                words_left -= max_word_blk_size;
+            } else {
+                words_to_read = words_left;
+                words_left = 0;
+            }
+            ssize_t words_read = uart_read_cmd(bars, addr, dest, words_to_read);
+            assert(words_read == words_to_read);
+            addr += words_to_read * 4;
+            dest = (unsigned char *)dest + words_to_read * 4;
+        }
+
+        goto unlock;
+    }
+
     bar_generic_read_v(bars, addr, dest, n, bar4_read);
 
+  unlock:
     pthread_mutex_unlock(&bars->locks[BAR4]);
 }
 

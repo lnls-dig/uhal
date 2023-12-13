@@ -12,6 +12,7 @@
 #ifndef PCIE_STRUCT_H
 #define PCIE_STRUCT_H
 
+#include <stdio.h>
 #include <pthread.h>
 #include <stdint.h>
 #include <sys/types.h>
@@ -35,6 +36,8 @@ struct pcie_bars {
     /* we only need locking for bar2 and bar4, since they are paged.
      * these mutexes MUST be initialized as recursive */
     pthread_mutex_t locks[NUM_LOCKS];
+
+    FILE *fserport;
 };
 
 #endif
