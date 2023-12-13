@@ -224,21 +224,36 @@ static volatile uint32_t *bar4_get_u32p(struct pcie_bars *bars, size_t addr)
 void bar4_write(struct pcie_bars *bars, size_t addr, uint32_t value)
 {
     pthread_mutex_lock(&bars->locks[BAR4]);
-    fprintf(bars->fserport, "W%08zX%08X\n", addr, value);
-    char *line = NULL;
-    size_t buff_size = 0;
-    ssize_t ans_str_size = getline(&line, &buff_size, bars->fserport);
-    assert(ans_str_size == 2);
-    if (line[0] == 'O') {
+
+    if (bars->fserport) {
+        fprintf(bars->fserport, "W%08zX%08X\n", addr, value);
+        char *line = NULL;
+        size_t buff_size = 0;
+        ssize_t ans_str_size = getline(&line, &buff_size, bars->fserport);
+        assert(ans_str_size == 2);
+        if (line[0] == 'O') {
+        }
+        else if (line[0] == 'E') {
+            fprintf(stderr, "Write error\n");
+        } else if (line[0] == 'T') {
+            fprintf(stderr, "Wishbone timeout\n");
+        } else {
+            fprintf(stderr, "Unknown response: %c\n", line[0]);
+        }
+        if (line) free(line);
+
+        return;
     }
-    else if (line[0] == 'E') {
-        fprintf(stderr, "Write error\n");
-    } else if (line[0] == 'T') {
-        fprintf(stderr, "Wishbone timeout\n");
-    } else {
-        fprintf(stderr, "Unknown response: %c\n", line[0]);
-    }
-    if (line) free(line);
+
+    *bar4_get_u32p(bars, addr) = value;
+
+    /* generate a read so the write is flushed;
+     * corruption / wishbone timeouts have been observed when writing too many
+     * words at once into bar4.
+     * if desired, we can add a check for the read being equal to 0xffffffff to detect
+     * timeouts in this layer. */
+    *bar4_get_u32p(bars, addr);
+
     pthread_mutex_unlock(&bars->locks[BAR4]);
 }
 
