@@ -33,7 +33,7 @@ jobs:
         with:
           submodules: true
       - name: Configure
-        run: meson setup -Dpcie_opt=${{ matrix.options.pcie_opt }} build || cat build/meson-logs/meson-log.txt /nonexistent
+        run: meson setup --werror -Dpcie_opt=${{ matrix.options.pcie_opt }} build || cat build/meson-logs/meson-log.txt /nonexistent
       - name: Build
         run: ninja -C build
       - name: Run tests
