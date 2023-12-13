@@ -10,10 +10,13 @@
 #include <fstream>
 #include <string>
 
+#include <errno.h>
 #include <fcntl.h>
+#include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <termios.h>
 #include <unistd.h>
 
 #include "pcie-open.h"
@@ -94,8 +97,46 @@ void dev_open(struct pcie_bars &bars, const char *pci_address)
     configure_mutexes(bars);
 }
 
+void dev_open_serial(struct pcie_bars &bars, const char *dev_file)
+{
+    /* segfault if any function tries to use these */
+    bars.bar0 = bars.bar2 = bars.bar4 = nullptr;
+
+    int fd = open(dev_file, O_RDWR | O_CLOEXEC | O_NOCTTY);
+    if (fd < 0)
+        throw std::runtime_error(std::string("couldn't open serial port: ") + dev_file);
+
+    auto xfail = [](int rv) {
+        if (rv < 0)
+            throw std::runtime_error(std::string("couldn't configure serial port: ") + strerror(errno));
+    };
+
+    struct termios term;
+    xfail(tcgetattr(fd, &term));
+    xfail(cfsetospeed(&term, B500000));
+    xfail(cfsetispeed(&term, B500000));
+
+    term.c_lflag &= ~ICANON;
+    cfmakeraw(&term);
+    term.c_cc[VMIN] = 0;
+    term.c_cc[VTIME] = 10;
+
+    xfail(tcflush(fd, TCIFLUSH));
+    xfail(tcsetattr(fd, TCSAFLUSH, &term));
+
+    bars.fserport = fdopen(fd, "r+");
+    setvbuf(bars.fserport, NULL, _IOLBF, 0);
+
+    configure_mutexes(bars);
+}
+
 void dev_close(struct pcie_bars &bars)
 {
+    if (bars.fserport) {
+        fclose(bars.fserport);
+        return;
+    }
+
     auto unmap = [&bars](auto &p, unsigned i) {
         munmap(const_cast<void *>(p), bars.sizes[i]);
         p = 0;
