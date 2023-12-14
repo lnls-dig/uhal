@@ -21,16 +21,17 @@
 #include "pcie.h"
 #include "pcie-open.h"
 #include "util_sdb.h"
+
 #include "modules/acq.h"
 #include "modules/afc_timing.h"
+#include "modules/bpm_swap.h"
 #include "modules/fofb_cc.h"
 #include "modules/fofb_processing.h"
 #include "modules/lamp.h"
+#include "modules/orbit_intlk.h"
 #include "modules/sysid.h"
 #include "modules/trigger_iface.h"
 #include "modules/trigger_mux.h"
-
-#include "modules/bpm_swap.h"
 
 using namespace std::chrono_literals;
 
@@ -193,6 +194,8 @@ int main(int argc, char *argv[])
             dec = std::make_unique<trigger_mux::Core>(bars);
         } else if (type == "bpm_swap") {
             dec = std::make_unique<bpm_swap::Core>(bars);
+        } else if (type == "orbit_intlk") {
+            dec = std::make_unique<orbit_intlk::Core>(bars);
         } else {
             fprintf(stderr, "Unknown type: '%s'\n", type.c_str());
             return 1;
