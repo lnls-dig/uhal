@@ -6,6 +6,7 @@ install_headers(
     'fofb_cc.h',
     'fofb_processing.h',
     'lamp.h',
+    'orbit_intlk.h',
     'sysid.h',
     'trigger_iface.h',
     'trigger_mux.h',
