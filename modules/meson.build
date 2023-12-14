@@ -1,6 +1,13 @@
 modules_src = [
-  'acq.cc', 'afc_timing.cc', 'lamp.cc', 'fofb_cc.cc', 'fofb_processing.cc', 'sysid.cc', 'trigger_iface.cc', 'trigger_mux.cc',
-  'bpm_swap.cc'
+  'acq.cc',
+  'afc_timing.cc',
+  'bpm_swap.cc',
+  'fofb_cc.cc',
+  'fofb_processing.cc',
+  'lamp.cc',
+  'sysid.cc',
+  'trigger_iface.cc',
+  'trigger_mux.cc',
 ]
 modules_lib = static_library(
   'uhal-modules',
