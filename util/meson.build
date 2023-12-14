@@ -1,4 +1,13 @@
-utilities_src = ['controllers.cc', 'decoderbase.cc', 'decoders.cc', 'pcie.c', 'pcie-open.cc', 'printer.cc', 'sdb.cc', 'util.cc']
+utilities_src = [
+  'controllers.cc',
+  'decoderbase.cc',
+  'decoders.cc',
+  'pcie-open.cc',
+  'pcie.c',
+  'printer.cc',
+  'sdb.cc',
+  'util.cc',
+]
 utilities_lib = static_library(
   'uhal-utilities',
   utilities_src,
@@ -12,6 +21,13 @@ utilities = declare_dependency(link_with: utilities_lib, include_directories: [u
 subdir('tests')
 
 install_headers(
-  ['controllers.h', 'decoders.h', 'pcie-open.h', 'pcie-defs.h', 'sdb-defs.h', 'util_sdb.h'],
+  [
+    'controllers.h',
+    'decoders.h',
+    'pcie-defs.h',
+    'pcie-open.h',
+    'sdb-defs.h',
+    'util_sdb.h',
+  ],
   subdir: header_dir
 )
