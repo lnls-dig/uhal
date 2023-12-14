@@ -5,6 +5,7 @@ modules_src = [
   'fofb_cc.cc',
   'fofb_processing.cc',
   'lamp.cc',
+  'orbit_intlk.cc',
   'sysid.cc',
   'trigger_iface.cc',
   'trigger_mux.cc',
