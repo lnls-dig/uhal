@@ -33,7 +33,7 @@ jobs:
     steps:
       - name: Install dependencies
         run: ${{ matrix.distro.update_cmd }} && ${{ matrix.distro.install_cmd }} git meson ${{ matrix.distro.packages }} ${{ matrix.compiler.cc }}
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
       - name: Configure
