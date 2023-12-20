@@ -90,7 +90,7 @@ void Printer::print(FILE *f, bool verbose, unsigned indent, T value) const
             fprintf(f, "%s: 0x%08X\n", final_name, (unsigned)value);
             break;
         case PrinterType::value_float:
-            fprintf(f, "%s: %.lf\n", final_name, (double)value);
+            fprintf(f, "%s: %lf\n", final_name, (double)value);
             break;
         case PrinterType::custom_function:
             fprintf(f, "%s: ", final_name);
