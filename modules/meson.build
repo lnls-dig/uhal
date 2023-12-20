@@ -6,6 +6,7 @@ modules_src = [
   'fofb_processing.cc',
   'lamp.cc',
   'orbit_intlk.cc',
+  'pos_calc.cc',
   'sysid.cc',
   'trigger_iface.cc',
   'trigger_mux.cc',
