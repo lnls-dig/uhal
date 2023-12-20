@@ -23,6 +23,7 @@
 #include "modules/fofb_processing.h"
 #include "modules/lamp.h"
 #include "modules/orbit_intlk.h"
+#include "modules/pos_calc.h"
 #include "modules/sysid.h"
 #include "modules/trigger_iface.h"
 #include "modules/trigger_mux.h"
@@ -190,6 +191,8 @@ int main(int argc, char *argv[])
             dec = std::make_unique<bpm_swap::Core>(bars);
         } else if (type == "orbit_intlk") {
             dec = std::make_unique<orbit_intlk::Core>(bars);
+        } else if (type == "pos_calc") {
+            dec = std::make_unique<pos_calc::Core>(bars);
         } else {
             fprintf(stderr, "Unknown type: '%s'\n", type.c_str());
             return 1;
