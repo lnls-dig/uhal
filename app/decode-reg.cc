@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <memory>
+#include <thread>
 
 #include <argparse/argparse.hpp>
 
@@ -43,7 +44,7 @@ int main(int argc, char *argv[])
         fputs(
             "Usage: decode-reg mode <mode specific options>\n\n"
             "Positional arguments:\n"
-            "mode      mode of operation ('reset', 'build_info', 'decode', 'ram', 'acq', 'lamp', 'timing')\n",
+            "mode      mode of operation ('reset', 'build_info', 'decode', 'ram', 'acq', 'lamp', 'timing', 'pos_calc')\n",
             stderr);
         return 1;
     }
@@ -105,7 +106,7 @@ int main(int argc, char *argv[])
     lamp_args.add_argument("-T").help("Trigger enable").scan<'u', unsigned>();
 
     argparse::ArgumentParser *pargs;
-    if (mode == "reset" || mode == "timing") {
+    if (mode == "reset" || mode == "timing" || mode == "pos_calc") {
         pargs = &parent_args_with_help;
     } else if (mode == "build_info") {
         pargs = &build_info_args;
@@ -318,6 +319,24 @@ int main(int argc, char *argv[])
         ctl.afc_clock.ddmtd_config.navg = 7;
 
         ctl.write_params();
+    }
+    if (mode == "pos_calc") {
+        pos_calc::Core dec(bars);
+        if (auto v = read_sdb(&bars, dec.match_devinfo_lambda, dev_index)) {
+            dec.set_devinfo(*v);
+        } else {
+            fprintf(stderr, "Couldn't find pos_calc module index %u\n", dev_index);
+            return 1;
+        }
+
+        dec.get_data();
+
+        while (true) {
+            while (dec.fifo_empty()) std::this_thread::sleep_for(50ms);
+            dec.get_fifo_amps();
+
+            dec.print(stdout, false);
+        }
     }
 
     return 0;
