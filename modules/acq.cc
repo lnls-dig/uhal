@@ -134,23 +134,23 @@ void Core::decode()
 
     /* control register */
     t = regs.ctl;
-    add_general("FSQ_ACQ_NOW", t & ACQ_CORE_CTL_FSM_ACQ_NOW);
+    add_general("FSQ_ACQ_NOW", get_bit(t, ACQ_CORE_CTL_FSM_ACQ_NOW));
 
     /* status register */
     t = regs.sta;
 
     add_general("FSM_STATE", extract_value<uint32_t>(t, ACQ_CORE_STA_FSM_STATE_MASK));
-    add_general("FSM_ACQ_DONE", t & ACQ_CORE_STA_FSM_ACQ_DONE);
-    add_general("FC_TRANS_DONE", t & ACQ_CORE_STA_FC_TRANS_DONE);
-    add_general("FC_FULL", t & ACQ_CORE_STA_FC_FULL);
-    add_general("DDR3_TRANS_DONE", t & ACQ_CORE_STA_DDR3_TRANS_DONE);
+    add_general("FSM_ACQ_DONE", get_bit(t, ACQ_CORE_STA_FSM_ACQ_DONE));
+    add_general("FC_TRANS_DONE", get_bit(t, ACQ_CORE_STA_FC_TRANS_DONE));
+    add_general("FC_FULL", get_bit(t, ACQ_CORE_STA_FC_FULL));
+    add_general("DDR3_TRANS_DONE", get_bit(t, ACQ_CORE_STA_DDR3_TRANS_DONE));
 
     /* trigger configuration */
     t = regs.trig_cfg;
-    add_general("HW_TRIG_SEL", t & ACQ_CORE_TRIG_CFG_HW_TRIG_SEL);
-    add_general("HW_TRIG_POL", t & ACQ_CORE_TRIG_CFG_HW_TRIG_POL);
-    add_general("HW_TRIG_EN", t & ACQ_CORE_TRIG_CFG_HW_TRIG_EN);
-    add_general("SW_TRIG_EN", t & ACQ_CORE_TRIG_CFG_SW_TRIG_EN);
+    add_general("HW_TRIG_SEL", get_bit(t, ACQ_CORE_TRIG_CFG_HW_TRIG_SEL));
+    add_general("HW_TRIG_POL", get_bit(t, ACQ_CORE_TRIG_CFG_HW_TRIG_POL));
+    add_general("HW_TRIG_EN", get_bit(t, ACQ_CORE_TRIG_CFG_HW_TRIG_EN));
+    add_general("SW_TRIG_EN", get_bit(t, ACQ_CORE_TRIG_CFG_SW_TRIG_EN));
     add_general("INT_TRIG_SEL", extract_value<uint32_t>(t, ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_MASK) + 1);
 
     /* trigger data config thresold */
@@ -164,7 +164,7 @@ void Core::decode()
     /* number of shots */
     t = regs.shots;
     add_general("NB", extract_value<uint32_t>(t, ACQ_CORE_SHOTS_NB_MASK));
-    add_general("MULTISHOT_RAM_SIZE_IMPL", t & ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_IMPL);
+    add_general("MULTISHOT_RAM_SIZE_IMPL", get_bit(t, ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_IMPL));
     add_general("MULTISHOT_RAM_SIZE", extract_value<uint32_t>(t, ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_MASK));
 
     /* trigger address register */
