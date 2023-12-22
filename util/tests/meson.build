@@ -9,3 +9,6 @@ test('list-of-keys-test', list_of_keys_test)
 
 fixed_test = executable('fixed-test', 'fixed-test.cc', dependencies: [utilities, catch2])
 test('fixed-test', fixed_test)
+
+decoders_test = executable('decoders-test', 'decoders-test.cc', dependencies: [utilities, catch2])
+test('decoders_test', decoders_test)
