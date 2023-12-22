@@ -26,6 +26,7 @@ endforeach
 subdir('third_party')
 
 thread_dep = dependency('threads')
+boost = dependency('boost')
 argparse = dependency('argparse', fallback: 'argparse')
 catch2 = dependency('catch2-with-main', fallback: 'catch2')
 
