@@ -26,6 +26,7 @@ struct TestRegisterDecoder: public RegisterDecoder {
             PRINTER("ENABLE", "bool", PrinterType::enable),
             PRINTER("C_INT", "integer", PrinterType::value),
             PRINTER("C_DOUBLE", "double", PrinterType::value_float),
+            PRINTER("C_DOUBLE_CH1", "double", PrinterType::value_float),
         }),
         CONSTRUCTOR_REGS(struct test_regs)
     {
@@ -67,6 +68,12 @@ struct TestRegisterDecoder: public RegisterDecoder {
             add_channel_double("C_DOUBLE", i, .25 + i);
         }
         if (extra_channel) add_channel_double("C_DOUBLE", i+1, 1.);
+    }
+
+    /* Channel data single channel & Print */
+    void add_ch1_only_double()
+    {
+        add_channel_double("C_DOUBLE_CH1", 1, 1.);
     }
 };
 
@@ -152,11 +159,22 @@ TEST_CASE("Channel data number_of_channels", "[decoders-test]")
     CHECK_THROWS_AS(dec.get_channel_data<int32_t>("C_INT", 2), std::out_of_range);
 }
 
+TEST_CASE("Channel data single channel", "[decoders-test]")
+{
+    TestRegisterDecoder dec{};
+    dec.channel_decode();
+    dec.add_ch1_only_double();
+
+    CHECK(dec.get_channel_data<double>("C_DOUBLE_CH1", 1) == 1.);
+    CHECK_THROWS_AS(dec.get_channel_data<double>("C_DOUBLE_CH1", 0), std::out_of_range);
+}
+
 TEST_CASE("Print", "[decoders-test]")
 {
     TestRegisterDecoder dec{};
     dec.decode();
     dec.channel_decode();
+    dec.add_ch1_only_double();
 
     char *fc;
     size_t fs;
@@ -175,6 +193,7 @@ TEST_CASE("Print", "[decoders-test]")
         "channel 1:\n"
         "    C_INT: 2\n"
         "    C_DOUBLE: 1.250000\n"
+        "    C_DOUBLE_CH1: 1.000000\n"
     ;
     CHECK(res == eres);
 }
