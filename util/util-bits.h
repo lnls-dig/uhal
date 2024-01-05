@@ -10,24 +10,43 @@
 
 static_assert(__cpp_lib_bitops >= 201907L);
 
-static inline void clear_and_insert(uint32_t &dest, unsigned value, uint32_t mask, unsigned shift, uint32_t max, uint32_t min)
+template <typename T>
+static inline void clear_and_insert(uint32_t &dest, T value, uint32_t mask)
 {
+    static_assert(std::is_integral_v<T>);
+
+    unsigned shift = std::countr_zero(mask);
+    uint32_t shifted_mask = mask >> shift;
+
+    T max, min;
+    uint32_t uvalue;
+    if constexpr (std::is_signed_v<T>) {
+        typedef typename std::make_unsigned<T>::type U;
+
+        uint32_t umax = shifted_mask >> 1;
+        /* in the case where mask == UINT32_MAX and value is signed, this would
+         * result in umin = INT32_MIN. Assigning that to an int32_t variable to
+         * then apply the unary minus operator below would be UB, which we avoid
+         * by using an int64_t intermediary value */
+        int64_t umin = shifted_mask ^ umax;
+
+        max = umax;
+        min = -umin;
+
+        uvalue = (U)value;
+    } else {
+        max = shifted_mask;
+        min = 0;
+        uvalue = value;
+    }
+
     if (value < min)
         throw std::runtime_error("value " + std::to_string(value) + " less than min (" + std::to_string(min) + ")");
     if (value > max)
         throw std::runtime_error("value " + std::to_string(value) + " greater than max (" + std::to_string(max) + ")");
 
     dest &= UINT32_MAX & ~mask;
-    dest |= (value << shift) & mask;
-}
-
-/* TODO: template this as well */
-static inline void clear_and_insert(uint32_t &dest, unsigned value, uint32_t mask)
-{
-    uint32_t max = ((uint64_t)1 << std::popcount(mask)) - 1;
-    unsigned shift = std::countr_zero(mask);
-
-    clear_and_insert(dest, value, mask, shift, max, 0);
+    dest |= (uvalue << shift) & mask;
 }
 
 static inline void insert_bit(uint32_t &dest, bool value, uint32_t mask)
