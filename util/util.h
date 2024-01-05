@@ -16,13 +16,9 @@
 
 #include <tsl/ordered_map.h>
 
-void clear_and_insert(uint32_t &dest, unsigned value, uint32_t mask);
-void insert_bit(uint32_t &dest, bool value, uint32_t mask);
-void clear_and_insert_index(uint32_t &dest, uint32_t mask, std::string_view value, std::vector<std::string> value_list);
-bool get_bit(uint32_t value, uint32_t mask);
+#include "util-bits.h"
 
-template<typename T>
-T extract_value(uint32_t value, uint32_t mask);
+void clear_and_insert_index(uint32_t &dest, uint32_t mask, std::string_view value, std::vector<std::string> value_list);
 
 typedef std::function<int32_t(uint32_t)> sign_extension_fn;
 sign_extension_fn &sign_extend_function(unsigned width);
