@@ -2,6 +2,62 @@
 
 #include "util-bits.h"
 
+TEST_CASE("clear_and_insert unsigned basic", "[bits-test]")
+{
+    uint32_t reg = UINT32_MAX;
+    clear_and_insert(reg, 0x49U, 0x7f00);
+    CHECK(reg == 0xffffc9ff);
+
+    reg = 0;
+    clear_and_insert(reg, 0x49U, 0x7f00);
+    CHECK(reg == 0x4900);
+}
+
+TEST_CASE("clear_and_insert signed basic", "[bits-test]")
+{
+    uint32_t reg;
+
+    /* using negative value */
+    reg = UINT32_MAX;
+    clear_and_insert(reg, -0x2a70, 0x00ffff00); /* equivalent to 0xd590 */
+    CHECK(reg == 0xffd590ff);
+
+    /* using cast to unsigned */
+    reg = UINT32_MAX;
+    clear_and_insert(reg, (uint16_t)-0x2a70, 0x00ffff00);
+    CHECK(reg == 0xffd590ff);
+}
+
+const uint32_t range_mask = 0x1ff000;
+
+TEST_CASE("clear_and_insert unsigned range", "[bits-test]")
+{
+    uint32_t reg = 0;
+    CHECK_THROWS_AS(clear_and_insert(reg, 1000U, range_mask), std::runtime_error);
+    CHECK_THROWS_AS(clear_and_insert(reg, -1000, range_mask), std::runtime_error);
+
+    CHECK_THROWS_AS(clear_and_insert(reg, 512U, range_mask), std::runtime_error);
+    CHECK_THROWS_AS(clear_and_insert(reg, -511, range_mask), std::runtime_error);
+
+    CHECK_NOTHROW(clear_and_insert(reg, 511U, range_mask));
+    CHECK_NOTHROW(clear_and_insert(reg, 255U, range_mask));
+    CHECK_NOTHROW(clear_and_insert(reg, 0U, range_mask));
+}
+
+TEST_CASE("clear_and_insert signed range", "[bits-test]")
+{
+    uint32_t reg = 0;
+    CHECK_THROWS_AS(clear_and_insert(reg, 1000, range_mask), std::runtime_error);
+    CHECK_THROWS_AS(clear_and_insert(reg, -1000, range_mask), std::runtime_error);
+
+    CHECK_THROWS_AS(clear_and_insert(reg, 256, range_mask), std::runtime_error);
+    CHECK_THROWS_AS(clear_and_insert(reg, -257, range_mask), std::runtime_error);
+
+    CHECK_NOTHROW(clear_and_insert(reg, 255, range_mask));
+    CHECK_NOTHROW(clear_and_insert(reg, 0, range_mask));
+    CHECK_NOTHROW(clear_and_insert(reg, -256, range_mask));
+}
+
 TEST_CASE("template extract_value unsigned", "[bits-test]")
 {
     CHECK(extract_value<uint8_t>(0xfe00, 0xff00) == 254);
