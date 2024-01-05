@@ -14,6 +14,7 @@
 #include <optional>
 #include <string_view>
 #include <unordered_map>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -27,6 +28,15 @@ struct RegisterDecoderPrivate;
 class Printer;
 
 #define CONSTRUCTOR_REGS(type) regs_storage(new type ()), regs(*regs_storage)
+
+namespace decoders {
+    /** int32_t is so far a generic enough type to be used here, but int64_t
+     * can be considered if it ever becomes an issue. We use double for
+     * floating point values */
+    using data_type = std::variant<std::int32_t, double>;
+
+    using data_key = std::pair<std::string_view, std::optional<unsigned>>;
+}
 
 class RegisterDecoderBase {
     /** Is set to true when set_devinfo() is called, used to protect us from
@@ -75,15 +85,14 @@ class RegisterDecoder: public RegisterDecoderBase {
     bool is_boolean_value(const char *) const;
     int32_t try_boolean_value(const char *, int32_t) const;
 
-    std::unique_ptr<RegisterDecoderPrivate> data;
+    std::unique_ptr<RegisterDecoderPrivate> pvt;
 
     template <class T>
-    void add_general_internal(const char *, T);
-    template <class T>
-    void add_channel_internal(const char *, unsigned, T);
+    void add_data_internal(const char *, decoders::data_key::second_type, T);
 
   protected:
-    /** A device that has multiple channels will set this */
+    /** A device that has multiple channels will set this to the maximum amount
+     * of channels */
     std::optional<unsigned> number_of_channels;
 
     std::unordered_map<std::string_view, Printer> printers;
