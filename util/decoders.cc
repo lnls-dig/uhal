@@ -14,11 +14,14 @@
 
 #include "pcie.h"
 #include "printer.h"
+#include "util.h"
 #include "decoders.h"
 
 struct RegisterDecoderPrivate {
     /** Hold decoded data from all registers */
     tsl::ordered_map<decoders::data_key, decoders::data_type, boost::hash<decoders::data_key>> data;
+
+    std::unordered_map<decoders::data_key, RegisterField, boost::hash<decoders::data_key>> register_fields;
 };
 
 RegisterDecoder::RegisterDecoder(
@@ -83,6 +86,44 @@ void RegisterDecoder::add_channel(const char *name, unsigned pos, int32_t value)
 void RegisterDecoder::add_channel_double(const char *name, unsigned pos, double value)
 {
     add_data_internal(name, pos, value);
+}
+
+size_t RegisterDecoder::register2offset(uint32_t *reg)
+{
+    auto rdp = (uintptr_t)read_dest;
+    auto rp = (uintptr_t)reg;
+
+    assert(rp >= rdp && rp < rdp + read_size);
+
+    return rp - rdp;
+}
+
+RegisterField RegisterDecoder::rf_get_bit(uint32_t &reg, uint32_t mask)
+{
+    return {
+        .offset = register2offset(&reg),
+        .mask = mask,
+        .multibit = false,
+        .is_signed = false,
+        .value = get_bit(reg, mask),
+    };
+}
+
+RegisterField RegisterDecoder::rf_extract_value(uint32_t &reg, uint32_t mask, bool is_signed)
+{
+    return {
+        .offset = register2offset(&reg),
+        .mask = mask,
+        .multibit = true,
+        .is_signed = is_signed,
+        .value = extract_value(reg, mask, is_signed),
+    };
+}
+
+void RegisterDecoder::rf_add_data_internal(const char *name, decoders::data_key::second_type pos, RegisterField rf)
+{
+    pvt->register_fields[{name, pos}] = rf;
+    add_data_internal(name, pos, rf.value);
 }
 
 void RegisterDecoder::read_monitors()
