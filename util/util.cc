@@ -5,38 +5,14 @@
  * Released according to the GNU GPL, version 3 or any later version.
  */
 
-#include <bit>
 #include <numeric>
 #include <ranges>
 #include <stdexcept>
-#include <type_traits>
 
 #include <cassert>
 #include <strings.h>
 
 #include "util.h"
-
-static_assert(__cpp_lib_bitops >= 201907L);
-
-static void clear_and_insert(uint32_t &dest, unsigned value, uint32_t mask, unsigned shift, uint32_t max, uint32_t min)
-{
-    if (value < min)
-        throw std::runtime_error("value " + std::to_string(value) + " less than min (" + std::to_string(min) + ")");
-    if (value > max)
-        throw std::runtime_error("value " + std::to_string(value) + " greater than max (" + std::to_string(max) + ")");
-
-    dest &= UINT32_MAX & ~mask;
-    dest |= (value << shift) & mask;
-}
-
-/* TODO: template this as well */
-void clear_and_insert(uint32_t &dest, unsigned value, uint32_t mask)
-{
-    uint32_t max = ((uint64_t)1 << std::popcount(mask)) - 1;
-    unsigned shift = std::countr_zero(mask);
-
-    clear_and_insert(dest, value, mask, shift, max, 0);
-}
 
 void clear_and_insert_index(uint32_t &dest, uint32_t mask, std::string_view value, std::vector<std::string> value_list)
 {
@@ -46,41 +22,6 @@ void clear_and_insert_index(uint32_t &dest, uint32_t mask, std::string_view valu
     else
         throw std::runtime_error("option must be one of " + list_of_keys(value_list));
 }
-
-void insert_bit(uint32_t &dest, bool value, uint32_t mask)
-{
-    assert(std::popcount(mask) == 1);
-    if (value)
-        dest |= mask;
-    else
-        dest &= ~mask;
-}
-
-bool get_bit(uint32_t value, uint32_t mask)
-{
-    assert(std::popcount(mask) == 1);
-    return value & mask;
-}
-
-template<typename T>
-T extract_value(uint32_t value, uint32_t mask)
-{
-    unsigned shift = std::countr_zero(mask);
-    uint32_t intermediary = (value & mask) >> shift;
-
-    if constexpr (std::is_signed<T>()) {
-        typedef typename std::make_unsigned<T>::type U;
-        return (T)(U)intermediary;
-    } else {
-        return (T)intermediary;
-    }
-}
-template int32_t extract_value(uint32_t, uint32_t);
-template int16_t extract_value(uint32_t, uint32_t);
-template int8_t extract_value(uint32_t, uint32_t);
-template uint32_t extract_value(uint32_t, uint32_t);
-template uint16_t extract_value(uint32_t, uint32_t);
-template uint8_t extract_value(uint32_t, uint32_t);
 
 template<typename Signed>
 int32_t sign_extend(uint32_t v)
