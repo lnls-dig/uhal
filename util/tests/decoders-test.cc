@@ -32,7 +32,7 @@ struct TestRegisterDecoder: public RegisterDecoder {
     {
         set_read_dest(regs);
 
-        regs.gen = 0xFE;
+        regs.gen = 0x809200FE;
         regs.fixed_point = float2fixed(7.75, 23);
     }
 
@@ -41,6 +41,11 @@ struct TestRegisterDecoder: public RegisterDecoder {
         /* General data storage */
         add_general("INT", 1);
         add_general_double("DOUBLE", 1.5);
+
+        /* RegisterField data storage */
+        add_general("RF_UINT", rf_extract_value(regs.gen, 0xFF));
+        add_general("RF_INT", rf_extract_value(regs.gen, 0xFF, true));
+        add_general("RF_INT16", rf_extract_value(regs.gen, 0xFFFF0000, true));
     }
 
     /* Test try_boolean_value */
@@ -196,4 +201,13 @@ TEST_CASE("Print", "[decoders-test]")
         "    C_DOUBLE_CH1: 1.000000\n"
     ;
     CHECK(res == eres);
+}
+
+TEST_CASE("RegisterField data storage", "[decoders-test]")
+{
+    TestRegisterDecoder dec{};
+    dec.decode();
+    CHECK(dec.get_general_data<int32_t>("RF_UINT") == 0xFE);
+    CHECK(dec.get_general_data<int32_t>("RF_INT") == -2);
+    CHECK(dec.get_general_data<int32_t>("RF_INT16") == -32622);
 }
