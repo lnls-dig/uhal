@@ -81,6 +81,14 @@ class RegisterDecoderBase {
     const device_match_fn match_devinfo_lambda;
 };
 
+struct RegisterField {
+    size_t offset;
+    uint32_t mask;
+    bool multibit;
+    bool is_signed;
+    decoders::data_type value;
+};
+
 class RegisterDecoder: public RegisterDecoderBase {
     bool is_boolean_value(const char *) const;
     int32_t try_boolean_value(const char *, int32_t) const;
@@ -89,6 +97,10 @@ class RegisterDecoder: public RegisterDecoderBase {
 
     template <class T>
     void add_data_internal(const char *, decoders::data_key::second_type, T);
+
+    void rf_add_data_internal(const char *, decoders::data_key::second_type, RegisterField);
+
+    size_t register2offset(uint32_t *);
 
   protected:
     /** A device that has multiple channels will set this to the maximum amount
@@ -109,6 +121,24 @@ class RegisterDecoder: public RegisterDecoderBase {
     /** Save a double value to a key and index. #number_of_channels must be set
      * before this can be called */
     void add_channel_double(const char *, unsigned, double);
+
+    /** get_bit() implementation which saves how to decode a register field. \p
+     * reg must be within the memory region defined by
+     * RegisterDecoderBase#read_dest and RegisterDecoderBase#read_size */
+    RegisterField rf_get_bit(uint32_t &, uint32_t);
+    /** equivalent to rf_get_bit() for extract_value() */
+    RegisterField rf_extract_value(uint32_t &, uint32_t, bool=false);
+
+    /** add_general() that takes a RegisterField */
+    inline void add_general(const char *name, RegisterField rf)
+    {
+        rf_add_data_internal(name, std::nullopt, rf);
+    }
+    /** add_channel() that takes a RegisterField */
+    inline void add_channel(const char *name, unsigned pos, RegisterField rf)
+    {
+        rf_add_data_internal(name, pos, rf);
+    }
 
     /** This simply calls read(), but can be specified by subclasses to read
      * only changing values from BAR4 into RegisterDecoderBase#read_dest */
