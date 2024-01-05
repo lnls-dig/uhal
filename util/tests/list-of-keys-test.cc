@@ -10,7 +10,7 @@ TEST_CASE("tsl::ordered_map with multiple entries", "[list-of-keys]")
         {"third", 0},
     };
 
-    REQUIRE(list_of_keys(map) == "first, second, third");
+    CHECK(list_of_keys(map) == "first, second, third");
 }
 
 TEST_CASE("tsl::ordered_map with single entry", "[list-of-keys]")
@@ -19,7 +19,7 @@ TEST_CASE("tsl::ordered_map with single entry", "[list-of-keys]")
         {"first", 0},
     };
 
-    REQUIRE(list_of_keys(map) == "first");
+    CHECK(list_of_keys(map) == "first");
 }
 
 TEST_CASE("std::vector with multiple entries", "[list-of-keys]")
@@ -30,7 +30,7 @@ TEST_CASE("std::vector with multiple entries", "[list-of-keys]")
         "third",
     };
 
-    REQUIRE(list_of_keys(vec) == "first, second, third");
+    CHECK(list_of_keys(vec) == "first, second, third");
 }
 
 TEST_CASE("std::vector with single entry", "[list-of-keys]")
@@ -39,5 +39,5 @@ TEST_CASE("std::vector with single entry", "[list-of-keys]")
         "first",
     };
 
-    REQUIRE(list_of_keys(vec) == "first");
+    CHECK(list_of_keys(vec) == "first");
 }
