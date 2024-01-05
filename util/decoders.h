@@ -102,7 +102,7 @@ class RegisterDecoder: public RegisterDecoderBase {
     void add_channel_double(const char *, unsigned, double);
 
     /** This simply calls read(), but can be specified by subclasses to read
-     * only changing values from BAR4 into #read_dest */
+     * only changing values from BAR4 into RegisterDecoderBase#read_dest */
     virtual void read_monitors();
     /** Decode registers into actual values. Implemented by subclasses */
     virtual void decode() = 0;
