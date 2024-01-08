@@ -20,9 +20,6 @@
 
 void clear_and_insert_index(uint32_t &dest, uint32_t mask, std::string_view value, std::vector<std::string> value_list);
 
-typedef std::function<int32_t(uint32_t)> sign_extension_fn;
-sign_extension_fn &sign_extend_function(unsigned width);
-
 uint32_t float2fixed(double v, unsigned point_pos, bool saturate=true);
 double fixed2float(uint32_t v, unsigned point_pos);
 
