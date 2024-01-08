@@ -80,6 +80,11 @@ struct TestRegisterDecoder: public RegisterDecoder {
     {
         add_channel_double("C_DOUBLE_CH1", 1, 1.);
     }
+
+    void write_general(const char *name, int32_t value)
+    {
+        RegisterDecoder::write_general(name, value, read_dest);
+    }
 };
 
 TEST_CASE("Benchmark", "[decoders-benchmark]")
@@ -210,4 +215,56 @@ TEST_CASE("RegisterField data storage", "[decoders-test]")
     CHECK(dec.get_general_data<int32_t>("RF_UINT") == 0xFE);
     CHECK(dec.get_general_data<int32_t>("RF_INT") == -2);
     CHECK(dec.get_general_data<int32_t>("RF_INT16") == -32622);
+}
+
+TEST_CASE("RegisterField write_general", "[decoders-test]")
+{
+    TestRegisterDecoder dec{};
+    dec.decode();
+
+    dec.write_general("RF_UINT", 0x43);
+    dec.decode();
+    CHECK(dec.get_general_data<int32_t>("RF_UINT") == 0x43);
+
+    dec.write_general("RF_INT", 0x54);
+    dec.decode();
+    CHECK(dec.get_general_data<int32_t>("RF_INT") == 0x54);
+
+    dec.write_general("RF_INT", -0x11);
+    dec.decode();
+    CHECK(dec.get_general_data<int32_t>("RF_INT") == -0x11);
+}
+
+TEST_CASE("RegisterDecoder write_general unsigned", "[decoders-test]")
+{
+    TestRegisterDecoder dec{};
+    dec.decode();
+
+    dec.write_general("RF_UINT", 127);
+    dec.decode();
+    CHECK(dec.get_general_data<int32_t>("RF_UINT") == 127);
+
+    CHECK_NOTHROW(dec.write_general("RF_UINT", 255));
+    dec.decode();
+    CHECK(dec.get_general_data<int32_t>("RF_UINT") == 255);
+
+    CHECK_THROWS_AS(dec.write_general("RF_UINT", 256), std::runtime_error);
+    CHECK_THROWS_AS(dec.write_general("RF_UINT", -5), std::runtime_error);
+}
+
+TEST_CASE("RegisterDecoder write_general signed", "[decoders-test]")
+{
+    TestRegisterDecoder dec{};
+    dec.decode();
+
+    dec.write_general("RF_INT", -128);
+    dec.decode();
+    CHECK(dec.get_general_data<int32_t>("RF_INT") == -128);
+
+    dec.write_general("RF_INT", 127);
+    dec.decode();
+    CHECK(dec.get_general_data<int32_t>("RF_INT") == 127);
+
+    CHECK_THROWS_AS(dec.write_general("RF_INT", -129), std::runtime_error);
+    CHECK_THROWS_AS(dec.write_general("RF_INT", 128), std::runtime_error);
 }
