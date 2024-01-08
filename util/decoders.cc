@@ -97,6 +97,11 @@ size_t RegisterDecoder::register2offset(uint32_t *reg)
 
     return rp - rdp;
 }
+uint32_t *RegisterDecoder::offset2register(size_t offset, void *registers)
+{
+    assert(offset <= read_size);
+    return (uint32_t *)((unsigned char *)registers + offset);
+}
 
 RegisterField RegisterDecoder::rf_get_bit(uint32_t &reg, uint32_t mask)
 {
@@ -216,3 +221,14 @@ T RegisterDecoder::get_channel_data(const char *name, unsigned channel_index) co
 }
 template int32_t RegisterDecoder::get_channel_data(const char *, unsigned) const;
 template double RegisterDecoder::get_channel_data(const char *, unsigned) const;
+
+void RegisterDecoder::write_internal(const char *name, std::optional<unsigned> pos, int32_t value, void *dest)
+{
+    auto rf = pvt->register_fields.at({name, pos});
+    uint32_t *reg = offset2register(rf.offset, dest);
+    if (rf.multibit)
+        if (rf.is_signed) clear_and_insert(*reg, value, rf.mask);
+        else clear_and_insert(*reg, (uint32_t)value, rf.mask);
+    else
+        insert_bit(*reg, value, rf.mask);
+}

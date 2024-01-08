@@ -101,6 +101,9 @@ class RegisterDecoder: public RegisterDecoderBase {
     void rf_add_data_internal(const char *, decoders::data_key::second_type, RegisterField);
 
     size_t register2offset(uint32_t *);
+    uint32_t *offset2register(size_t, void *);
+
+    void write_internal(const char *, std::optional<unsigned>, int32_t, void *);
 
   protected:
     /** A device that has multiple channels will set this to the maximum amount
@@ -163,6 +166,15 @@ class RegisterDecoder: public RegisterDecoderBase {
     T get_channel_data(const char *, unsigned) const;
 
     std::optional<unsigned> channel;
+
+    inline void write_general(const char *name, int32_t value, void *dest)
+    {
+        write_internal(name, std::nullopt, value, dest);
+    }
+    inline void write_channel(const char *name, unsigned pos, int32_t value, void *dest)
+    {
+        write_internal(name, pos, value, dest);
+    }
 };
 
 #endif
