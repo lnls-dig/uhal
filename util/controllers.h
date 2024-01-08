@@ -31,4 +31,37 @@ class RegisterController: public RegisterDecoderBase {
     virtual void write_params();
 };
 
+class RegisterDecoderController: public RegisterController {
+    RegisterDecoder *pdec;
+
+  protected:
+    RegisterDecoderController(
+        struct pcie_bars &bars,
+        const struct sdb_device_info &devinfo,
+        RegisterDecoder *pdec):
+        RegisterController(bars, devinfo),
+        pdec(pdec)
+    {
+    }
+
+  public:
+    void set_devinfo(const struct sdb_device_info &devinfo) override
+    {
+        RegisterController::set_devinfo(devinfo);
+        pdec->set_devinfo(devinfo);
+        pdec->get_data();
+    }
+
+    virtual void encode_params() override { }
+
+    void write_general(const char *name, int32_t value)
+    {
+        pdec->write_general(name, value, read_dest);
+    }
+    void write_channel(const char *name, unsigned pos, int32_t value)
+    {
+        pdec->write_channel(name, pos, value, read_dest);
+    }
+};
+
 #endif
