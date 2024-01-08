@@ -23,31 +23,6 @@ void clear_and_insert_index(uint32_t &dest, uint32_t mask, std::string_view valu
         throw std::runtime_error("option must be one of " + list_of_keys(value_list));
 }
 
-template<typename Signed>
-int32_t sign_extend(uint32_t v)
-{
-    typedef typename std::make_unsigned<Signed>::type Unsigned;
-    return (Signed)(Unsigned)v;
-}
-
-static sign_extension_fn sign_extend_8 = sign_extend<int8_t>;
-static sign_extension_fn sign_extend_16 = sign_extend<int16_t>;
-static sign_extension_fn sign_extend_32 = sign_extend<int32_t>;
-
-sign_extension_fn &sign_extend_function(unsigned width)
-{
-    switch (width) {
-        case 8:
-            return sign_extend_8;
-        case 16:
-            return sign_extend_16;
-        case 32:
-            return sign_extend_32;
-        default:
-            throw std::logic_error("invalid width should have been caught elsewhere");
-    }
-}
-
 uint32_t float2fixed(double v, unsigned point_pos, bool saturate)
 {
     const uint32_t max_value_rep = 0x7fffffff, min_value_rep = 0x80000000;
