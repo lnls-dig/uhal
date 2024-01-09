@@ -20,6 +20,7 @@
 #include "defer.h"
 #include "pcie.h"
 #include "pcie-open.h"
+#include "util.h"
 #include "util_sdb.h"
 
 #include "modules/acq.h"
@@ -181,7 +182,7 @@ int main(int argc, char *argv[])
         } else if (type == "timing") {
             dec = std::make_unique<afc_timing::Core>(bars);
         } else if (type == "lamp") {
-            dec = std::make_unique<lamp::CoreV2>(bars);
+            dec = std::make_unique<lamp::Core>(bars);
         } else if (type == "fofb_cc") {
             dec = std::make_unique<fofb_cc::Core>(bars);
         } else if (type == "fofb_processing") {
@@ -273,7 +274,7 @@ int main(int argc, char *argv[])
         ctl.print_csv(stdout, res);
     }
     if (mode == "lamp") {
-        lamp::ControllerV2 ctl{bars};
+        lamp::Controller ctl{bars};
         if (auto v = read_sdb(&bars, ctl.match_devinfo_lambda, dev_index)) {
             ctl.set_devinfo(*v);
         } else {
@@ -281,21 +282,20 @@ int main(int argc, char *argv[])
             return 1;
         }
 
-        ctl.amp_enable = args.is_used("-e");
-        ctl.mode = args.get<std::string>("-m");
-        ctl.channel = args.get<unsigned>("-c");
-        ctl.pi_kp = args.present<unsigned>("-k");
-        ctl.pi_ti = args.present<unsigned>("-t");
-        ctl.pi_sp = args.present<int>("-s");
+        auto channel = args.get<unsigned>("-c");
 
-        ctl.dac = args.present<int>("-d");
-        ctl.limit_a = args.present<int>("-l");
-        ctl.limit_b = args.present<int>("-L");
-        ctl.cnt = args.present<unsigned>("-C");
+        ctl.write_channel("AMP_EN", channel, args.is_used("-e"));
+        ctl.write_channel("MODE", channel, get_index(args.get<std::string>("-m"), lamp::mode_list));
+        ctl.write_channel("PI_KP", channel, args.get<unsigned>("-k"));
+        ctl.write_channel("PI_TI", channel, args.get<unsigned>("-t"));
+        ctl.write_channel("PI_SP", channel, args.get<int>("-s"));
 
-        if (auto trigger_enable = args.present<unsigned>("-T")) {
-            ctl.trigger_enable = *trigger_enable;
-        }
+        ctl.write_channel("DAC", channel, args.get<int>("-d"));
+        ctl.write_channel("LIMIT_A", channel, args.get<int>("-l"));
+        ctl.write_channel("LIMIT_B", channel, args.get<int>("-L"));
+        ctl.write_channel("CNT", channel, args.get<int>("-C"));
+
+        ctl.write_channel("TRIG_EN", channel, args.get<unsigned>("-T"));
 
         ctl.write_params();
     }

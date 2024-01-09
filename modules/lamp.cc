@@ -11,17 +11,12 @@
 #include "printer.h"
 #include "util.h"
 
-namespace lamp {
-#include "hw/wb_rtmlamp_ohwr_regs.h"
-}
-
-#define channel_registers_v2_impl wb_rtmlamp_ohwr_regs::ch
 #include "modules/lamp.h"
 
 namespace lamp {
+#include "hw/wb_rtmlamp_ohwr_regs.h"
 
 namespace {
-    static constexpr unsigned CHANNEL_DISTANCE = sizeof(channel_registers_v2);
     static constexpr unsigned NUM_CHAN = 12;
     static constexpr unsigned TRIGGER_ENABLE_VERSION = 1;
 
@@ -33,7 +28,15 @@ namespace {
     };
 }
 
-CoreV2::CoreV2(struct pcie_bars &bars):
+const std::vector<std::string> mode_list({
+    "open_loop_manual",
+    "open_loop_test_sqr",
+    "closed_loop_manual",
+    "closed_loop_test_sqr",
+    "closed_loop_fofb",
+});
+
+Core::Core(struct pcie_bars &bars):
     RegisterDecoder(bars, ref_devinfo, {
         PRINTER("AMP_STATUS", "Amplifier flags", PrinterType::value_hex),
         PRINTER("AMP_IFLAG_L", "Amplifier Left Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
@@ -76,13 +79,12 @@ CoreV2::CoreV2(struct pcie_bars &bars):
         PRINTER("ADC_INST", "ADC instantaneous measurement", PrinterType::value),
         PRINTER("DAC_EFF", "DAC effective measurement - actual value sent to DAC", PrinterType::value),
         PRINTER("SP_EFF", "Set point instantaneous effective data", PrinterType::value),
-    })
+    }),
+    CONSTRUCTOR_REGS(struct wb_rtmlamp_ohwr_regs)
 {
-    read_size = sizeof *regs;
-    regs = std::make_unique<struct wb_rtmlamp_ohwr_regs>();
-    read_dest = regs.get();
+    set_read_dest(regs);
 }
-CoreV2::~CoreV2() = default;
+Core::~Core() = default;
 
 #define STA_AMP_MASK \
     (WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_L | WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_L | \
@@ -91,129 +93,76 @@ CoreV2::~CoreV2() = default;
     (WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_L_LATCH | WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_L_LATCH | \
      WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_R_LATCH | WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_R_LATCH)
 
-void CoreV2::decode()
+void Core::decode()
 {
-    uint32_t t;
+    uint32_t t, *pt;
 
     /* add printer if this value ever gets flags;
      * this is being done for IOC compatibility */
-    add_general("PS_STATUS", regs->sta);
+    add_general("PS_STATUS", regs.sta);
 
     number_of_channels = NUM_CHAN;
 
     unsigned i = 0;
-    for (const auto &channel_regs: regs->ch) {
+    for (auto &channel_regs: regs.ch) {
         t = channel_regs.sta;
         /* we want AMP_STATUS to be 0 if everything is fine */
-        add_channel("AMP_STATUS", i, extract_value<uint8_t>(~t, STA_AMP_MASK));
+        add_channel("AMP_STATUS", i, extract_value(~t, STA_AMP_MASK));
         add_channel("AMP_IFLAG_L", i, get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_L));
         add_channel("AMP_TFLAG_L", i, get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_L));
         add_channel("AMP_IFLAG_R", i, get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_R));
         add_channel("AMP_TFLAG_R", i, get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_R));
 
-        add_channel("AMP_STATUS_LATCH", i, extract_value<uint8_t>(~t, STA_AMP_LATCH_MASK));
+        add_channel("AMP_STATUS_LATCH", i, extract_value(~t, STA_AMP_LATCH_MASK));
         add_channel("AMP_IFLAG_L_LATCH", i, get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_L_LATCH));
         add_channel("AMP_TFLAG_L_LATCH", i, get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_L_LATCH));
         add_channel("AMP_IFLAG_R_LATCH", i, get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_IFLAG_R_LATCH));
         add_channel("AMP_TFLAG_R_LATCH", i, get_bit(t, WB_RTMLAMP_OHWR_REGS_CH_STA_AMP_TFLAG_R_LATCH));
 
-        t = channel_regs.ctl;
-        add_channel("AMP_EN", i, t & WB_RTMLAMP_OHWR_REGS_CH_CTL_AMP_EN);
-        add_channel("MODE", i, extract_value<uint32_t>(t, WB_RTMLAMP_OHWR_REGS_CH_CTL_MODE_MASK));
+        pt = &channel_regs.ctl;
+        add_channel("AMP_EN", i, rf_get_bit(*pt, WB_RTMLAMP_OHWR_REGS_CH_CTL_AMP_EN));
+        add_channel("MODE", i, rf_extract_value(*pt, WB_RTMLAMP_OHWR_REGS_CH_CTL_MODE_MASK));
         if (devinfo.abi_ver_minor >= TRIGGER_ENABLE_VERSION) {
-            add_channel("TRIG_EN", i, t & WB_RTMLAMP_OHWR_REGS_CH_CTL_TRIG_EN);
+            add_channel("TRIG_EN", i, rf_get_bit(*pt, WB_RTMLAMP_OHWR_REGS_CH_CTL_TRIG_EN));
         } else {
             add_channel("TRIG_EN", i, 0);
         }
+        add_channel("RST_LATCH", i, rf_get_bit(*pt, WB_RTMLAMP_OHWR_REGS_CH_CTL_RST_LATCH_STS));
 
-        add_channel("PI_KP", i, extract_value<uint32_t>(channel_regs.pi_kp, WB_RTMLAMP_OHWR_REGS_CH_PI_KP_DATA_MASK));
-        add_channel("PI_TI", i, extract_value<uint32_t>(channel_regs.pi_ti, WB_RTMLAMP_OHWR_REGS_CH_PI_TI_DATA_MASK));
-        add_channel("PI_SP", i, extract_value<int16_t>(channel_regs.pi_sp, WB_RTMLAMP_OHWR_REGS_CH_PI_SP_DATA_MASK));
-        add_channel("DAC", i, extract_value<int16_t>(channel_regs.dac, WB_RTMLAMP_OHWR_REGS_CH_DAC_DATA_MASK));
+        add_channel("PI_KP", i, rf_extract_value(channel_regs.pi_kp, WB_RTMLAMP_OHWR_REGS_CH_PI_KP_DATA_MASK));
+        add_channel("PI_TI", i, rf_extract_value(channel_regs.pi_ti, WB_RTMLAMP_OHWR_REGS_CH_PI_TI_DATA_MASK));
+        add_channel("PI_SP", i, rf_extract_value(channel_regs.pi_sp, WB_RTMLAMP_OHWR_REGS_CH_PI_SP_DATA_MASK, true));
+        add_channel("DAC", i, rf_extract_value(channel_regs.dac, WB_RTMLAMP_OHWR_REGS_CH_DAC_DATA_MASK, true));
 
-        t = channel_regs.lim;
-        add_channel("LIMIT_A", i, extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_LIM_A_MASK));
-        add_channel("LIMIT_B", i, extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_LIM_B_MASK));
+        pt = &channel_regs.lim;
+        add_channel("LIMIT_A", i, rf_extract_value(*pt, WB_RTMLAMP_OHWR_REGS_CH_LIM_A_MASK, true));
+        add_channel("LIMIT_B", i, rf_extract_value(*pt, WB_RTMLAMP_OHWR_REGS_CH_LIM_B_MASK, true));
 
-        add_channel("CNT", i, extract_value<uint32_t>(channel_regs.cnt, WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_MASK));
+        add_channel("CNT", i, rf_extract_value(channel_regs.cnt, WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_MASK));
 
-        t = channel_regs.adc_dac_eff;
-        add_channel("ADC_INST", i, extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_ADC_MASK));
-        add_channel("DAC_EFF", i, extract_value<int16_t>(t, WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_DAC_MASK));
+        pt = &channel_regs.adc_dac_eff;
+        add_channel("ADC_INST", i, rf_extract_value(*pt, WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_ADC_MASK, true));
+        add_channel("DAC_EFF", i, extract_value(*pt, WB_RTMLAMP_OHWR_REGS_CH_ADC_DAC_EFF_DAC_MASK, true));
 
-        add_channel("SP_EFF", i, extract_value<int16_t>(channel_regs.sp_eff, WB_RTMLAMP_OHWR_REGS_CH_SP_EFF_SP_MASK));
+        add_channel("SP_EFF", i, rf_extract_value(channel_regs.sp_eff, WB_RTMLAMP_OHWR_REGS_CH_SP_EFF_SP_MASK, true));
 
         i++;
     }
 }
 
 Controller::Controller(struct pcie_bars &bars):
-    RegisterController(bars, ref_devinfo)
+    RegisterDecoderController(bars, ref_devinfo, &dec),
+    CONSTRUCTOR_REGS(struct wb_rtmlamp_ohwr_regs),
+    dec(bars)
 {
+    set_read_dest(regs);
 }
+Controller::~Controller() = default;
 
-ControllerV2::ControllerV2(struct pcie_bars &bars):
-    Controller(bars)
+void Controller::unset_commands()
 {
-    channel_regs = std::make_unique<channel_registers_v2>();
-}
-ControllerV2::~ControllerV2() = default;
-
-void ControllerV2::encode_params()
-{
-    static const tsl::ordered_map<std::string_view, int> mode_options({
-        {"open-loop-dac", 0},
-        {"open-loop-square", 1},
-        {"closed-loop-pi_sp", 2},
-        {"closed-loop-square", 3},
-        {"closed-loop-external", 4},
-    });
-
-    int mode_option;
-    if (mode_numeric) mode_option = *mode_numeric;
-    else try {
-        mode_option = mode_options.at(mode);
-    } catch (std::out_of_range &e) {
-        throw std::runtime_error("mode must be one of " + list_of_keys(mode_options));
-    }
-
-    if (channel > NUM_CHAN-1)
-        throw std::runtime_error("there are only 12 channels");
-
-    bar4_read_v(&bars, addr + WB_RTMLAMP_OHWR_REGS_CH + channel * CHANNEL_DISTANCE, channel_regs.get(), CHANNEL_DISTANCE);
-
-    clear_and_insert(channel_regs->ctl, mode_option, WB_RTMLAMP_OHWR_REGS_CH_CTL_MODE_MASK);
-    insert_bit(channel_regs->ctl, amp_enable, WB_RTMLAMP_OHWR_REGS_CH_CTL_AMP_EN);
-
-    if (trigger_enable) {
-        if (devinfo.abi_ver_minor >= TRIGGER_ENABLE_VERSION)
-            insert_bit(channel_regs->ctl, *trigger_enable, WB_RTMLAMP_OHWR_REGS_CH_CTL_TRIG_EN);
-        else if (*trigger_enable)
-            throw std::runtime_error("this core doesn't support trigger_enable");
-    }
-
-    insert_bit(channel_regs->ctl, reset_latch, WB_RTMLAMP_OHWR_REGS_CH_CTL_RST_LATCH_STS);
-
-    if (pi_kp) clear_and_insert(channel_regs->pi_kp, *pi_kp, WB_RTMLAMP_OHWR_REGS_CH_PI_KP_DATA_MASK);
-    if (pi_ti) clear_and_insert(channel_regs->pi_ti, *pi_ti, WB_RTMLAMP_OHWR_REGS_CH_PI_TI_DATA_MASK);
-    if (pi_sp) clear_and_insert(channel_regs->pi_sp, (uint16_t)*pi_sp, WB_RTMLAMP_OHWR_REGS_CH_PI_SP_DATA_MASK);
-
-    if (dac) clear_and_insert(channel_regs->dac, (uint16_t)*dac, WB_RTMLAMP_OHWR_REGS_CH_DAC_DATA_MASK);
-
-    if (limit_a) clear_and_insert(channel_regs->lim, (uint16_t)*limit_a, WB_RTMLAMP_OHWR_REGS_CH_LIM_A_MASK);
-    if (limit_b) clear_and_insert(channel_regs->lim, (uint16_t)*limit_b, WB_RTMLAMP_OHWR_REGS_CH_LIM_B_MASK);
-
-    if (cnt) clear_and_insert(channel_regs->cnt, *cnt, WB_RTMLAMP_OHWR_REGS_CH_CNT_DATA_MASK);
-}
-
-void ControllerV2::write_params()
-{
-    encode_params();
-
-    bar4_write_v(&bars, addr + WB_RTMLAMP_OHWR_REGS_CH + channel * CHANNEL_DISTANCE, channel_regs.get(), CHANNEL_DISTANCE);
-
-    /* clear reset for next write */
-    reset_latch = false;
+    for (unsigned i = 0; i < NUM_CHAN; i++)
+        write_channel("RST_LATCH", i, 0);
 }
 
 } /* namespace lamp */
