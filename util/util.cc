@@ -14,13 +14,18 @@
 
 #include "util.h"
 
-void clear_and_insert_index(uint32_t &dest, uint32_t mask, std::string_view value, std::vector<std::string> value_list)
+size_t get_index(std::string_view value, const std::vector<std::string> &value_list)
 {
     auto it = std::ranges::find(value_list, value);
     if (it != value_list.end())
-        clear_and_insert(dest, it - value_list.begin(), mask);
+        return it - value_list.begin();
     else
         throw std::runtime_error("option must be one of " + list_of_keys(value_list));
+}
+
+void clear_and_insert_index(uint32_t &dest, uint32_t mask, std::string_view value, const std::vector<std::string> &value_list)
+{
+    clear_and_insert(dest, get_index(value, value_list), mask);
 }
 
 uint32_t float2fixed(double v, unsigned point_pos, bool saturate)
