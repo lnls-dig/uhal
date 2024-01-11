@@ -1,0 +1,27 @@
+name: Build and run tests for every commit
+on:
+  pull_request:
+
+jobs:
+  build-and-test-every-commit:
+    runs-on: ubuntu-latest
+    container:
+      image: alpine:edge
+    steps:
+      - name: Install dependencies
+        run: apk add git meson gcc g++ musl-dev boost-dev
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+      - name: Configure git user
+        run: git config --global user.email "me@me.me" && git config --global user.name "Me"
+      - name: Configure git safe directory
+        run: git config --global --add safe.directory /__w/uhal/uhal
+      - name: Configure
+        run: meson setup --werror build || cat build/meson-logs/meson-log.txt /nonexistent
+      - name: Build and test every commit
+        run: git rebase --exec "ninja -C build test" origin/master
+      - name: Commit blame
+        if: ${{ failure() }}
+        run: git --no-pager log -n1
