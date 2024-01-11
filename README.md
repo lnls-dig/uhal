@@ -37,3 +37,13 @@ $ meson install -C build/ --skip-subprojects
 Run `decode-reg` without any arguments to see the available operation modes.
 With the operation mode selected, the `-h` flag can be used to view all the
 available options.
+
+## Documentation
+
+The documentation can be built with Doxygen and browsed from the
+`html/index.html` page:
+
+```
+$ doxygen
+$ ${your_browser} html/index.html
+```
