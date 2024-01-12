@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Doxygen
-        run: apt update -y && apt install -y doxygen
+        run: apt update -y && apt install -y doxygen graphviz
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v4
