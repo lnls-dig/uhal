@@ -40,6 +40,13 @@ available options.
 
 ## Documentation
 
+The documentation is [available online](https://lnls-dig.github.io/uhal/). Make
+sure to take a look at the [Related
+Pages](https://lnls-dig.github.io/uhal/pages.html) for project history,
+motivation, and design!
+
+### How to build documentation locally
+
 The documentation can be built with Doxygen and browsed from the
 `html/index.html` page:
 
