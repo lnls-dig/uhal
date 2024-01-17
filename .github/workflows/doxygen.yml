@@ -23,6 +23,8 @@ jobs:
       image: debian:12
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: true
       - name: Install Doxygen
         run: apt update -y && apt install -y doxygen graphviz
       - name: Setup Pages
