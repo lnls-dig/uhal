@@ -22,11 +22,11 @@ jobs:
     container:
       image: debian:12
     steps:
+      - name: Install tooling
+        run: apt update -y && apt install -y git doxygen graphviz
       - uses: actions/checkout@v4
         with:
           submodules: true
-      - name: Install Doxygen
-        run: apt update -y && apt install -y doxygen graphviz
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v4
