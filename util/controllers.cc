@@ -27,4 +27,6 @@ void RegisterController::write_params()
 
     encode_params();
     bar4_write_v(&bars, addr, read_dest, read_size);
+
+    unset_commands();
 }
