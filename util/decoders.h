@@ -75,11 +75,11 @@ class RegisterDecoderBase {
 };
 
 struct RegisterField {
+    decoders::data_type value;
     size_t offset;
     uint32_t mask;
     bool multibit;
     bool is_signed;
-    decoders::data_type value;
 };
 
 class RegisterDecoder: public RegisterDecoderBase {

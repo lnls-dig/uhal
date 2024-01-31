@@ -99,22 +99,22 @@ uint32_t *RegisterDecoder::offset2register(size_t offset, void *registers)
 RegisterField RegisterDecoder::rf_get_bit(uint32_t &reg, uint32_t mask)
 {
     return {
+        .value = get_bit(reg, mask),
         .offset = register2offset(&reg),
         .mask = mask,
         .multibit = false,
         .is_signed = false,
-        .value = get_bit(reg, mask),
     };
 }
 
 RegisterField RegisterDecoder::rf_extract_value(uint32_t &reg, uint32_t mask, bool is_signed)
 {
     return {
+        .value = extract_value(reg, mask, is_signed),
         .offset = register2offset(&reg),
         .mask = mask,
         .multibit = true,
         .is_signed = is_signed,
-        .value = extract_value(reg, mask, is_signed),
     };
 }
 
