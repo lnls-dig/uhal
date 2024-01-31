@@ -78,8 +78,10 @@ struct RegisterField {
     decoders::data_type value;
     size_t offset;
     uint32_t mask;
+    unsigned fixed_point_pos = 0;
     bool multibit;
     bool is_signed;
+    bool is_fixed_point = false;
 };
 
 class RegisterDecoder: public RegisterDecoderBase {
@@ -96,7 +98,7 @@ class RegisterDecoder: public RegisterDecoderBase {
     size_t register2offset(uint32_t *);
     uint32_t *offset2register(size_t, void *);
 
-    void write_internal(const char *, std::optional<unsigned>, int32_t, void *);
+    void write_internal(const char *, std::optional<unsigned>, decoders::data_type, void *);
 
   protected:
     /** A device that has multiple channels will set this to the maximum amount
@@ -130,6 +132,8 @@ class RegisterDecoder: public RegisterDecoderBase {
     {
         return rf_extract_value(value, UINT32_MAX, is_signed);
     }
+    /** set RegisterField metadata for conversion to and from fixed point */
+    RegisterField rf_fixed2float(RegisterField, unsigned);
 
     /** add_general() that takes a RegisterField */
     inline void add_general(const char *name, RegisterField rf)
@@ -166,11 +170,11 @@ class RegisterDecoder: public RegisterDecoderBase {
 
     std::optional<unsigned> channel;
 
-    inline void write_general(const char *name, int32_t value, void *dest)
+    inline void write_general(const char *name, decoders::data_type value, void *dest)
     {
         write_internal(name, std::nullopt, value, dest);
     }
-    inline void write_channel(const char *name, unsigned pos, int32_t value, void *dest)
+    inline void write_channel(const char *name, unsigned pos, decoders::data_type value, void *dest)
     {
         write_internal(name, pos, value, dest);
     }
