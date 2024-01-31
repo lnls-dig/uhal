@@ -124,6 +124,12 @@ class RegisterDecoder: public RegisterDecoderBase {
     RegisterField rf_get_bit(uint32_t &, uint32_t);
     /** equivalent to rf_get_bit() for extract_value() */
     RegisterField rf_extract_value(uint32_t &, uint32_t, bool=false);
+    /** equivalent to rf_extract_value() with mask=UINT32_MAX, useful for when
+     * values take up a whole register and a MASK macro isn't defined */
+    RegisterField rf_whole_register(uint32_t &value, bool is_signed=false)
+    {
+        return rf_extract_value(value, UINT32_MAX, is_signed);
+    }
 
     /** add_general() that takes a RegisterField */
     inline void add_general(const char *name, RegisterField rf)
