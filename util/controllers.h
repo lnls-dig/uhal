@@ -23,6 +23,10 @@ class RegisterController: public RegisterDecoderBase {
      * configuration parameters into hardware registers */
     virtual void encode_params() = 0;
 
+    /** Child classes can implement this function to unset any commands (e.g.
+     * reset commands) which cause side-effects on every write */
+    virtual void unset_commands() {}
+
   public:
     void set_devinfo(const struct sdb_device_info &) override;
 
