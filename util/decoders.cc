@@ -118,6 +118,15 @@ RegisterField RegisterDecoder::rf_extract_value(uint32_t &reg, uint32_t mask, bo
     };
 }
 
+RegisterField RegisterDecoder::rf_fixed2float(RegisterField rf, unsigned fixed_point_pos)
+{
+    rf.fixed_point_pos = fixed_point_pos;
+    rf.is_signed = true;
+    rf.is_fixed_point = true;
+    rf.value = fixed2float(std::get<int32_t>(rf.value), fixed_point_pos);
+    return rf;
+}
+
 void RegisterDecoder::rf_add_data_internal(const char *name, decoders::data_key::second_type pos, RegisterField rf)
 {
     pvt->register_fields[{name, pos}] = rf;
@@ -215,10 +224,15 @@ T RegisterDecoder::get_channel_data(const char *name, unsigned channel_index) co
 template int32_t RegisterDecoder::get_channel_data(const char *, unsigned) const;
 template double RegisterDecoder::get_channel_data(const char *, unsigned) const;
 
-void RegisterDecoder::write_internal(const char *name, std::optional<unsigned> pos, int32_t value, void *dest)
+void RegisterDecoder::write_internal(const char *name, std::optional<unsigned> pos, decoders::data_type rvalue, void *dest)
 {
     auto rf = pvt->register_fields.at({name, pos});
     uint32_t *reg = offset2register(rf.offset, dest);
+
+    int32_t value = rf.is_fixed_point ?
+        float2fixed(std::get<double>(rvalue), rf.fixed_point_pos) :
+        std::get<int32_t>(rvalue);
+
     if (rf.multibit)
         if (rf.is_signed) clear_and_insert(*reg, value, rf.mask);
         else clear_and_insert(*reg, (uint32_t)value, rf.mask);
