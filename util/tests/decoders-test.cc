@@ -27,6 +27,7 @@ struct TestRegisterDecoder: public RegisterDecoder {
             PRINTER("C_INT", "integer", PrinterType::value),
             PRINTER("C_DOUBLE", "double", PrinterType::value_float),
             PRINTER("C_DOUBLE_CH1", "double", PrinterType::value_float),
+            PRINTER("RF_DOUBLE", "double", PrinterType::value_float),
         }),
         CONSTRUCTOR_REGS(struct test_regs)
     {
@@ -46,6 +47,8 @@ struct TestRegisterDecoder: public RegisterDecoder {
         add_general("RF_UINT", rf_extract_value(regs.gen, 0xFF));
         add_general("RF_INT", rf_extract_value(regs.gen, 0xFF, true));
         add_general("RF_INT16", rf_extract_value(regs.gen, 0xFFFF0000, true));
+
+        add_general("RF_DOUBLE", rf_fixed2float(rf_whole_register(regs.fixed_point), 23));
     }
 
     /* Test try_boolean_value */
@@ -81,7 +84,7 @@ struct TestRegisterDecoder: public RegisterDecoder {
         add_channel_double("C_DOUBLE_CH1", 1, 1.);
     }
 
-    void write_general(const char *name, int32_t value)
+    void write_general(const char *name, decoders::data_type value)
     {
         RegisterDecoder::write_general(name, value, read_dest);
     }
@@ -197,6 +200,7 @@ TEST_CASE("Print", "[decoders-test]")
     std::string eres =
         "INT: 1\n"
         "DOUBLE: 1.500000\n"
+        "RF_DOUBLE: 7.750000\n"
         "channel 0:\n"
         "    C_INT: 1\n"
         "    C_DOUBLE: 0.250000\n"
@@ -267,4 +271,18 @@ TEST_CASE("RegisterDecoder write_general signed", "[decoders-test]")
 
     CHECK_THROWS_AS(dec.write_general("RF_INT", -129), std::runtime_error);
     CHECK_THROWS_AS(dec.write_general("RF_INT", 128), std::runtime_error);
+}
+
+TEST_CASE("RegisterDecoder write_general fixed-point", "[decoders-test]")
+{
+    TestRegisterDecoder dec{};
+    dec.decode();
+
+    dec.write_general("RF_DOUBLE", -5.125);
+    dec.decode();
+    CHECK(dec.get_general_data<double>("RF_DOUBLE") == -5.125);
+
+    dec.write_general("RF_DOUBLE", 3.5);
+    dec.decode();
+    CHECK(dec.get_general_data<double>("RF_DOUBLE") == 3.5);
 }
