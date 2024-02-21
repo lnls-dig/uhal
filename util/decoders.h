@@ -164,9 +164,17 @@ class RegisterDecoder: public RegisterDecoderBase {
     virtual void print(FILE *, bool) const;
 
     template <class T>
-    T get_general_data(const char *) const;
+    T get_general_data(const char *name) const
+    {
+        return std::get<T>(get_generic_data(name));
+    }
     template <class T>
-    T get_channel_data(const char *, unsigned) const;
+    T get_channel_data(const char *name, unsigned channel_index) const
+    {
+        return std::get<T>(get_generic_data(name, channel_index));
+    }
+
+    decoders::data_type get_generic_data(const char *, decoders::data_key::second_type=std::nullopt) const;
 
     std::optional<unsigned> channel;
 

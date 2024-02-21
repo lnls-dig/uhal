@@ -198,31 +198,15 @@ void RegisterDecoder::print(FILE *f, bool verbose) const
     }
 }
 
-template <class T>
-T RegisterDecoder::get_general_data(const char *name) const
+decoders::data_type RegisterDecoder::get_generic_data(const char *name, decoders::data_key::second_type channel_index) const
 {
     try {
-        return std::get<T>(pvt->data.at({name, std::nullopt}));
+        return pvt->data.at({name, channel_index});
     } catch (std::out_of_range &e) {
-        fprintf(stderr, "%s: bad key '%s'\n", __func__, name);
+        fprintf(stderr, "%s: bad key '{%s,%u}'\n", __func__, name, channel_index ? *channel_index : -1);
         throw e;
     }
 }
-template int32_t RegisterDecoder::get_general_data(const char *) const;
-template double RegisterDecoder::get_general_data(const char *) const;
-
-template <class T>
-T RegisterDecoder::get_channel_data(const char *name, unsigned channel_index) const
-{
-    try {
-        return std::get<T>(pvt->data.at({name, channel_index}));
-    } catch (std::out_of_range &e) {
-        fprintf(stderr, "%s: bad key '%s'\n", __func__, name);
-        throw e;
-    }
-}
-template int32_t RegisterDecoder::get_channel_data(const char *, unsigned) const;
-template double RegisterDecoder::get_channel_data(const char *, unsigned) const;
 
 void RegisterDecoder::write_internal(const char *name, std::optional<unsigned> pos, decoders::data_type rvalue, void *dest)
 {
