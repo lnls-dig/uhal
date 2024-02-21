@@ -182,6 +182,16 @@ TEST_CASE("Channel data single channel", "[decoders-test]")
     CHECK_THROWS_AS(dec.get_channel_data<double>("C_DOUBLE_CH1", 0), std::out_of_range);
 }
 
+TEST_CASE("Generic data API", "[decoders-test]")
+{
+    TestRegisterDecoder dec{};
+    dec.decode();
+    dec.channel_decode();
+
+    CHECK(std::get<int32_t>(dec.get_generic_data("INT")) == 1);
+    CHECK(std::get<double>(dec.get_generic_data("C_DOUBLE", 1)) == 1.25);
+}
+
 TEST_CASE("Print", "[decoders-test]")
 {
     TestRegisterDecoder dec{};
