@@ -1,10 +1,3 @@
-/*
- * Copyright (C) 2022 CNPEM (cnpem.br)
- * Author: Érico Nogueira <erico.rolim@lnls.br>
- *
- * Released according to the GNU GPL, version 3 or any later version.
- */
-
 /** \file
  * This file contains the functions used to read and write from BARs 2 and 4.
  * All addresses and amounts to read or write are in bytes. */
