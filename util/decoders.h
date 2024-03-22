@@ -1,10 +1,3 @@
-/*
- * Copyright (C) 2022 CNPEM (cnpem.br)
- * Author: Érico Nogueira <erico.rolim@lnls.br>
- *
- * Released according to the GNU GPL, version 3 or any later version.
- */
-
 #ifndef DECODERS_H
 #define DECODERS_H
 
@@ -82,11 +75,13 @@ class RegisterDecoderBase {
 };
 
 struct RegisterField {
+    decoders::data_type value;
     size_t offset;
     uint32_t mask;
+    unsigned fixed_point_pos = 0;
     bool multibit;
     bool is_signed;
-    decoders::data_type value;
+    bool is_fixed_point = 0;
 };
 
 class RegisterDecoder: public RegisterDecoderBase {
@@ -103,7 +98,7 @@ class RegisterDecoder: public RegisterDecoderBase {
     size_t register2offset(uint32_t *);
     uint32_t *offset2register(size_t, void *);
 
-    void write_internal(const char *, std::optional<unsigned>, int32_t, void *);
+    void write_internal(const char *, std::optional<unsigned>, decoders::data_type, void *);
 
   protected:
     /** A device that has multiple channels will set this to the maximum amount
@@ -131,6 +126,14 @@ class RegisterDecoder: public RegisterDecoderBase {
     RegisterField rf_get_bit(uint32_t &, uint32_t);
     /** equivalent to rf_get_bit() for extract_value() */
     RegisterField rf_extract_value(uint32_t &, uint32_t, bool=false);
+    /** equivalent to rf_extract_value() with mask=UINT32_MAX, useful for when
+     * values take up a whole register and a MASK macro isn't defined */
+    RegisterField rf_whole_register(uint32_t &value, bool is_signed=false)
+    {
+        return rf_extract_value(value, UINT32_MAX, is_signed);
+    }
+    /** set RegisterField metadata for conversion to and from fixed point */
+    RegisterField rf_fixed2float(RegisterField, unsigned);
 
     /** add_general() that takes a RegisterField */
     inline void add_general(const char *name, RegisterField rf)
@@ -161,17 +164,25 @@ class RegisterDecoder: public RegisterDecoderBase {
     virtual void print(FILE *, bool) const;
 
     template <class T>
-    T get_general_data(const char *) const;
+    T get_general_data(const char *name) const
+    {
+        return std::get<T>(get_generic_data(name));
+    }
     template <class T>
-    T get_channel_data(const char *, unsigned) const;
+    T get_channel_data(const char *name, unsigned channel_index) const
+    {
+        return std::get<T>(get_generic_data(name, channel_index));
+    }
+
+    decoders::data_type get_generic_data(const char *, decoders::data_key::second_type=std::nullopt) const;
 
     std::optional<unsigned> channel;
 
-    inline void write_general(const char *name, int32_t value, void *dest)
+    inline void write_general(const char *name, decoders::data_type value, void *dest)
     {
         write_internal(name, std::nullopt, value, dest);
     }
-    inline void write_channel(const char *name, unsigned pos, int32_t value, void *dest)
+    inline void write_channel(const char *name, unsigned pos, decoders::data_type value, void *dest)
     {
         write_internal(name, pos, value, dest);
     }
