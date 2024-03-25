@@ -1,10 +1,3 @@
-/*
- * Copyright (C) 2022 CNPEM (cnpem.br)
- * Author: Érico Nogueira <erico.rolim@lnls.br>
- *
- * Released according to the GNU GPL, version 3 or any later version.
- */
-
 /** \file
  * This file contains the functions used to initialize and destroy a pcie_bars
  * struct. */

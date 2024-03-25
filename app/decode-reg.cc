@@ -1,10 +1,3 @@
-/*
- * Copyright (C) 2022 CNPEM (cnpem.br)
- * Author: Érico Nogueira <erico.rolim@lnls.br>
- *
- * Released according to the GNU GPL, version 3 or any later version.
- */
-
 #include <inttypes.h>
 
 #include <algorithm>
@@ -30,6 +23,7 @@
 #include "modules/fofb_processing.h"
 #include "modules/lamp.h"
 #include "modules/orbit_intlk.h"
+#include "modules/pos_calc.h"
 #include "modules/sysid.h"
 #include "modules/trigger_iface.h"
 #include "modules/trigger_mux.h"
@@ -49,7 +43,7 @@ int main(int argc, char *argv[])
         fputs(
             "Usage: decode-reg mode <mode specific options>\n\n"
             "Positional arguments:\n"
-            "mode      mode of operation ('reset', 'build_info', 'decode', 'ram', 'acq', 'lamp', 'timing')\n",
+            "mode      mode of operation ('reset', 'build_info', 'decode', 'ram', 'acq', 'lamp', 'timing', 'pos_calc')\n",
             stderr);
         return 1;
     }
@@ -111,7 +105,7 @@ int main(int argc, char *argv[])
     lamp_args.add_argument("-T").help("Trigger enable").scan<'u', unsigned>();
 
     argparse::ArgumentParser *pargs;
-    if (mode == "reset" || mode == "timing") {
+    if (mode == "reset" || mode == "timing" || mode == "pos_calc") {
         pargs = &parent_args_with_help;
     } else if (mode == "build_info") {
         pargs = &build_info_args;
@@ -197,6 +191,8 @@ int main(int argc, char *argv[])
             dec = std::make_unique<bpm_swap::Core>(bars);
         } else if (type == "orbit_intlk") {
             dec = std::make_unique<orbit_intlk::Core>(bars);
+        } else if (type == "pos_calc") {
+            dec = std::make_unique<pos_calc::Core>(bars);
         } else {
             fprintf(stderr, "Unknown type: '%s'\n", type.c_str());
             return 1;
@@ -322,6 +318,22 @@ int main(int argc, char *argv[])
         ctl.afc_clock.ddmtd_config.navg = 7;
 
         ctl.write_params();
+    }
+    if (mode == "pos_calc") {
+        pos_calc::Core dec(bars);
+        if (auto v = read_sdb(&bars, dec.match_devinfo_lambda, dev_index)) {
+            dec.set_devinfo(*v);
+        } else {
+            fprintf(stderr, "Couldn't find pos_calc module index %u\n", dev_index);
+            return 1;
+        }
+
+        dec.get_data();
+
+        while (true) {
+            dec.wait_for_fifo();
+            dec.print(stdout, false);
+        }
     }
 
     return 0;

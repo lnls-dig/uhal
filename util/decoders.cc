@@ -1,10 +1,3 @@
-/*
- * Copyright (C) 2022 CNPEM (cnpem.br)
- * Author: Érico Nogueira <erico.rolim@lnls.br>
- *
- * Released according to the GNU GPL, version 3 or any later version.
- */
-
 #include <algorithm>
 #include <stdexcept>
 
@@ -106,23 +99,32 @@ uint32_t *RegisterDecoder::offset2register(size_t offset, void *registers)
 RegisterField RegisterDecoder::rf_get_bit(uint32_t &reg, uint32_t mask)
 {
     return {
+        .value = get_bit(reg, mask),
         .offset = register2offset(&reg),
         .mask = mask,
         .multibit = false,
         .is_signed = false,
-        .value = get_bit(reg, mask),
     };
 }
 
 RegisterField RegisterDecoder::rf_extract_value(uint32_t &reg, uint32_t mask, bool is_signed)
 {
     return {
+        .value = extract_value(reg, mask, is_signed),
         .offset = register2offset(&reg),
         .mask = mask,
         .multibit = true,
         .is_signed = is_signed,
-        .value = extract_value(reg, mask, is_signed),
     };
+}
+
+RegisterField RegisterDecoder::rf_fixed2float(RegisterField rf, unsigned fixed_point_pos)
+{
+    rf.fixed_point_pos = fixed_point_pos;
+    rf.is_signed = true;
+    rf.is_fixed_point = true;
+    rf.value = fixed2float(std::get<int32_t>(rf.value), fixed_point_pos);
+    return rf;
 }
 
 void RegisterDecoder::rf_add_data_internal(const char *name, decoders::data_key::second_type pos, RegisterField rf)
@@ -196,36 +198,25 @@ void RegisterDecoder::print(FILE *f, bool verbose) const
     }
 }
 
-template <class T>
-T RegisterDecoder::get_general_data(const char *name) const
+decoders::data_type RegisterDecoder::get_generic_data(const char *name, decoders::data_key::second_type channel_index) const
 {
     try {
-        return std::get<T>(pvt->data.at({name, std::nullopt}));
+        return pvt->data.at({name, channel_index});
     } catch (std::out_of_range &e) {
-        fprintf(stderr, "%s: bad key '%s'\n", __func__, name);
+        fprintf(stderr, "%s: bad key '{%s,%u}'\n", __func__, name, channel_index ? *channel_index : -1);
         throw e;
     }
 }
-template int32_t RegisterDecoder::get_general_data(const char *) const;
-template double RegisterDecoder::get_general_data(const char *) const;
 
-template <class T>
-T RegisterDecoder::get_channel_data(const char *name, unsigned channel_index) const
-{
-    try {
-        return std::get<T>(pvt->data.at({name, channel_index}));
-    } catch (std::out_of_range &e) {
-        fprintf(stderr, "%s: bad key '%s'\n", __func__, name);
-        throw e;
-    }
-}
-template int32_t RegisterDecoder::get_channel_data(const char *, unsigned) const;
-template double RegisterDecoder::get_channel_data(const char *, unsigned) const;
-
-void RegisterDecoder::write_internal(const char *name, std::optional<unsigned> pos, int32_t value, void *dest)
+void RegisterDecoder::write_internal(const char *name, std::optional<unsigned> pos, decoders::data_type rvalue, void *dest)
 {
     auto rf = pvt->register_fields.at({name, pos});
     uint32_t *reg = offset2register(rf.offset, dest);
+
+    int32_t value = rf.is_fixed_point ?
+        float2fixed(std::get<double>(rvalue), rf.fixed_point_pos) :
+        std::get<int32_t>(rvalue);
+
     if (rf.multibit)
         if (rf.is_signed) clear_and_insert(*reg, value, rf.mask);
         else clear_and_insert(*reg, (uint32_t)value, rf.mask);
