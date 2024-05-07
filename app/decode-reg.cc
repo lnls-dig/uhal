@@ -285,9 +285,9 @@ int main(int argc, char *argv[])
         auto channel = args.get<unsigned>("-c");
 
         ctl.write_channel("AMP_EN", channel, args.is_used("-e"));
-        ctl.write_channel("MODE", channel, get_index(args.get<std::string>("-m"), lamp::mode_list));
-        ctl.write_channel("PI_KP", channel, args.get<unsigned>("-k"));
-        ctl.write_channel("PI_TI", channel, args.get<unsigned>("-t"));
+        ctl.write_channel("MODE", channel, (int32_t)get_index(args.get<std::string>("-m"), lamp::mode_list));
+        ctl.write_channel("PI_KP", channel, (int32_t)args.get<unsigned>("-k"));
+        ctl.write_channel("PI_TI", channel, (int32_t)args.get<unsigned>("-t"));
         ctl.write_channel("PI_SP", channel, args.get<int>("-s"));
 
         ctl.write_channel("DAC", channel, args.get<int>("-d"));
@@ -295,7 +295,7 @@ int main(int argc, char *argv[])
         ctl.write_channel("LIMIT_B", channel, args.get<int>("-L"));
         ctl.write_channel("CNT", channel, args.get<int>("-C"));
 
-        ctl.write_channel("TRIG_EN", channel, args.get<unsigned>("-T"));
+        ctl.write_channel("TRIG_EN", channel, (int32_t)args.get<unsigned>("-T"));
 
         ctl.write_params();
     }

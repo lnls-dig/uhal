@@ -44,7 +44,7 @@ TEST_CASE("RegisterDecoderController write_general", "[controllers-test]")
     CHECK(dec.get_general_data<int32_t>("RF_INT") == -0x11);
 }
 
-TEST_CASE("RegisterDecoderController write_general fixed-point", "[controllers-test][!shouldfail]")
+TEST_CASE("RegisterDecoderController write_general fixed-point", "[controllers-test]")
 {
     TestRegisterDecoderController ctl{};
     TestRegisterDecoder dec{};
