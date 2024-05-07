@@ -2,6 +2,7 @@ modules_src = [
   'acq.cc',
   'afc_timing.cc',
   'bpm_swap.cc',
+  'fmcpico1m_4ch.cc',
   'fofb_cc.cc',
   'fofb_processing.cc',
   'fofb_shaper_filt.cc',
