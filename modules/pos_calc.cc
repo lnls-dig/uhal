@@ -133,7 +133,7 @@ void Core::decode()
         add_channel("DESYNC_CNT", i, rf_extract_value(*rate.tag, POS_CALC_TBT_TAG_DESYNC_CNT_MASK));
         add_channel("DESYNC_CNT_RST", i, rf_get_bit(*rate.tag, POS_CALC_TBT_TAG_DESYNC_CNT_RST));
 
-        add_channel("DATA_MASK_EN", i, get_bit(*rate.data_mask_ctl, POS_CALC_TBT_DATA_MASK_CTL_EN));
+        add_channel("DATA_MASK_EN", i, rf_get_bit(*rate.data_mask_ctl, POS_CALC_TBT_DATA_MASK_CTL_EN));
 
         add_channel("DATA_MASK_SAMPLES_BEG", i, rf_extract_value(*rate.data_mask_samples, POS_CALC_TBT_DATA_MASK_SAMPLES_BEG_MASK));
         add_channel("DATA_MASK_SAMPLES_END", i, rf_extract_value(*rate.data_mask_samples, POS_CALC_TBT_DATA_MASK_SAMPLES_END_MASK));
