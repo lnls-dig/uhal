@@ -51,6 +51,7 @@ struct SyncMaskRates {
 
 namespace {
     constexpr unsigned NUM_CHANNELS = 4;
+    constexpr unsigned NUM_RATES = 3;
     constexpr unsigned ksum_fixed_point_pos = 24;
 
     constexpr unsigned POS_CALC_DEVID = 0x1bafbf1e;
@@ -226,7 +227,7 @@ void Controller::write_params()
     bar4_write_v(&bars, addr + POS_CALC_SW_TAG, &regs.sw_tag, POS_CALC_SIZE - POS_CALC_SW_TAG);
 
     write_general("FOFB_DESYNC_CNT_RST", 0);
-    for (unsigned i = 0; i < NUM_CHANNELS; i++)
+    for (unsigned i = 0; i < NUM_RATES; i++)
         write_channel("DESYNC_CNT_RST", i, 0);
 }
 
