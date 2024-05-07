@@ -51,11 +51,11 @@ class RegisterDecoderController: public RegisterController {
 
     virtual void encode_params() override { }
 
-    void write_general(const char *name, int32_t value)
+    void write_general(const char *name, decoders::data_type value)
     {
         pdec->write_general(name, value, read_dest);
     }
-    void write_channel(const char *name, unsigned pos, int32_t value)
+    void write_channel(const char *name, unsigned pos, decoders::data_type value)
     {
         pdec->write_channel(name, pos, value, read_dest);
     }
