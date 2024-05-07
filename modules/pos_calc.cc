@@ -91,6 +91,8 @@ Core::Core(struct pcie_bars &bars):
 {
     set_read_dest(regs);
 
+    number_of_channels = NUM_CHANNELS;
+
     /* initialize these keys in the map */
     decode_fifo_csr();
     decode_fifo_amps();
@@ -109,8 +111,6 @@ void Core::read()
 
 void Core::decode()
 {
-    number_of_channels = NUM_CHANNELS;
-
     add_general("KX", rf_extract_value(regs.kx, POS_CALC_KX_VAL_MASK));
     add_general("KY", rf_extract_value(regs.ky, POS_CALC_KY_VAL_MASK));
     add_general(
