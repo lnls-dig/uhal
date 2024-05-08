@@ -6,6 +6,7 @@ test('copy-test', copy_test)
 
 tests = [
   'bits-test',
+  'controllers-test',
   'decoders-test',
   'fixed-test',
   'list-of-keys-test',
