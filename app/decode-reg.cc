@@ -20,6 +20,7 @@
 #include "modules/acq.h"
 #include "modules/afc_timing.h"
 #include "modules/bpm_swap.h"
+#include "modules/fmcpico1m_4ch.h"
 #include "modules/fofb_cc.h"
 #include "modules/fofb_processing.h"
 #include "modules/fofb_shaper_filt.h"
@@ -179,6 +180,8 @@ int main(int argc, char *argv[])
             dec = std::make_unique<afc_timing::Core>(bars);
         } else if (type == "lamp") {
             dec = std::make_unique<lamp::Core>(bars);
+        } else if (type == "fmcpico1m_4ch") {
+            dec = std::make_unique<fmcpico1m_4ch::Core>(bars);
         } else if (type == "fofb_cc") {
             dec = std::make_unique<fofb_cc::Core>(bars);
         } else if (type == "fofb_processing") {
