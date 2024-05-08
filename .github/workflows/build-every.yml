@@ -19,7 +19,7 @@ jobs:
       - name: Configure git safe directory
         run: git config --global --add safe.directory /__w/uhal/uhal
       - name: Configure
-        run: meson setup --werror build || cat build/meson-logs/meson-log.txt /nonexistent
+        run: meson setup --buildtype release --werror build || cat build/meson-logs/meson-log.txt /nonexistent
       - name: Build and test every commit
         run: git rebase --exec "ninja -C build test" origin/master
       - name: Commit blame
