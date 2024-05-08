@@ -200,6 +200,7 @@ bool Controller::set_freq(double freq, struct clock &clock)
     uint32_t n1_best, hs_div_best;
     uint64_t rfreq_best;
     double freq_err_best = freq_err_initial;
+    bool best_is_set = false;
     for (auto hs_div_opt: hs_div_opts) {
         for (uint32_t n1 = n1_min_val; n1 <= n1_max_val; n1 += n1_step) {
             uint64_t rfreq = (freq * hs_div_opt * n1 * rfreq_factor / fxtal);
@@ -212,11 +213,13 @@ bool Controller::set_freq(double freq, struct clock &clock)
                     n1_best = n1;
                     hs_div_best = hs_div_opt;
                     rfreq_best = rfreq;
+
+                    best_is_set = true;
                 }
             }
         }
     }
-    if (freq_err_best == freq_err_initial) return false;
+    if (!best_is_set) return false;
 
     /* values to actually write into registers */
     clock.n1 = n1_best - 1;
