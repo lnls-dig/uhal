@@ -28,6 +28,23 @@ struct GainArrays {
     }
 };
 
+struct OffsetArrays {
+    std::array<uint32_t *, 4> offsets_inverse, offsets_direct;
+    OffsetArrays(struct pos_calc &regs):
+        offsets_inverse{
+            &regs.adc_ch0_swclk_0_offset,
+            &regs.adc_ch1_swclk_0_offset,
+            &regs.adc_ch2_swclk_0_offset,
+            &regs.adc_ch3_swclk_0_offset,},
+        offsets_direct{
+            &regs.adc_ch0_swclk_1_offset,
+            &regs.adc_ch1_swclk_1_offset,
+            &regs.adc_ch2_swclk_1_offset,
+            &regs.adc_ch3_swclk_1_offset,}
+    {
+    }
+};
+
 struct SyncMaskRates {
     struct {
         uint32_t *tag, *data_mask_ctl, *data_mask_samples;
@@ -53,6 +70,7 @@ namespace {
     constexpr unsigned NUM_CHANNELS = 4;
     constexpr unsigned NUM_RATES = 3;
     constexpr unsigned ksum_fixed_point_pos = 24;
+    constexpr unsigned ADC_OFFSET_VERSION = 1;
 
     constexpr unsigned POS_CALC_DEVID = 0x1bafbf1e;
     struct sdb_device_info ref_devinfo = {
@@ -87,6 +105,8 @@ Core::Core(struct pcie_bars &bars):
         PRINTER("ADC_GAINS_FIXED_POINT_POS", "Fixed-point position constant value", PrinterType::value),
         PRINTER("ADC_SWCLK_INV_GAIN", "ADC channel gain on RFFE switch state 0 (inverted)", PrinterType::value_float),
         PRINTER("ADC_SWCLK_DIR_GAIN", "ADC channel gain on RFFE switch state 1 (direct)", PrinterType::value_float),
+        PRINTER("ADC_SWCLK_INV_OFFSET", "ADC channel offset on RFFE switch state 0 (inverted)", PrinterType::value),
+        PRINTER("ADC_SWCLK_DIR_OFFSET", "ADC channel offset on RFFE switch state 1 (direct)", PrinterType::value),
     }),
     CONSTRUCTOR_REGS(struct pos_calc)
 {
@@ -158,6 +178,16 @@ void Core::decode()
     };
     get_gains("ADC_SWCLK_INV_GAIN", gains_arrays.gains_inverse);
     get_gains("ADC_SWCLK_DIR_GAIN", gains_arrays.gains_direct);
+
+    if (devinfo.abi_ver_minor >= ADC_OFFSET_VERSION) {
+        const OffsetArrays offsets_arrays{regs};
+        auto get_offsets = [this](const char *name, const auto &offsets) {
+            for (unsigned i = 0; i < offsets.size(); i++)
+                add_channel(name, i, rf_extract_value(*offsets[i], POS_CALC_ADC_CH0_SWCLK_0_OFFSET_DATA_MASK, true));
+        };
+        get_offsets("ADC_SWCLK_INV_OFFSET", offsets_arrays.offsets_inverse);
+        get_offsets("ADC_SWCLK_DIR_OFFSET", offsets_arrays.offsets_direct);
+    }
 }
 
 void Core::read_monitors()
