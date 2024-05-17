@@ -219,6 +219,8 @@ Controller::~Controller() = default;
 
 void Controller::write_params()
 {
+    encode_params();
+
     /* has to write to the same registers Core::read() above reads, though we
      * can skip regs.ampfifo_monit.ampfifo_monit_csr, since it's read-only. The
      * reason is the same: we can't read the FIFO registers */
