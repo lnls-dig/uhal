@@ -22,6 +22,7 @@
 #include "modules/bpm_swap.h"
 #include "modules/fofb_cc.h"
 #include "modules/fofb_processing.h"
+#include "modules/fofb_shaper_filt.h"
 #include "modules/lamp.h"
 #include "modules/orbit_intlk.h"
 #include "modules/pos_calc.h"
@@ -182,6 +183,8 @@ int main(int argc, char *argv[])
             dec = std::make_unique<fofb_cc::Core>(bars);
         } else if (type == "fofb_processing") {
             dec = std::make_unique<fofb_processing::Core>(bars);
+        } else if (type == "fofb_shaper_filt") {
+            dec = std::make_unique<fofb_shaper_filt::Core>(bars);
         } else if (type == "sys_id") {
             dec = std::make_unique<sys_id::Core>(bars);
         } else if (type == "trigger_iface") {
