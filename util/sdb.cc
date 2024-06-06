@@ -75,9 +75,10 @@ std::optional<struct sdb_device_info> read_sdb(struct pcie_bars *bars, device_ma
 
 bool print_sdb(const struct sdb_device_info &devinfo)
 {
-    fprintf(stdout, "id %08jx vendor %016jx version %04x addr %08jx\n",
+    fprintf(stdout, "id %08jx vendor %016jx version %04x.%04x addr %08jx\n",
         (uintmax_t)devinfo.device_id, (uintmax_t)devinfo.vendor_id,
-        (unsigned)devinfo.abi_ver_major, (uintmax_t)devinfo.start_addr);
+        (unsigned)devinfo.abi_ver_major, (unsigned)devinfo.abi_ver_minor,
+        (uintmax_t)devinfo.start_addr);
     return false;
 }
 
