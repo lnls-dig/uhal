@@ -142,8 +142,8 @@ void Core::decode()
     get_sync_and_mask(1, sync_mask_rates.facq);
     get_sync_and_mask(2, sync_mask_rates.monit);
 
-    add_general("OFFSET_X", rf_whole_register(regs.offset_x));
-    add_general("OFFSET_Y", rf_whole_register(regs.offset_y));
+    add_general("OFFSET_X", rf_whole_register(regs.offset_x, true));
+    add_general("OFFSET_Y", rf_whole_register(regs.offset_y, true));
 
     auto rf_adc_gains_fixed_point_pos = rf_extract_value(regs.adc_gains_fixed_point_pos, POS_CALC_ADC_GAINS_FIXED_POINT_POS_DATA_MASK);
     add_general("ADC_GAINS_FIXED_POINT_POS", rf_adc_gains_fixed_point_pos);
