@@ -190,13 +190,6 @@ void Core::decode()
     }
 }
 
-void Core::read_monitors()
-{
-}
-void Core::decode_monitors()
-{
-}
-
 void Core::read_fifo_csr()
 {
     regs.ampfifo_monit.ampfifo_monit_csr = bar4_read(&bars, addr + POS_CALC_AMPFIFO_MONIT_AMPFIFO_MONIT_CSR);

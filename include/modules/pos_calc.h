@@ -21,8 +21,6 @@ class Core: public RegisterDecoder {
 
     void decode() override;
     void read() override;
-    void read_monitors() override;
-    void decode_monitors() override;
 
     void read_fifo_csr();
     void decode_fifo_csr();
