@@ -9,6 +9,7 @@ modules_src = [
   'lamp.cc',
   'orbit_intlk.cc',
   'pos_calc.cc',
+  'si57x_ctrl.cc',
   'sysid.cc',
   'trigger_iface.cc',
   'trigger_mux.cc',
