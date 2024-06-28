@@ -10,6 +10,7 @@ install_headers(
     'lamp.h',
     'orbit_intlk.h',
     'pos_calc.h',
+    'si57x_ctrl.h',
     'sysid.h',
     'trigger_iface.h',
     'trigger_mux.h',
