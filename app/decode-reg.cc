@@ -21,6 +21,7 @@
 #include "modules/afc_timing.h"
 #include "modules/bpm_swap.h"
 #include "modules/fmcpico1m_4ch.h"
+#include "modules/fmc_active_clk.h"
 #include "modules/fofb_cc.h"
 #include "modules/fofb_processing.h"
 #include "modules/fofb_shaper_filt.h"
@@ -47,7 +48,7 @@ int main(int argc, char *argv[])
         fputs(
             "Usage: decode-reg mode <mode specific options>\n\n"
             "Positional arguments:\n"
-            "mode      mode of operation ('reset', 'build_info', 'decode', 'ram', 'acq', 'lamp', 'timing', 'pos_calc', 'si57x')\n",
+            "mode      mode of operation ('reset', 'build_info', 'decode', 'ram', 'acq', 'lamp', 'timing', 'pos_calc', 'si57x', 'fmc_active_clk')\n",
             stderr);
         return 1;
     }
@@ -114,7 +115,7 @@ int main(int argc, char *argv[])
     si57x_args.add_argument("-f").help("desired frequency").required().scan<'f', double>();
 
     argparse::ArgumentParser *pargs;
-    if (mode == "reset" || mode == "timing" || mode == "pos_calc") {
+    if (mode == "reset" || mode == "timing" || mode == "pos_calc" || mode == "fmc_active_clk") {
         pargs = &parent_args_with_help;
     } else if (mode == "build_info") {
         pargs = &build_info_args;
@@ -195,6 +196,8 @@ int main(int argc, char *argv[])
             dec = std::make_unique<lamp::Core>(bars);
         } else if (type == "fmcpico1m_4ch") {
             dec = std::make_unique<fmcpico1m_4ch::Core>(bars);
+        } else if (type == "fmc_active_clk") {
+            dec = std::make_unique<fmc_active_clk::Core>(bars);
         } else if (type == "fofb_cc") {
             dec = std::make_unique<fofb_cc::Core>(bars);
         } else if (type == "fofb_processing") {
@@ -395,6 +398,22 @@ int main(int argc, char *argv[])
         puts("\nAfter apply_config...");
         dec.get_data();
         dec.print(stdout, true);
+    }
+    if (mode == "fmc_active_clk") {
+        fmc_active_clk::Controller ctl(bars);
+
+        if (auto v = read_sdb(&bars, ctl.match_devinfo_lambda, dev_index)) {
+            ctl.set_devinfo(*v);
+        } else {
+            fprintf(stderr, "Couldn't find fmc_active_clk module index %u\n", dev_index);
+            return 1;
+        }
+
+        ctl.write_general("SI571_OE", 1);
+        ctl.write_general("PLL_FUNCTION", 1);
+        ctl.write_general("CLK_SEL", 1);
+
+        ctl.write_params();
     }
 
     return 0;
