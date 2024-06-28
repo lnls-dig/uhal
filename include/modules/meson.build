@@ -3,6 +3,7 @@ install_headers(
     'acq.h',
     'afc_timing.h',
     'bpm_swap.h',
+    'fmc_active_clk.h',
     'fmcpico1m_4ch.h',
     'fofb_cc.h',
     'fofb_processing.h',
