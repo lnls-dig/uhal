@@ -6,6 +6,7 @@ utilities_src = [
   'pcie.c',
   'printer.cc',
   'sdb.cc',
+  'si57x_util.cc',
   'util.cc',
 ]
 utilities_lib = static_library(

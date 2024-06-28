@@ -21,12 +21,14 @@
 #include "modules/afc_timing.h"
 #include "modules/bpm_swap.h"
 #include "modules/fmcpico1m_4ch.h"
+#include "modules/fmc_active_clk.h"
 #include "modules/fofb_cc.h"
 #include "modules/fofb_processing.h"
 #include "modules/fofb_shaper_filt.h"
 #include "modules/lamp.h"
 #include "modules/orbit_intlk.h"
 #include "modules/pos_calc.h"
+#include "modules/si57x_ctrl.h"
 #include "modules/sysid.h"
 #include "modules/trigger_iface.h"
 #include "modules/trigger_mux.h"
@@ -46,7 +48,7 @@ int main(int argc, char *argv[])
         fputs(
             "Usage: decode-reg mode <mode specific options>\n\n"
             "Positional arguments:\n"
-            "mode      mode of operation ('reset', 'build_info', 'decode', 'ram', 'acq', 'lamp', 'timing', 'pos_calc')\n",
+            "mode      mode of operation ('reset', 'build_info', 'decode', 'ram', 'acq', 'lamp', 'timing', 'pos_calc', 'si57x', 'fmc_active_clk')\n",
             stderr);
         return 1;
     }
@@ -107,8 +109,13 @@ int main(int argc, char *argv[])
     lamp_args.add_argument("-C").help("Count value").scan<'u', unsigned>();
     lamp_args.add_argument("-T").help("Trigger enable").scan<'u', unsigned>();
 
+    argparse::ArgumentParser si57x_args("decode-reg si57x", "1.0", argparse::default_arguments::help);
+    si57x_args.add_parents(parent_args);
+    si57x_args.add_argument("-s").help("startup frequency").required().scan<'f', double>();
+    si57x_args.add_argument("-f").help("desired frequency").required().scan<'f', double>();
+
     argparse::ArgumentParser *pargs;
-    if (mode == "reset" || mode == "timing" || mode == "pos_calc") {
+    if (mode == "reset" || mode == "timing" || mode == "pos_calc" || mode == "fmc_active_clk") {
         pargs = &parent_args_with_help;
     } else if (mode == "build_info") {
         pargs = &build_info_args;
@@ -120,6 +127,8 @@ int main(int argc, char *argv[])
         pargs = &acq_args;
     } else if (mode == "lamp") {
         pargs = &lamp_args;
+    } else if (mode == "si57x") {
+        pargs = &si57x_args;
     } else {
         fprintf(stderr, "Unsupported type: '%s'\n", mode.c_str());
         return 1;
@@ -182,6 +191,8 @@ int main(int argc, char *argv[])
             dec = std::make_unique<lamp::Core>(bars);
         } else if (type == "fmcpico1m_4ch") {
             dec = std::make_unique<fmcpico1m_4ch::Core>(bars);
+        } else if (type == "fmc_active_clk") {
+            dec = std::make_unique<fmc_active_clk::Core>(bars);
         } else if (type == "fofb_cc") {
             dec = std::make_unique<fofb_cc::Core>(bars);
         } else if (type == "fofb_processing") {
@@ -200,6 +211,8 @@ int main(int argc, char *argv[])
             dec = std::make_unique<orbit_intlk::Core>(bars);
         } else if (type == "pos_calc") {
             dec = std::make_unique<pos_calc::Core>(bars);
+        } else if (type == "si57x_ctrl") {
+            dec = std::make_unique<si57x_ctrl::Core>(bars);
         } else {
             fprintf(stderr, "Unknown type: '%s'\n", type.c_str());
             return 1;
@@ -343,6 +356,51 @@ int main(int argc, char *argv[])
 
             dec.print(stdout, false);
         }
+    }
+    if (mode == "si57x") {
+        si57x_ctrl::Core dec(bars);
+        si57x_ctrl::Controller ctl(bars, args.get<double>("-s"));
+
+        if (auto v = read_sdb(&bars, dec.match_devinfo_lambda, dev_index)) {
+            dec.set_devinfo(*v);
+            ctl.set_devinfo(*v);
+        } else {
+            fprintf(stderr, "Couldn't find si57x_ctrl module index %u\n", dev_index);
+            return 1;
+        }
+
+        puts("Original values...");
+        dec.get_data();
+        dec.print(stdout, true);
+
+        ctl.read_startup_regs();
+
+        puts("\nAfter read_startup_regs...");
+        dec.get_data();
+        dec.print(stdout, true);
+
+        ctl.set_freq(args.get<double>("-f"));
+        ctl.apply_config();
+
+        puts("\nAfter apply_config...");
+        dec.get_data();
+        dec.print(stdout, true);
+    }
+    if (mode == "fmc_active_clk") {
+        fmc_active_clk::Controller ctl(bars);
+
+        if (auto v = read_sdb(&bars, ctl.match_devinfo_lambda, dev_index)) {
+            ctl.set_devinfo(*v);
+        } else {
+            fprintf(stderr, "Couldn't find fmc_active_clk module index %u\n", dev_index);
+            return 1;
+        }
+
+        ctl.write_general("SI571_OE", 1);
+        ctl.write_general("PLL_FUNCTION", 1);
+        ctl.write_general("CLK_SEL", 1);
+
+        ctl.write_params();
     }
 
     return 0;
