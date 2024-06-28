@@ -10,6 +10,7 @@ tests = [
   'decoders-test',
   'fixed-test',
   'list-of-keys-test',
+  'si57x-test',
 ]
 foreach test_name : tests
   exe = executable(test_name, test_name + '.cc', dependencies: [utilities, catch2])
