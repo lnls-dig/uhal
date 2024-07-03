@@ -4,6 +4,7 @@ modules_src = [
   'bpm_swap.cc',
   'fmc250m_4ch.cc',
   'fmc_active_clk.cc',
+  'fmc_adc_common.cc',
   'fmcpico1m_4ch.cc',
   'fofb_cc.cc',
   'fofb_processing.cc',
