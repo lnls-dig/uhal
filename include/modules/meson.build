@@ -5,6 +5,7 @@ install_headers(
     'bpm_swap.h',
     'fmc250m_4ch.h',
     'fmc_active_clk.h',
+    'fmc_adc_common.h',
     'fmcpico1m_4ch.h',
     'fofb_cc.h',
     'fofb_processing.h',
