@@ -22,6 +22,7 @@
 #include "modules/bpm_swap.h"
 #include "modules/fmcpico1m_4ch.h"
 #include "modules/fmc_active_clk.h"
+#include "modules/fmc_adc_common.h"
 #include "modules/fmc250m_4ch.h"
 #include "modules/fofb_cc.h"
 #include "modules/fofb_processing.h"
@@ -199,6 +200,8 @@ int main(int argc, char *argv[])
             dec = std::make_unique<fmcpico1m_4ch::Core>(bars);
         } else if (type == "fmc_active_clk") {
             dec = std::make_unique<fmc_active_clk::Core>(bars);
+        } else if (type == "fmc_adc_common") {
+            dec = std::make_unique<fmc_adc_common::Core>(bars);
         } else if (type == "fmc250m_4ch") {
             dec = std::make_unique<fmc250m_4ch::Core>(bars);
         } else if (type == "fofb_cc") {
