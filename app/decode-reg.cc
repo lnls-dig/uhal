@@ -31,6 +31,7 @@
 #include "modules/orbit_intlk.h"
 #include "modules/pos_calc.h"
 #include "modules/si57x_ctrl.h"
+#include "modules/spi.h"
 #include "modules/sysid.h"
 #include "modules/trigger_iface.h"
 #include "modules/trigger_mux.h"
@@ -224,6 +225,8 @@ int main(int argc, char *argv[])
             dec = std::make_unique<pos_calc::Core>(bars);
         } else if (type == "si57x_ctrl") {
             dec = std::make_unique<si57x_ctrl::Core>(bars);
+        } else if (type == "spi") {
+            dec = std::make_unique<spi::Core>(bars);
         } else {
             fprintf(stderr, "Unknown type: '%s'\n", type.c_str());
             return 1;
