@@ -18,6 +18,7 @@
 #include "util_sdb.h"
 
 #include "modules/acq.h"
+#include "modules/ad9510.h"
 #include "modules/afc_timing.h"
 #include "modules/bpm_swap.h"
 #include "modules/fmcpico1m_4ch.h"
@@ -27,6 +28,7 @@
 #include "modules/fofb_cc.h"
 #include "modules/fofb_processing.h"
 #include "modules/fofb_shaper_filt.h"
+#include "modules/isla216p.h"
 #include "modules/lamp.h"
 #include "modules/orbit_intlk.h"
 #include "modules/pos_calc.h"
@@ -51,7 +53,7 @@ int main(int argc, char *argv[])
         fputs(
             "Usage: decode-reg mode <mode specific options>\n\n"
             "Positional arguments:\n"
-            "mode      mode of operation ('reset', 'build_info', 'decode', 'ram', 'acq', 'lamp', 'timing', 'pos_calc', 'si57x', 'fmc_active_clk', 'fmc250m_4ch')\n",
+            "mode      mode of operation ('reset', 'build_info', 'decode', 'ram', 'acq', 'lamp', 'timing', 'pos_calc', 'si57x', 'fmc_active_clk', 'fmc250m_4ch', 'spi')\n",
             stderr);
         return 1;
     }
@@ -117,6 +119,14 @@ int main(int argc, char *argv[])
     si57x_args.add_argument("-s").help("startup frequency").required().scan<'f', double>();
     si57x_args.add_argument("-f").help("desired frequency").required().scan<'f', double>();
 
+    argparse::ArgumentParser spi_args("decode-reg spi", "1.0", argparse::default_arguments::help);
+    spi_args.add_parents(parent_args);
+    spi_args.add_argument("-q").help("type of SPI device").required();
+    spi_args.add_argument("-r").help("register address").scan<'x', uint8_t>().required();
+    spi_args.add_argument("-w").help("register value").scan<'x', uint8_t>();
+    spi_args.add_argument("-d").help("set default parameters").default_value(false).implicit_value(true);
+    spi_args.add_argument("-s").help("slave select").default_value((unsigned)0).scan<'d', unsigned>().required();
+
     argparse::ArgumentParser *pargs;
     if (mode == "reset" || mode == "timing" || mode == "pos_calc" || mode == "fmc_active_clk" || mode == "fmc250m_4ch") {
         pargs = &parent_args_with_help;
@@ -132,6 +142,8 @@ int main(int argc, char *argv[])
         pargs = &lamp_args;
     } else if (mode == "si57x") {
         pargs = &si57x_args;
+    } else if (mode == "spi") {
+        pargs = &spi_args;
     } else {
         fprintf(stderr, "Unsupported type: '%s'\n", mode.c_str());
         return 1;
@@ -439,6 +451,43 @@ int main(int argc, char *argv[])
         ctl.write_general("SLEEP_ADCS", 0);
 
         ctl.write_params();
+    }
+    if (mode == "spi") {
+        auto spi_fn = [&bars, &args, dev_index](auto &ctl, const auto &name) {
+            spi::Channel channel{args.get<unsigned>("-s")};
+
+            if (auto v = read_sdb(&bars, [&ctl](auto const &d){ return ctl.match_devinfo(d); }, dev_index)) {
+                ctl.set_devinfo(*v);
+            } else {
+                fprintf(stderr, "Couldn't find %s module index %u\n", name.c_str(), dev_index);
+                std::exit(1);
+            }
+
+            if (args.is_used("-d"))
+                if (!ctl.set_defaults(channel))
+                    fputs("set_defaults error\n", stderr);
+
+            auto reg_addr = args.get<uint8_t>("-r");
+
+            if (args.present<uint8_t>("-w"))
+                if (!ctl.set_reg(reg_addr, args.get<uint8_t>("-w"), channel))
+                    fputs("set_reg error\n", stderr);
+
+            uint8_t reg_read;
+            if (ctl.get_reg(reg_addr, reg_read, channel))
+                printf("reg@%#02x: %#02x\n", reg_addr, reg_read);
+            else
+                fputs("error when calling get_reg\n", stderr);
+        };
+
+        auto dev_type = args.get<std::string>("-q");
+        if (dev_type == "ad9510") {
+            ad9510::Controller ctl(bars);
+            spi_fn(ctl, dev_type);
+        } else if (dev_type == "isla216p") {
+            isla216p::Controller ctl(bars);
+            spi_fn(ctl, dev_type);
+        }
     }
 
     return 0;
