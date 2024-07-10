@@ -14,6 +14,7 @@ install_headers(
     'orbit_intlk.h',
     'pos_calc.h',
     'si57x_ctrl.h',
+    'spi.h',
     'sysid.h',
     'trigger_iface.h',
     'trigger_mux.h',
