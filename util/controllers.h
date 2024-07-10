@@ -44,9 +44,9 @@ class RegisterDecoderController: public RegisterController {
   public:
     void set_devinfo(const struct sdb_device_info &devinfo) override
     {
-        RegisterController::set_devinfo(devinfo);
         pdec->set_devinfo(devinfo);
         pdec->get_data();
+        RegisterController::set_devinfo(devinfo);
     }
 
     virtual void encode_params() override { }
