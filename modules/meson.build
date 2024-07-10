@@ -13,6 +13,7 @@ modules_src = [
   'orbit_intlk.cc',
   'pos_calc.cc',
   'si57x_ctrl.cc',
+  'spi.cc',
   'sysid.cc',
   'trigger_iface.cc',
   'trigger_mux.cc',
