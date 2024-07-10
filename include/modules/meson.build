@@ -1,6 +1,7 @@
 install_headers(
   [
     'acq.h',
+    'ad9510.h',
     'afc_timing.h',
     'bpm_swap.h',
     'fmc250m_4ch.h',

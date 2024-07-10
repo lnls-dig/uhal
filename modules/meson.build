@@ -1,5 +1,6 @@
 modules_src = [
   'acq.cc',
+  'ad9510.cc',
   'afc_timing.cc',
   'bpm_swap.cc',
   'fmc250m_4ch.cc',
