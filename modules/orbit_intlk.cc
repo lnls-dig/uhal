@@ -90,7 +90,7 @@ void Core::decode()
     add_general("EN", get_bit(t, ORBIT_INTLK_CTRL_EN));
     add_general("MIN_SUM_EN", get_bit(t, ORBIT_INTLK_CTRL_MIN_SUM_EN));
     add_general("POS_EN", get_bit(t, ORBIT_INTLK_CTRL_TRANS_EN));
-    add_general("ANG_EN", get_bit(t, ORBIT_INTLK_CTRL_ANG_CLR));
+    add_general("ANG_EN", get_bit(t, ORBIT_INTLK_CTRL_ANG_EN));
 
     t = regs.sts;
     add_general("POS_UPPER_X", get_bit(t, ORBIT_INTLK_STS_TRANS_BIGGER_X));
