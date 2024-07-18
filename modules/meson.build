@@ -10,6 +10,7 @@ modules_src = [
   'fofb_cc.cc',
   'fofb_processing.cc',
   'fofb_shaper_filt.cc',
+  'isla216p.cc',
   'lamp.cc',
   'orbit_intlk.cc',
   'pos_calc.cc',
