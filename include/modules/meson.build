@@ -11,6 +11,7 @@ install_headers(
     'fofb_cc.h',
     'fofb_processing.h',
     'fofb_shaper_filt.h',
+    'isla216p.h',
     'lamp.h',
     'orbit_intlk.h',
     'pos_calc.h',
