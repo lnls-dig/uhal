@@ -154,6 +154,11 @@ int main(int argc, char *argv[])
     if (mode == "build_info") {
         auto build_info = get_synthesis_info(&bars);
 
+        if (build_info.empty()) {
+            fputs("no SDB was found\n", stderr);
+            return 1;
+        }
+
         if (args.is_used("-q"))
             puts(build_info[0].name);
         else
