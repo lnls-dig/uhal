@@ -1,8 +1,6 @@
 #include <algorithm>
 #include <stdexcept>
 
-#include <boost/container_hash/hash.hpp>
-
 #include <tsl/ordered_map.h>
 
 #include "pcie.h"
@@ -10,11 +8,27 @@
 #include "util.h"
 #include "decoders.h"
 
+struct pairhash {
+    template <typename T, typename U>
+    std::size_t operator()(const std::pair<T, U> &x) const
+    {
+        std::hash<T> hasher_t;
+        std::hash<U> hasher_u;
+
+        auto hash_t = hasher_t(x.first);
+        auto hash_u = hasher_u(x.second);
+
+        hash_u ^= hash_t + 0x9e3779b9 + (hash_u<<6) + (hash_u>>2);
+
+        return hash_u;
+    }
+};
+
 struct RegisterDecoderPrivate {
     /** Hold decoded data from all registers */
-    tsl::ordered_map<decoders::data_key, decoders::data_type, boost::hash<decoders::data_key>> data;
+    tsl::ordered_map<decoders::data_key, decoders::data_type, pairhash> data;
 
-    std::unordered_map<decoders::data_key, RegisterField, boost::hash<decoders::data_key>> register_fields;
+    std::unordered_map<decoders::data_key, RegisterField, pairhash> register_fields;
 };
 
 RegisterDecoder::RegisterDecoder(
