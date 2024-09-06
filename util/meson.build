@@ -11,7 +11,7 @@ utilities_src = [
 utilities_lib = static_library(
   'uhal-utilities',
   utilities_src,
-  dependencies: [sdbfs, boost],
+  dependencies: [sdbfs],
   include_directories: ordered_map_inc,
   install: true
 )
