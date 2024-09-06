@@ -9,7 +9,7 @@ jobs:
       image: alpine:edge
     steps:
       - name: Install dependencies
-        run: apk add git meson gcc g++ musl-dev boost-dev
+        run: apk add git meson gcc g++ musl-dev
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
