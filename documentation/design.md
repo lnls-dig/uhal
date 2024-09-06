@@ -92,3 +92,20 @@ because it shifts addresses 3 bits to the right. Therefore, in order to access
 a 32-bit word located at address `0x0100` (per the SDB), for example, one must
 access `0x0100 << 3 = 0x0800`; and, in order to access the next 32-bit word,
 one must access `(0x0100 + 4) << 3 = 0x0820`.
+
+## Low level interface
+
+The low level interface consists simply of a `struct pcie_bars` object, which
+allows its user to read and write from bars 2 and 4 (`BAR0` is considered an
+implementation detail) using the functions defined in `util/pcie.h`.
+
+`BAR2` can also be accessed when `struct pcie_bars` points to a serial port,
+which is used when debugging boards outside of a MTCA crate.
+
+All other functionality of this project depends on the low level interface.
+
+## Basic abstractions
+
+### SDB access
+
+SDB access
