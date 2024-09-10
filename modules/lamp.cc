@@ -32,18 +32,18 @@ const std::vector<std::string> mode_list({
 Core::Core(struct pcie_bars &bars):
     RegisterDecoder(bars, ref_devinfo, {
         PRINTER("AMP_STATUS", "Amplifier flags", PrinterType::value_hex),
-        PRINTER("AMP_IFLAG_L", "Amplifier Left Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
-        PRINTER("AMP_TFLAG_L", "Amplifier Left Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),
-        PRINTER("AMP_IFLAG_R", "Amplifier Right Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
-        PRINTER("AMP_TFLAG_R", "Amplifier Right Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),
+        PRINTER("AMP_IFLAG_L", "Amplifier Left Current Limit Flag", "current over limit", "current under limit"),
+        PRINTER("AMP_TFLAG_L", "Amplifier Left Thermal Limit Flag", "temperature over limit", "temperature under limit"),
+        PRINTER("AMP_IFLAG_R", "Amplifier Right Current Limit Flag", "current over limit", "current under limit"),
+        PRINTER("AMP_TFLAG_R", "Amplifier Right Thermal Limit Flag", "temperature over limit", "temperature under limit"),
         PRINTER("AMP_STATUS_LATCH", "Amplifier flags", PrinterType::value_hex),
-        PRINTER("AMP_IFLAG_L_LATCH", "Amplifier Left Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
-        PRINTER("AMP_TFLAG_L_LATCH", "Amplifier Left Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),
-        PRINTER("AMP_IFLAG_R_LATCH", "Amplifier Right Current Limit Flag", PrinterType::boolean, "current under limit", "current over limit"),
-        PRINTER("AMP_TFLAG_R_LATCH", "Amplifier Right Thermal Limit Flag", PrinterType::boolean, "temperature under limit", "temperature over limit"),
+        PRINTER("AMP_IFLAG_L_LATCH", "Amplifier Left Current Limit Flag", "current over limit", "current under limit"),
+        PRINTER("AMP_TFLAG_L_LATCH", "Amplifier Left Thermal Limit Flag", "temperature over limit", "temperature under limit"),
+        PRINTER("AMP_IFLAG_R_LATCH", "Amplifier Right Current Limit Flag", "current over limit", "current under limit"),
+        PRINTER("AMP_TFLAG_R_LATCH", "Amplifier Right Thermal Limit Flag", "temperature over limit", "temperature under limit"),
         PRINTER("AMP_EN", "Amplifier Enable", PrinterType::boolean),
         /* TODO: add test mode when it becomes a single value */
-        PRINTER("MODE", "Power supply operation mode", PrinterType::custom_function,
+        PRINTER("MODE", "Power supply operation mode",
             [](FILE *f, bool v, uint32_t value){
                 (void)v;
                 static const char *modes[8] = {

@@ -69,8 +69,8 @@ namespace {
 
 Core::Core(struct pcie_bars &bars):
     RegisterDecoder(bars, ref_devinfo, {
-        PRINTER("FSQ_ACQ_NOW", "Acquire data immediately and don't wait for any trigger", PrinterType::boolean, "acquire immediately", "wait on trigger"),
-        PRINTER("FSM_STATE", "State machine status", PrinterType::custom_function,
+        PRINTER("FSQ_ACQ_NOW", "Acquire data immediately and don't wait for any trigger", "wait on trigger", "acquire immediately"),
+        PRINTER("FSM_STATE", "State machine status",
             [](FILE *f, bool v, uint32_t value){
                 (void)v;
                 static const char *fsm_states[] = {"IDLE", "PRE_TRIG", "WAIT_TRIG", "POST_TRIG", "DECR_SHOT"};
@@ -87,10 +87,10 @@ Core::Core(struct pcie_bars &bars):
         ),
         PRINTER("FSM_ACQ_DONE", "FSM acquisition status", PrinterType::progress),
         PRINTER("FC_TRANS_DONE", "External flow control transfer status", PrinterType::boolean),
-        PRINTER("FC_FULL", "External flow control FIFO full status", PrinterType::boolean, "full (data may be lost)", "full"),
+        PRINTER("FC_FULL", "External flow control FIFO full status", "full", "full (data may be lost)"),
         PRINTER("DDR3_TRANS_DONE", "DDR3 transfer status", PrinterType::progress),
-        PRINTER("HW_TRIG_SEL", "Hardware trigger selection", PrinterType::boolean, "external", "internal"),
-        PRINTER("HW_TRIG_POL", "Hardware trigger polarity", PrinterType::boolean, "negative edge", "positive edge"),
+        PRINTER("HW_TRIG_SEL", "Hardware trigger selection", "internal", "external"),
+        PRINTER("HW_TRIG_POL", "Hardware trigger polarity", "positive edge", "negative edge"),
         PRINTER("HW_TRIG_EN", "Hardware trigger enable", PrinterType::enable),
         PRINTER("SW_TRIG_EN", "Software trigger enable", PrinterType::enable),
         PRINTER("INT_TRIG_SEL", "Atom selection for internal trigger", PrinterType::value),

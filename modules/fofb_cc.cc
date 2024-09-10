@@ -74,7 +74,7 @@ Core::Core(struct pcie_bars &bars):
     RegisterDecoder(bars, ref_devinfo, {
         /* normal wishbone registers */
         PRINTER("CC_ENABLE", "Enable CC module", PrinterType::enable),
-        PRINTER("TFS_OVERRIDE", "Timeframe start override", PrinterType::boolean, "override, use external signal", "normal, use internal signal"),
+        PRINTER("TFS_OVERRIDE", "Timeframe start override", "normal, use internal signal", "override, use external signal"),
         PRINTER("TOA_RD_EN", "Enable Time of Arrival module for reading", PrinterType::enable),
         PRINTER("TOA_DATA", "Time of Arrival data", PrinterType::value),
         PRINTER("RCB_RD_EN", "Enable Received Buffer module for reading", PrinterType::enable),

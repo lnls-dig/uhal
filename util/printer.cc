@@ -19,28 +19,22 @@ Printer::Printer(const char *name, const char *description, PrinterType type):
             boolean_names.truth = "enabled";
             boolean_names.not_truth = "disabled";
             break;
-        case PrinterType::custom_function:
-            throw std::invalid_argument("this constructor shouldn't be used for PrinterType::custom_function");
+        case PrinterType::internal_custom_function:
+            throw std::invalid_argument("this constructor shouldn't be used for PrinterType::internal_custom_function");
             break;
         default:
             break;
     }
 }
 
-Printer::Printer(const char *name, const char *description, PrinterType type, printing_function custom_fn):
-    type(type), name(name), description(description), custom_fn(custom_fn)
+Printer::Printer(const char *name, const char *description, printing_function custom_fn):
+    type(PrinterType::internal_custom_function), name(name), description(description), custom_fn(custom_fn)
 {
-    if (type != PrinterType::custom_function) {
-        throw std::invalid_argument("this constructor should only be used for PrinterType::custom_function");
-    }
 }
 
-Printer::Printer(const char *name, const char *description, PrinterType type, const char *truth, const char *not_truth):
-    type(type), name(name), description(description), boolean_names{truth, not_truth}
+Printer::Printer(const char *name, const char *description, const char *not_truth, const char *truth):
+    type(PrinterType::boolean), name(name), description(description), boolean_names{truth, not_truth}
 {
-    if (type != PrinterType::boolean) {
-        throw std::invalid_argument("this constructor should only be used for PrinterType::boolean");
-    }
 }
 
 PrinterType Printer::get_type() const
@@ -85,7 +79,7 @@ void Printer::print(FILE *f, bool verbose, unsigned indent, T value) const
         case PrinterType::value_float:
             fprintf(f, "%s: %lf\n", final_name, (double)value);
             break;
-        case PrinterType::custom_function:
+        case PrinterType::internal_custom_function:
             fprintf(f, "%s: ", final_name);
             custom_fn(f, verbose, value);
             break;
