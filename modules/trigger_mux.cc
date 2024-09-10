@@ -29,9 +29,9 @@ struct trigger_mux_regs {
 
 Core::Core(struct pcie_bars &bars):
     RegisterDecoder(bars, ref_devinfo, {
-        PRINTER("RCV_SRC", "Receiver Source", PrinterType::boolean, "Internal Signals", "Triggers"),
+        PRINTER("RCV_SRC", "Receiver Source", "Triggers", "Internal Signals"),
         PRINTER("RCV_IN_SEL", "Select Receiver Input", PrinterType::value),
-        PRINTER("TRANSM_SRC", "Transmitter Source", PrinterType::boolean, "Internal Signals", "Triggers"),
+        PRINTER("TRANSM_SRC", "Transmitter Source", "Triggers", "Internal Signals"),
         PRINTER("TRANSM_OUT_SEL", "Select Transmitter Output", PrinterType::value),
     }),
     CONSTRUCTOR_REGS(struct trigger_mux_regs)

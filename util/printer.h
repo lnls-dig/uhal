@@ -16,7 +16,7 @@ enum class PrinterType {
     value_hex,
     value_float,
     /* allow it to print its own value */
-    custom_function,
+    internal_custom_function,
 };
 
 typedef std::function<void(FILE *, bool, uint32_t)> printing_function;
@@ -34,8 +34,8 @@ class Printer {
 
   public:
     Printer(const char *name, const char *description, PrinterType type);
-    Printer(const char *name, const char *description, PrinterType type, printing_function custom_fn);
-    Printer(const char *name, const char *description, PrinterType type, const char *truth, const char *not_truth);
+    Printer(const char *name, const char *description, printing_function custom_fn);
+    Printer(const char *name, const char *description, const char *not_truth, const char *truth);
 
     PrinterType get_type() const;
 

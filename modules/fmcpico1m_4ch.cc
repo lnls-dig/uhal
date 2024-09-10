@@ -34,8 +34,8 @@ const std::vector<std::string> range_list = {
 
 Core::Core(struct pcie_bars &bars):
     RegisterDecoder(bars, ref_devinfo, {
-        PRINTER("PRSNT", "FMC Present", PrinterType::boolean, "no FMC card", "card present"),
-        PRINTER("RANGE", "Input Range Control for ADC", PrinterType::boolean, range_list[1].c_str(), range_list[0].c_str()),
+        PRINTER("PRSNT", "FMC Present", "card present", "no FMC card"),
+        PRINTER("RANGE", "Input Range Control for ADC", range_list[0].c_str(), range_list[1].c_str()),
         PRINTER("DATA", "ADC Data from channel", PrinterType::value_hex),
     }),
     CONSTRUCTOR_REGS(struct fmcpico1m_4ch)

@@ -29,8 +29,8 @@ struct trigger_iface_regs {
 
 Core::Core(struct pcie_bars &bars):
     RegisterDecoder(bars, ref_devinfo, {
-        PRINTER("DIR", "Trigger Direction", PrinterType::boolean, "Receiver Mode", "Transmitter Mode"),
-        PRINTER("DIR_POL", "Trigger Direction Polarity", PrinterType::boolean, "Reversed backplane trigger direction", "Same backplane trigger direction"),
+        PRINTER("DIR", "Trigger Direction", "Transmitter Mode", "Receiver Mode"),
+        PRINTER("DIR_POL", "Trigger Direction Polarity", "Same backplane trigger direction", "Reversed backplane trigger direction"),
         PRINTER("RCV_LEN", "Receiver Pulse Length", PrinterType::value),
         PRINTER("TRANSM_LEN", "Transmitter Pulse Length", PrinterType::value),
         PRINTER("RCV_COUNT", "Receiver Counter", PrinterType::value),
