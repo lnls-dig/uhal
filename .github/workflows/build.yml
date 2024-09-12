@@ -19,7 +19,7 @@ jobs:
       matrix:
         distro:
           - { image: "debian:12", update_cmd: "apt update", install_cmd: "apt install -y" }
-          - { image: "alpine:3.18", update_cmd: "true", install_cmd: "apk add --no-cache", packages: "g++ musl-dev" }
+          - { image: "alpine:3.20", update_cmd: "true", install_cmd: "apk add --no-cache", packages: "g++ musl-dev" }
           - { image: "alpine:edge", update_cmd: "true", install_cmd: "apk add --no-cache", packages: "g++ musl-dev" }
         compiler:
           - { cc: gcc, cxx: g++ }
