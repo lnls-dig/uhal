@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    if (verbose) read_sdb(&bars, print_sdb);
+    if (verbose) read_sdb(&bars, nullptr, 0);
 
     if (mode == "decode") {
         auto type = args.get<std::string>("-q");

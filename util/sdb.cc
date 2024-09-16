@@ -1,3 +1,5 @@
+#include <cassert>
+
 #include <endian.h>
 #include <limits.h>
 #include <stdint.h>
@@ -42,9 +44,25 @@ static struct sdbfs sdbfs_init(struct pcie_bars *bars)
     return fs;
 }
 
-std::optional<struct sdb_device_info> read_sdb(struct pcie_bars *bars, device_match_fn device_match)
+static void print_sdb(const struct sdb_device_info &devinfo, const struct sdb_product *product, const struct sdbfs &fs)
 {
-    return read_sdb(bars, device_match, UINT_MAX);
+    const char indentation[] = "                ";
+    const size_t indent = 4;
+    static_assert(((sizeof indentation) - 1) % indent == 0);
+    const size_t max_indent = ((sizeof indentation) - 1) / indent;
+
+    /* fs.depth starts at 1 */
+    size_t depth = fs.depth - 1;
+    assert(depth <= max_indent);
+
+    static_assert(sizeof product->name == 19);
+    fprintf(stdout, "%sname %19s id %08jx vendor %016jx version %04x.%04x addr %08jx\n",
+        /* indent entries according to fs.depth */
+        indentation + indent * (max_indent - depth),
+        product->name,
+        (uintmax_t)devinfo.device_id, (uintmax_t)devinfo.vendor_id,
+        (unsigned)devinfo.abi_ver_major, (unsigned)devinfo.abi_ver_minor,
+        (uintmax_t)devinfo.start_addr);
 }
 
 std::optional<struct sdb_device_info> read_sdb(struct pcie_bars *bars, device_match_fn device_match, unsigned pos)
@@ -65,21 +83,16 @@ std::optional<struct sdb_device_info> read_sdb(struct pcie_bars *bars, device_ma
         devinfo.abi_ver_major = d->abi_ver_major;
         devinfo.abi_ver_minor = d->abi_ver_minor;
 
-        if (device_match && device_match(devinfo)) {
-            if (pos == 0) return devinfo;
-            else pos--;
+        if (device_match) {
+            if (device_match(devinfo)) {
+                if (pos == 0) return devinfo;
+                else pos--;
+            }
+        } else {
+            print_sdb(devinfo, p, fs);
         }
     }
     return std::nullopt;
-}
-
-bool print_sdb(const struct sdb_device_info &devinfo)
-{
-    fprintf(stdout, "id %08jx vendor %016jx version %04x.%04x addr %08jx\n",
-        (uintmax_t)devinfo.device_id, (uintmax_t)devinfo.vendor_id,
-        (unsigned)devinfo.abi_ver_major, (unsigned)devinfo.abi_ver_minor,
-        (uintmax_t)devinfo.start_addr);
-    return false;
 }
 
 std::vector<struct sdb_synthesis_info> get_synthesis_info(struct pcie_bars *bars)
