@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
         fputs(
             "Usage: decode-reg mode <mode specific options>\n\n"
             "Positional arguments:\n"
-            "mode      mode of operation ('reset', 'build_info', 'decode', 'ram', 'acq', 'lamp', 'timing', 'pos_calc', 'si57x', 'fmc_active_clk', 'fmc250m_4ch', 'spi')\n",
+            "mode      mode of operation ('reset', 'build_info', 'sdb', 'decode', 'ram', 'acq', 'lamp', 'timing', 'pos_calc', 'si57x', 'fmc_active_clk', 'fmc250m_4ch', 'spi')\n",
             stderr);
         return 1;
     }
@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
     spi_args.add_argument("-s").help("slave select").default_value((unsigned)0).scan<'d', unsigned>().required();
 
     argparse::ArgumentParser *pargs;
-    if (mode == "reset" || mode == "timing" || mode == "pos_calc" || mode == "fmc_active_clk" || mode == "fmc250m_4ch") {
+    if (mode == "reset" || mode == "sdb" || mode == "timing" || mode == "pos_calc" || mode == "fmc_active_clk" || mode == "fmc250m_4ch") {
         pargs = &parent_args_with_help;
     } else if (mode == "build_info") {
         pargs = &build_info_args;
@@ -197,8 +197,10 @@ int main(int argc, char *argv[])
 
         return 0;
     }
-
-    if (verbose) read_sdb(&bars, nullptr, 0);
+    if (mode == "sdb") {
+        read_sdb(&bars, nullptr, 0);
+        return 0;
+    }
 
     if (mode == "decode") {
         auto type = args.get<std::string>("-q");
