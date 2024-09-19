@@ -33,5 +33,6 @@ header_dir = 'uhal'
 
 subdir('include')
 subdir('util')
+subdir('templates')
 subdir('modules')
 subdir('app')
