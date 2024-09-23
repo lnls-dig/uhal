@@ -28,6 +28,27 @@ void configure_mutexes(struct pcie_bars &bars)
             throw std::runtime_error("couldn't initialize mutex");
 }
 
+void lock_file(int fd)
+{
+    struct flock arg = {
+        /* exclusive lock */
+        .l_type = F_WRLCK,
+        /* lock the whole file */
+        .l_whence = SEEK_SET,
+        .l_start = 0,
+        .l_len = 0,
+        /* application is responsible for setting to 0 for OFD locks */
+        .l_pid = 0,
+    };
+    if (fcntl(fd, F_OFD_SETLK, &arg) < 0) {
+        /* allow program to work when F_OFD_SETLK isn't implemented */
+        if (errno == EINVAL)
+            fputs("WARNING: F_OFD_SETLK not supported!\n", stderr);
+        else
+            throw std::runtime_error(std::string("couldn't lock file"));
+    }
+}
+
 }
 
 void dev_open_slot(struct pcie_bars &bars, int slot)
@@ -69,6 +90,8 @@ void dev_open(struct pcie_bars &bars, const char *pci_address)
             if (fd < 0)
                 throw std::runtime_error(std::string("couldn't open resource file: ") + pci_address);
         }
+        if (bar == 0)
+            lock_file(fd);
         struct stat st;
         fstat(fd, &st);
         bars.sizes[i] = st.st_size;
