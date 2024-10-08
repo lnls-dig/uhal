@@ -138,7 +138,11 @@ void Core::decode()
         add_channel("CH_POL", i, get_bit(t, TIMING_AMC0_POL));
         add_channel("CH_LOG", i, get_bit(t, TIMING_AMC0_LOG));
         add_channel("CH_ITL", i, get_bit(t, TIMING_AMC0_ITL));
-        add_channel("CH_SRC", i, extract_value<uint8_t>(t, TIMING_AMC0_SRC_MASK));
+
+        auto ch_src = extract_value<uint8_t>(t, TIMING_AMC0_SRC_MASK);
+        assert(ch_src < Controller::sources_list.size());
+        add_channel("CH_SRC", i, ch_src);
+
         add_channel("CH_DIR", i, get_bit(t, TIMING_AMC0_DIR));
 
         add_channel("CH_PULSES", i, trigger.pulses);
