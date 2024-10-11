@@ -24,13 +24,22 @@ class Core: public RegisterDecoder {
     ~Core() override;
 };
 
-class Controller: public RegisterController {
-  protected:
+class Controller: public RegisterDecoderController {
     std::unique_ptr<struct afc_timing> regs_storage;
     struct afc_timing &regs;
 
-    void set_devinfo_callback() override;
+    Core dec;
+
     void encode_params() override;
+    void unset_commands() override;
+
+    /** Configuration values for RTM and AFC reference clocks */
+    struct clock {
+        uint64_t rfreq;
+        uint8_t n1, hs_div;
+    } rtm_clock = {}, afc_clock = {};
+
+    bool set_freq(double, struct Controller::clock &);
 
   public:
     Controller(struct pcie_bars &);
@@ -38,39 +47,8 @@ class Controller: public RegisterController {
 
     static const std::vector<std::string> sources_list;
 
-    bool event_receiver_enable = true;
-    bool reset_latches = false;
-    /** Configuration values for RTM and AFC reference clocks */
-    struct clock {
-        uint64_t rfreq;
-        uint8_t n1, hs_div;
-        struct {
-            uint16_t kp, ki;
-        } freq_loop, phase_loop;
-        struct {
-            uint16_t navg;
-            uint8_t div_exp;
-        } ddmtd_config;
-    } rtm_clock = {}, afc_clock = {};
-
-    struct parameters {
-        bool enable, polarity, log, interlock;
-        std::string source = "Trigger";
-        bool direction, count_reset;
-        uint16_t pulses;
-        uint8_t event_code;
-        uint32_t delay;
-        uint32_t width;
-    };
-    std::vector<struct parameters> parameters;
-
     bool set_rtm_freq(double);
     bool set_afc_freq(double);
-
-    void write_params() override;
-
-  private:
-    bool set_freq(double, struct Controller::clock &);
 };
 
 } /* namespace afc_timing */
