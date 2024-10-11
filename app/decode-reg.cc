@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
         fputs(
             "Usage: decode-reg mode <mode specific options>\n\n"
             "Positional arguments:\n"
-            "mode      mode of operation ('reset', 'build_info', 'sdb', 'decode', 'ram', 'acq', 'lamp', 'timing', 'pos_calc', 'si57x', 'fmc_active_clk', 'fmc250m_4ch', 'spi')\n",
+            "mode      mode of operation ('reset', 'build_info', 'sdb', 'decode', 'ram', 'acq', 'lamp', 'pos_calc', 'si57x', 'fmc_active_clk', 'fmc250m_4ch', 'spi')\n",
             stderr);
         return 1;
     }
@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
     spi_args.add_argument("-s").help("slave select").default_value((unsigned)0).scan<'d', unsigned>().required();
 
     argparse::ArgumentParser *pargs;
-    if (mode == "reset" || mode == "sdb" || mode == "timing" || mode == "pos_calc" || mode == "fmc_active_clk" || mode == "fmc250m_4ch") {
+    if (mode == "reset" || mode == "sdb" || mode == "pos_calc" || mode == "fmc_active_clk" || mode == "fmc250m_4ch") {
         pargs = &parent_args_with_help;
     } else if (mode == "build_info") {
         pargs = &build_info_args;
@@ -348,30 +348,6 @@ int main(int argc, char *argv[])
         ctl.write_channel("CNT", channel, args.get<int>("-C"));
 
         ctl.write_channel("TRIG_EN", channel, (int32_t)args.get<unsigned>("-T"));
-
-        ctl.write_params();
-    }
-    if (mode == "timing") {
-        afc_timing::Controller ctl(bars);
-        if (auto v = read_sdb(&bars, ctl.match_devinfo_lambda, dev_index)) {
-            ctl.set_devinfo(*v);
-        } else {
-            fprintf(stderr, "Couldn't find timing module index %u\n", dev_index);
-            return 1;
-        }
-
-        ctl.event_receiver_enable = true;
-
-        ctl.set_rtm_freq(499667736.71/4.);
-        ctl.set_afc_freq(499667736.71/4. * 5./9.);
-
-        ctl.afc_clock.freq_loop.kp = 1;
-        ctl.afc_clock.freq_loop.ki = 1500;
-        ctl.afc_clock.phase_loop.kp = 10;
-        ctl.afc_clock.phase_loop.ki = 1;
-
-        ctl.afc_clock.ddmtd_config.div_exp = 1;
-        ctl.afc_clock.ddmtd_config.navg = 7;
 
         ctl.write_params();
     }
