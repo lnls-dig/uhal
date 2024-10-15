@@ -36,7 +36,7 @@ namespace {
     struct sdb_device_info ref_devinfo = {
         .vendor_id = LNLS_VENDORID,
         .device_id = AFC_TIMING_DEVID,
-        .abi_ver_major = 1
+        .abi_ver_major = 2
     };
 }
 
@@ -58,15 +58,19 @@ struct afc_timing {
 
 Core::Core(struct pcie_bars &bars):
     RegisterDecoder(bars, ref_devinfo, {
-        PRINTER("STA_LINK", "Fiber link", PrinterType::enable),
-        PRINTER("STA_RXEN", "RX Enable", PrinterType::enable),
-        PRINTER("STA_REFCLKLOCK", "AFC clock locked", PrinterType::boolean),
-        PRINTER("STA_EVREN", "Event receiver enable", PrinterType::boolean),
-        PRINTER("STA_LOCKED_RTM", "RTM clock locked", PrinterType::boolean),
-        PRINTER("STA_LOCKED_GT0", "GT0 clock locked", PrinterType::boolean),
-        PRINTER("STA_LOCKED_AFC_LATCH", "AFC clock locked (latch)", PrinterType::boolean),
-        PRINTER("STA_LOCKED_RTM_LATCH", "RTM clock locked (latch)", PrinterType::boolean),
-        PRINTER("STA_LOCKED_GT0_LATCH", "GT0 clock locked (latch)", PrinterType::boolean),
+        PRINTER("LINK", "Fiber link", PrinterType::enable),
+        PRINTER("RXEN", "RX Enable", PrinterType::enable),
+        PRINTER("EVREN", "Event receiver enable", PrinterType::boolean),
+        PRINTER("LOCKED_AFC_FREQ", "AFC PLL frequency lock status", PrinterType::boolean),
+        PRINTER("LOCKED_AFC_PHASE", "AFC PLL phase lock status", PrinterType::boolean),
+        PRINTER("LOCKED_RTM_FREQ", "RTM PLL frequency lock status", PrinterType::boolean),
+        PRINTER("LOCKED_RTM_PHASE", "RTM PLL phase lock status", PrinterType::boolean),
+        PRINTER("LOCKED_GT0", "GT0 PLL lock status", PrinterType::boolean),
+        PRINTER("LOCKED_AFC_FREQ_LTC", "Latched AFC PLL frequency lock status", PrinterType::boolean),
+        PRINTER("LOCKED_AFC_PHASE_LTC", "Latched AFC PLL phase lock status", PrinterType::boolean),
+        PRINTER("LOCKED_RTM_FREQ_LTC", "Latched RTM PLL frequency lock status", PrinterType::boolean),
+        PRINTER("LOCKED_RTM_PHASE_LTC", "Latched RTM PLL phase lock status", PrinterType::boolean),
+        PRINTER("LOCKED_GT0_LTC", "Latched GT0 PLL lock status", PrinterType::boolean),
         PRINTER("ALIVE", "Alive counter", PrinterType::value),
 
         PRINTER("RFREQ_HI", "Si57x RFREQ MSB", PrinterType::value),
@@ -102,16 +106,22 @@ Core::~Core() = default;
 
 void Core::decode()
 {
-    uint32_t t = regs.stat;
-    add_general("STA_LINK", get_bit(t, TIMING_STAT_LINK));
-    add_general("STA_RXEN", get_bit(t, TIMING_STAT_RXEN));
-    add_general("STA_REFCLKLOCK", get_bit(t, TIMING_STAT_REFCLKLOCK));
-    add_general("STA_EVREN", get_bit(t, TIMING_STAT_EVREN));
-    add_general("STA_LOCKED_RTM", get_bit(t, TIMING_STAT_LOCKED_RTM));
-    add_general("STA_LOCKED_GT0", get_bit(t, TIMING_STAT_LOCKED_GT0));
-    add_general("STA_LOCKED_AFC_LATCH", get_bit(t, TIMING_STAT_LOCKED_AFC_LATCH));
-    add_general("STA_LOCKED_RTM_LATCH", get_bit(t, TIMING_STAT_LOCKED_RTM_LATCH));
-    add_general("STA_LOCKED_GT0_LATCH", get_bit(t, TIMING_STAT_LOCKED_GT0_LATCH));
+    uint32_t *pt = &regs.stat;
+    add_general("LINK", get_bit(*pt, TIMING_STAT_LINK));
+    add_general("RXEN", get_bit(*pt, TIMING_STAT_RXEN));
+    add_general("EVREN", rf_get_bit(*pt, TIMING_STAT_EVREN));
+
+    add_general("LOCKED_AFC_FREQ", get_bit(*pt, TIMING_STAT_LOCKED_AFC_FREQ));
+    add_general("LOCKED_AFC_PHASE", get_bit(*pt, TIMING_STAT_LOCKED_AFC_PHASE));
+    add_general("LOCKED_RTM_FREQ", get_bit(*pt, TIMING_STAT_LOCKED_RTM_FREQ));
+    add_general("LOCKED_RTM_PHASE", get_bit(*pt, TIMING_STAT_LOCKED_RTM_PHASE));
+    add_general("LOCKED_GT0", get_bit(*pt, TIMING_STAT_LOCKED_GT0));
+    add_general("LOCKED_AFC_FREQ_LTC", get_bit(*pt, TIMING_STAT_LOCKED_AFC_FREQ_LTC));
+    add_general("LOCKED_AFC_PHASE_LTC", get_bit(*pt, TIMING_STAT_LOCKED_AFC_PHASE_LTC));
+    add_general("LOCKED_RTM_FREQ_LTC", get_bit(*pt, TIMING_STAT_LOCKED_RTM_FREQ_LTC));
+    add_general("LOCKED_RTM_PHASE_LTC", get_bit(*pt, TIMING_STAT_LOCKED_RTM_PHASE_LTC));
+    add_general("LOCKED_GT0_LTC", get_bit(*pt, TIMING_STAT_LOCKED_GT0_LTC));
+    add_general("RST_LOCKED_LTCS", rf_get_bit(*pt, TIMING_STAT_RST_LOCKED_LTCS));
 
     add_general("ALIVE", regs.alive);
 
@@ -121,44 +131,46 @@ void Core::decode()
         add_channel("RFREQ_LO", i, clockp->rfreq_lo);
         add_channel("N1", i, extract_value<uint8_t>(clockp->n1_hs_div, TIMING_RTM_N1_MASK));
         add_channel("HS_DIV", i, extract_value<uint8_t>(clockp->n1_hs_div, TIMING_RTM_HS_DIV_MASK));
-        add_channel("FREQ_KP", i, extract_value<int16_t>(clockp->freq_control_loop, TIMING_RTM_FREQ_KP_MASK));
-        add_channel("FREQ_KI", i, extract_value<int16_t>(clockp->freq_control_loop, TIMING_RTM_FREQ_KI_MASK));
-        add_channel("PHASE_KP", i, extract_value<int16_t>(clockp->phase_control_loop, TIMING_RTM_PHASE_KP_MASK));
-        add_channel("PHASE_KI", i, extract_value<int16_t>(clockp->phase_control_loop, TIMING_RTM_PHASE_KI_MASK));
-        add_channel("MAF_NAVG", i, extract_value<uint16_t>(clockp->maf, TIMING_RTM_MAF_NAVG_MASK));
-        add_channel("MAF_DIV_EXP", i, extract_value<uint16_t>(clockp->maf, TIMING_RTM_MAF_DIV_EXP_MASK));
+        add_channel("FREQ_KP", i, rf_extract_value(clockp->freq_control_loop, TIMING_RTM_FREQ_KP_MASK, true));
+        add_channel("FREQ_KI", i, rf_extract_value(clockp->freq_control_loop, TIMING_RTM_FREQ_KI_MASK, true));
+        add_channel("PHASE_KP", i, rf_extract_value(clockp->phase_control_loop, TIMING_RTM_PHASE_KP_MASK, true));
+        add_channel("PHASE_KI", i, rf_extract_value(clockp->phase_control_loop, TIMING_RTM_PHASE_KI_MASK, true));
+        add_channel("MAF_NAVG", i, rf_extract_value(clockp->maf, TIMING_RTM_MAF_NAVG_MASK));
+        add_channel("MAF_DIV_EXP", i, rf_extract_value(clockp->maf, TIMING_RTM_MAF_DIV_EXP_MASK));
         i++;
     }
 
     for (unsigned i = 0; i < *number_of_channels; i++) {
-        auto const &trigger = regs.trigger[i];
+        auto &trigger = regs.trigger[i];
 
-        t = trigger.config;
-        add_channel("CH_EN", i, get_bit(t, TIMING_AMC0_EN));
-        add_channel("CH_POL", i, get_bit(t, TIMING_AMC0_POL));
-        add_channel("CH_LOG", i, get_bit(t, TIMING_AMC0_LOG));
-        add_channel("CH_ITL", i, get_bit(t, TIMING_AMC0_ITL));
+        pt = &trigger.config;
+        add_channel("CH_EN", i, rf_get_bit(*pt, TIMING_AMC0_EN));
+        add_channel("CH_POL", i, rf_get_bit(*pt, TIMING_AMC0_POL));
+        add_channel("CH_LOG", i, rf_get_bit(*pt, TIMING_AMC0_LOG));
+        add_channel("CH_ITL", i, rf_get_bit(*pt, TIMING_AMC0_ITL));
 
-        auto ch_src = extract_value<uint8_t>(t, TIMING_AMC0_SRC_MASK);
-        assert(ch_src < Controller::sources_list.size());
+        auto ch_src = rf_extract_value(*pt, TIMING_AMC0_SRC_MASK);
+        assert(std::get<int32_t>(ch_src.value) < (ssize_t)Controller::sources_list.size());
         add_channel("CH_SRC", i, ch_src);
 
-        add_channel("CH_DIR", i, get_bit(t, TIMING_AMC0_DIR));
+        add_channel("CH_DIR", i, rf_get_bit(*pt, TIMING_AMC0_DIR));
 
-        add_channel("CH_PULSES", i, trigger.pulses);
+        add_channel("CH_COUNT_RST", i, rf_get_bit(*pt, TIMING_AMC0_COUNT_RST));
+
+        add_channel("CH_PULSES", i, rf_whole_register(trigger.pulses));
         add_channel("CH_COUNT", i, trigger.count);
-        add_channel("CH_EVT", i, trigger.evt);
-        add_channel("CH_DLY", i, trigger.dly);
-        add_channel("CH_WDT", i, trigger.wdt);
+        add_channel("CH_EVT", i, rf_whole_register(trigger.evt));
+        add_channel("CH_DLY", i, rf_whole_register(trigger.dly));
+        add_channel("CH_WDT", i, rf_whole_register(trigger.wdt));
     }
 }
 
 Controller::Controller(struct pcie_bars &bars):
-    RegisterController(bars, ref_devinfo),
-    CONSTRUCTOR_REGS(struct afc_timing)
+    RegisterDecoderController(bars, ref_devinfo, &dec),
+    CONSTRUCTOR_REGS(struct afc_timing),
+    dec(bars)
 {
     set_read_dest(regs);
-    parameters.resize(NUM_CHANNELS);
 }
 Controller::~Controller() = default;
 
@@ -173,10 +185,6 @@ const std::vector<std::string> Controller::sources_list = {
     "Clock6",
     "Clock7",
 };
-
-void Controller::set_devinfo_callback()
-{
-}
 
 bool Controller::set_rtm_freq(double freq)
 {
@@ -202,57 +210,22 @@ bool Controller::set_freq(double freq, struct clock &clock)
 
 void Controller::encode_params()
 {
-    insert_bit(regs.stat, event_receiver_enable, TIMING_STAT_EVREN);
-    insert_bit(regs.stat, reset_latches, TIMING_STAT_RST_LATCH);
-
     auto setup_clock = [](const auto &parameters, auto &registers) {
         registers.rfreq_hi = parameters.rfreq >> 20;
         registers.rfreq_lo = parameters.rfreq & 0xfffff;
 
         clear_and_insert(registers.n1_hs_div, parameters.n1, TIMING_RTM_N1_MASK);
         clear_and_insert(registers.n1_hs_div, parameters.hs_div, TIMING_RTM_HS_DIV_MASK);
-
-        auto setup_loop = [](const auto &p, auto &r) {
-            clear_and_insert(r, p.kp, TIMING_RTM_FREQ_KP_MASK);
-            clear_and_insert(r, p.ki, TIMING_RTM_FREQ_KI_MASK);
-        };
-        setup_loop(parameters.freq_loop, registers.freq_control_loop);
-        setup_loop(parameters.phase_loop, registers.phase_control_loop);
-
-        clear_and_insert(registers.maf, parameters.ddmtd_config.div_exp, TIMING_RTM_MAF_DIV_EXP_MASK);
-        clear_and_insert(registers.maf, parameters.ddmtd_config.navg, TIMING_RTM_MAF_NAVG_MASK);
     };
     setup_clock(rtm_clock, regs.rtm_clock);
     setup_clock(afc_clock, regs.afc_clock);
-
-    auto setup_trigger = [](const auto &parameters, auto &registers) {
-        insert_bit(registers.config, parameters.enable, TIMING_AMC0_EN);
-        insert_bit(registers.config, parameters.polarity, TIMING_AMC0_POL);
-        insert_bit(registers.config, parameters.log, TIMING_AMC0_LOG);
-        insert_bit(registers.config, parameters.interlock, TIMING_AMC0_ITL);
-
-        clear_and_insert_index(registers.config, TIMING_AMC0_SRC_MASK, parameters.source, sources_list);
-
-        insert_bit(registers.config, parameters.direction, TIMING_AMC0_DIR);
-        insert_bit(registers.config, parameters.count_reset, TIMING_AMC0_COUNT_RST);
-
-        registers.pulses = parameters.pulses;
-        registers.evt = parameters.event_code;
-        registers.dly = parameters.delay;
-        registers.wdt = parameters.width;
-    };
-
-    for (unsigned i = 0; i < NUM_CHANNELS; i++)
-        setup_trigger(parameters[i], regs.trigger[i]);
 }
 
-void Controller::write_params()
+void Controller::unset_commands()
 {
-    RegisterController::write_params();
-
-    reset_latches = false;
-    for (auto &p: parameters)
-        p.count_reset = false;
+    write_general("RST_LOCKED_LTCS", 0);
+    for (unsigned i = 0; i < NUM_CHANNELS; i++)
+        write_channel("CH_COUNT_RST", i, 0);
 }
 
 } /* namespace afc_timing */
