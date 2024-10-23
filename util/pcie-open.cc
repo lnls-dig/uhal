@@ -129,8 +129,8 @@ void dev_open_serial(struct pcie_bars &bars, const char *dev_file)
 
     struct termios term;
     xfail(tcgetattr(fd, &term));
-    xfail(cfsetospeed(&term, B500000));
-    xfail(cfsetispeed(&term, B500000));
+    xfail(cfsetospeed(&term, B115200));
+    xfail(cfsetispeed(&term, B115200));
 
     term.c_lflag &= ~ICANON;
     cfmakeraw(&term);
