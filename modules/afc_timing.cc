@@ -54,6 +54,7 @@ struct afc_timing {
     struct {
         uint32_t config, pulses, count, evt, dly, wdt;
     } trigger[NUM_CHANNELS];
+    uint32_t dbg_ctl, dbg_cfg_1, dbg_cfg_2, dbg_sta;
 };
 
 Core::Core(struct pcie_bars &bars):
@@ -95,6 +96,13 @@ Core::Core(struct pcie_bars &bars):
         PRINTER("CH_EVT", "Channel event code", PrinterType::value),
         PRINTER("CH_DLY", "Channel delay to trigger output", PrinterType::value),
         PRINTER("CH_WDT", "Channel trigger output width", PrinterType::value),
+
+        PRINTER("DBG_EN", "Enables upstream debug mode", PrinterType::enable),
+        PRINTER("DBG_EVT_DS_START", "Downstream start event", PrinterType::value),
+        PRINTER("DBG_EVT_US", "Upstream event", PrinterType::value),
+        PRINTER("DBG_EVT_SPACING", "Upstream event spacing", PrinterType::value),
+        PRINTER("DBG_EVT_REPS", "Upstream event repetitions", PrinterType::value),
+        PRINTER("DBG_COUNTER", "Counts how many times the debugging procedure was triggered", PrinterType::value),
     }),
     CONSTRUCTOR_REGS(struct afc_timing)
 {
@@ -163,6 +171,17 @@ void Core::decode()
         add_channel("CH_DLY", i, rf_whole_register(trigger.dly));
         add_channel("CH_WDT", i, rf_whole_register(trigger.wdt));
     }
+
+    pt = &regs.dbg_ctl;
+    add_general("DBG_EN", rf_get_bit(*pt, TIMING_DBG_CTL_EN));
+    add_general("DBG_COUNTER_RST", rf_get_bit(*pt, TIMING_DBG_CTL_COUNTER_RST));
+    pt = &regs.dbg_cfg_1;
+    add_general("DBG_EVT_DS_START", rf_extract_value(*pt, TIMING_DBG_CFG_1_EVT_DS_START_MASK));
+    add_general("DBG_EVT_US", rf_extract_value(*pt, TIMING_DBG_CFG_1_EVT_US_MASK));
+    add_general("DBG_EVT_SPACING", rf_extract_value(*pt, TIMING_DBG_CFG_1_EVT_SPACING_MASK));
+
+    add_general("DBG_EVT_REPS", rf_whole_register(regs.dbg_cfg_2));
+    add_general("DBG_COUNTER", regs.dbg_sta);
 }
 
 Controller::Controller(struct pcie_bars &bars):
@@ -226,6 +245,7 @@ void Controller::unset_commands()
     write_general("RST_LOCKED_LTCS", 0);
     for (unsigned i = 0; i < NUM_CHANNELS; i++)
         write_channel("CH_COUNT_RST", i, 0);
+    write_general("DBG_COUNTER_RST", 0);
 }
 
 } /* namespace afc_timing */
