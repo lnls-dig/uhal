@@ -1,4 +1,5 @@
 #include <cassert>
+#include <limits>
 
 #include <endian.h>
 #include <limits.h>
@@ -44,15 +45,16 @@ static struct sdbfs sdbfs_init(struct pcie_bars *bars)
     return fs;
 }
 
-static void print_sdb(const struct sdb_device_info &devinfo, const struct sdb_product *product, const struct sdbfs &fs)
+static void print_sdb(const struct sdb_device_info &devinfo, const struct sdb_product *product, const struct sdbfs &fs, size_t &min_depth)
 {
     const char indentation[] = "                ";
     const size_t indent = 4;
     static_assert(((sizeof indentation) - 1) % indent == 0);
     const size_t max_indent = ((sizeof indentation) - 1) / indent;
 
-    /* fs.depth starts at 1 */
-    size_t depth = fs.depth - 1;
+    /* fs.depth can start at different values depending on how the SDB was created */
+    min_depth = std::min((size_t)fs.depth, min_depth);
+    size_t depth = fs.depth - min_depth;
     assert(depth <= max_indent);
 
     static_assert(sizeof product->name == 19);
@@ -70,6 +72,7 @@ std::optional<struct sdb_device_info> read_sdb(struct pcie_bars *bars, device_ma
     struct sdbfs fs = sdbfs_init(bars);
     defer _(nullptr, [&fs](...){sdbfs_dev_destroy(&fs);});
 
+    auto min_depth = std::numeric_limits<size_t>::max();
     struct sdb_device *d;
     while((d = sdbfs_scan(&fs, 0))) {
         struct sdb_component *c = &d->sdb_component;
@@ -89,7 +92,7 @@ std::optional<struct sdb_device_info> read_sdb(struct pcie_bars *bars, device_ma
                 else pos--;
             }
         } else {
-            print_sdb(devinfo, p, fs);
+            print_sdb(devinfo, p, fs, min_depth);
         }
     }
     return std::nullopt;
