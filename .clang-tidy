@@ -1,0 +1,19 @@
+Checks: "bugprone*,\
+         cert-*,\
+         clang-analyzer*,\
+         concurrency-*,\
+         modernize-*,\
+         performance-*,\
+         readability-*,\
+         -bugprone-empty-catch,\
+         -concurrency-mt-unsafe,\
+         -modernize-use-trailing-return-type,\
+         -performance-avoid-endl,\
+         -readability-braces-around-statements,\
+         -readability-identifier-length,\
+         -readability-implicit-bool-conversion,\
+         -readability-named-parameter,\
+         "
+
+HeaderFilterRegex: "(util|modules)/[^/]*\\.h"
+WarningsAsErrors: "*"
