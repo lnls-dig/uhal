@@ -19,6 +19,19 @@ jobs:
       fail-fast: false
       matrix:
         tool:
+          # clang-tidy is more extensive and the list of checks isn't final, so fixing all of them at once isn't tractable;
+          # therefore, the job doesn't fail due to clang-tidy, it's simply informative
+          - packages: "clang-tidy"
+            command: "clang-tidy '--warnings-as-errors=-*' -p build/ $(git ls-files | grep '\\.c\\+$')"
+          # however, we should check that the changed lines of code don't have any tidy warnings
+          - packages: "clang-tidy"
+            command: |
+              if [ -n \"$GITHUB_BASE_REF\" ]; then
+                git diff -U0 origin/$GITHUB_BASE_REF > diff
+                clang-tidy-diff -p1 -config-file .clang-tidy -path build/ < diff > result && exitcode=0 || exitcode=$?
+                cat result
+                exit $exitcode
+              fi
           # cppcheck doesn't check as much, so we can make the job fail because of it;
           # tests are skipped due to issues with Catch2 headers
           - packages: "cppcheck"
