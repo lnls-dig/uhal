@@ -1,0 +1,40 @@
+name: Run static analysis tools
+on:
+  push:
+    branches:
+      - master
+
+  pull_request:
+
+jobs:
+  # each one of the tools are used in different ways
+  static-analysis:
+    runs-on: ubuntu-latest
+    container:
+      image: debian:testing
+      env:
+        CC: clang
+        CXX: clang++
+    strategy:
+      fail-fast: false
+      matrix:
+        tool:
+          # cppcheck doesn't check as much, so we can make the job fail because of it;
+          # tests are skipped due to issues with Catch2 headers
+          - packages: "cppcheck"
+            command: >
+              cppcheck --error-exitcode=1 --std=c++20 --check-level=exhaustive --addon=threadsafety
+              -D__unix__ -D__GNUC__
+              --project=build/compile_commands.json -i subprojects/ -i util/tests/
+    steps:
+      - name: Install dependencies
+        run: apt update && apt install -y git meson clang ${{ matrix.tool.packages }}
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+      - run: git config --system --add safe.directory $(pwd)
+      - name: Generate compile_commands.json
+        run: meson setup --buildtype release --werror -Dpcie_opt=true build || cat build/meson-logs/meson-log.txt /nonexistent
+      - name: Run static analysis tool
+        run: ${{ matrix.tool.command }}
