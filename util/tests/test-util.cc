@@ -1,3 +1,4 @@
+#include <sys/mman.h>
 #include <stdexcept>
 
 #include "test-util.h"
@@ -18,7 +19,7 @@ void dummy_dev_open(struct pcie_bars &bars)
 
     auto allocate_bar = [](volatile void *&ptr, size_t &size, size_t desired_size) {
         size = desired_size;
-        ptr = malloc(size);
+        ptr = mmap(0, desired_size, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
     };
 
     /* same sizes as our devices */
