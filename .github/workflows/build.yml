@@ -27,12 +27,20 @@ jobs:
         link-n-sane:
           - { ldflags: "", sanitizer: "none" }
           - { ldflags: "-static", sanitizer: "none" }
-          - { sanitizer: "address,undefined" }
-          - { sanitizer: "thread" }
-          - { sanitizer: "leak" }
+          - { ldflags: "", sanitizer: "address,undefined" }
+          - { ldflags: "", sanitizer: "thread" }
+          - { ldflags: "", sanitizer: "memory" }
+          - { ldflags: "", sanitizer: "leak" }
         options:
           - { pcie_opt: "true" }
           - { pcie_opt: "false" }
+        exclude:
+          - link-n-sane: { ldflags: "", sanitizer: "memory" }
+            compiler: { cc: gcc, cxx: g++ }
+          - link-n-sane: { ldflags: "", sanitizer: "leak" }
+            distro: { image: "alpine:3.20", update_cmd: "true", install_cmd: "apk add --no-cache", packages: "g++ musl-dev" }
+          - link-n-sane: { ldflags: "", sanitizer: "leak" }
+            distro: { image: "alpine:edge", update_cmd: "true", install_cmd: "apk add --no-cache", packages: "g++ musl-dev" }
     steps:
       - name: Install dependencies
         run: ${{ matrix.distro.update_cmd }} && ${{ matrix.distro.install_cmd }} git meson ${{ matrix.distro.packages }} ${{ matrix.compiler.cc }}
