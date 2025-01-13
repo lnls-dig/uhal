@@ -10,45 +10,45 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     container:
-      image: ${{ matrix.distro.image }}
+      image: ${{ matrix.distro[0] }}
       env:
-        LDFLAGS: ${{ matrix.link-n-sane.ldflags }}
-        CC: ${{ matrix.compiler.cc }}
-        CXX: ${{ matrix.compiler.cxx }}
+        LDFLAGS: ${{ matrix.link-n-sane[0] }}
+        CC: ${{ matrix.compiler[0] }}
+        CXX: ${{ matrix.compiler[1] }}
     strategy:
       matrix:
         distro:
-          - { image: "debian:testing", update_cmd: "apt update", install_cmd: "apt install -y" }
-          - { image: "alpine:3.20", update_cmd: "true", install_cmd: "apk add --no-cache", packages: "g++ musl-dev" }
-          - { image: "alpine:edge", update_cmd: "true", install_cmd: "apk add --no-cache", packages: "g++ musl-dev" }
+          - [ "debian:testing", "apt update", "apt install -y" ]
+          - [ "alpine:3.20", "true", "apk add --no-cache", "g++ musl-dev compiler-rt" ]
+          - [ "alpine:edge", "true", "apk add --no-cache", "g++ musl-dev compiler-rt" ]
         compiler:
-          - { cc: gcc, cxx: g++ }
-          - { cc: clang, cxx: clang++ }
+          - [ gcc, g++ ]
+          - [ clang, clang++ ]
         link-n-sane:
-          - { ldflags: "", sanitizer: "none" }
-          - { ldflags: "-static", sanitizer: "none" }
-          - { ldflags: "", sanitizer: "address,undefined" }
-          - { ldflags: "", sanitizer: "thread" }
-          - { ldflags: "", sanitizer: "memory" }
-          - { ldflags: "", sanitizer: "leak" }
+          - [ "", "none" ]
+          - [ "-static", "none" ]
+          - [ "", "address,undefined" ]
+          - [ "", "thread" ]
+          - [ "", "memory" ]
+          - [ "", "leak" ]
         options:
           - { pcie_opt: "true" }
           - { pcie_opt: "false" }
         exclude:
-          - link-n-sane: { ldflags: "", sanitizer: "memory" }
-            compiler: { cc: gcc, cxx: g++ }
-          - link-n-sane: { ldflags: "", sanitizer: "leak" }
-            distro: { image: "alpine:3.20", update_cmd: "true", install_cmd: "apk add --no-cache", packages: "g++ musl-dev" }
-          - link-n-sane: { ldflags: "", sanitizer: "leak" }
-            distro: { image: "alpine:edge", update_cmd: "true", install_cmd: "apk add --no-cache", packages: "g++ musl-dev" }
+          - link-n-sane: [ "", "memory" ]
+            compiler: [ gcc, g++ ]
+          - link-n-sane: [ "", "leak" ]
+            distro: [ "alpine:3.20", "true", "apk add --no-cache", "g++ musl-dev compiler-rt" ]
+          - link-n-sane: [ "", "leak" ]
+            distro: [ "alpine:edge", "true", "apk add --no-cache", "g++ musl-dev compiler-rt" ]
     steps:
       - name: Install dependencies
-        run: ${{ matrix.distro.update_cmd }} && ${{ matrix.distro.install_cmd }} git meson ${{ matrix.distro.packages }} ${{ matrix.compiler.cc }}
+        run: ${{ matrix.distro[1] }} && ${{ matrix.distro[2] }} git meson ${{ matrix.distro[3] }} ${{ matrix.compiler[0] }}
       - uses: actions/checkout@v4
         with:
           submodules: true
       - name: Configure
-        run: meson setup --buildtype release --werror -Dpcie_opt=${{ matrix.options.pcie_opt }} -Db_sanitize=${{ matrix.link-n-sane.sanitizer }} build || cat build/meson-logs/meson-log.txt /nonexistent
+        run: meson setup --buildtype release --werror -Dpcie_opt=${{ matrix.options.pcie_opt }} -Db_sanitize=${{ matrix.link-n-sane[1] }} build || cat build/meson-logs/meson-log.txt /nonexistent
       - name: Build
         run: ninja -C build
       - name: Run tests
