@@ -31,7 +31,7 @@ catch2 = dependency('catch2-with-main', fallback: 'catch2')
 
 header_dir = 'uhal'
 
-test_env = ['LSAN_OPTIONS=use_tls=0']
+test_env = ['LSAN_OPTIONS=use_tls=0:verbosity=1:log_threads=1']
 
 subdir('include')
 subdir('util')
