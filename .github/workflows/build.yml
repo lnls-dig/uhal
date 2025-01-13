@@ -15,6 +15,7 @@ jobs:
         LDFLAGS: ${{ matrix.link-n-sane[0] }}
         CC: ${{ matrix.compiler[0] }}
         CXX: ${{ matrix.compiler[1] }}
+      options: --privileged
     strategy:
       matrix:
         distro:
@@ -63,5 +64,7 @@ jobs:
         run: meson setup --buildtype release --werror -Dpcie_opt=${{ matrix.options.pcie_opt }} -Db_sanitize=${{ matrix.link-n-sane[1] }} build || cat build/meson-logs/meson-log.txt /nonexistent
       - name: Build
         run: ninja -C build
+      - name: Allow tests to run
+        run: echo 1 > /proc/sys/fs/suid_dumpable
       - name: Run tests
         run: ninja -C build test
