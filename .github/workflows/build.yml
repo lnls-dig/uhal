@@ -41,6 +41,18 @@ jobs:
             distro: [ "alpine:3.20", "true", "apk add --no-cache", "g++ musl-dev compiler-rt" ]
           - link-n-sane: [ "", "leak" ]
             distro: [ "alpine:edge", "true", "apk add --no-cache", "g++ musl-dev compiler-rt" ]
+          - link-n-sane: [ "", "thread" ]
+            distro: [ "alpine:3.20", "true", "apk add --no-cache", "g++ musl-dev compiler-rt" ]
+          - link-n-sane: [ "", "thread" ]
+            distro: [ "alpine:edge", "true", "apk add --no-cache", "g++ musl-dev compiler-rt" ]
+          - link-n-sane: [ "", "memory" ]
+            distro: [ "alpine:3.20", "true", "apk add --no-cache", "g++ musl-dev compiler-rt" ]
+          - link-n-sane: [ "", "memory" ]
+            distro: [ "alpine:edge", "true", "apk add --no-cache", "g++ musl-dev compiler-rt" ]
+          - link-n-sane: [ "", "address,undefined" ]
+            distro: [ "alpine:3.20", "true", "apk add --no-cache", "g++ musl-dev compiler-rt" ]
+          - link-n-sane: [ "", "address,undefined" ]
+            distro: [ "alpine:edge", "true", "apk add --no-cache", "g++ musl-dev compiler-rt" ]
     steps:
       - name: Install dependencies
         run: ${{ matrix.distro[1] }} && ${{ matrix.distro[2] }} git meson ${{ matrix.distro[3] }} ${{ matrix.compiler[0] }}
