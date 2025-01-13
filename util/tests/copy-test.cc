@@ -3,12 +3,15 @@
 #include <cstring>
 #include <iostream>
 
+#include "defer.h"
+#include "pcie-open.h"
 #include "test-util.h"
 
 int main()
 {
     struct pcie_bars bars;
     dummy_dev_open(bars);
+    defer _(nullptr, [&bars](...){dev_close(bars);});
 
     const size_t s = bars.sizes[1] / sizeof(uint32_t);
     uint32_t *p = reinterpret_cast<uint32_t *>(const_cast<void *>(bars.bar2));
