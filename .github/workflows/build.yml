@@ -62,7 +62,7 @@ jobs:
         with:
           submodules: true
       - name: Configure
-        run: meson setup --buildtype release --werror -Dpcie_opt=${{ matrix.options.pcie_opt }} -Db_sanitize=${{ matrix.link-n-sane[1] }} build || cat build/meson-logs/meson-log.txt /nonexistent
+        run: meson setup --buildtype release --debug --werror -Dpcie_opt=${{ matrix.options.pcie_opt }} -Db_sanitize=${{ matrix.link-n-sane[1] }} build || cat build/meson-logs/meson-log.txt /nonexistent
       - name: Build
         run: ninja -C build
       - name: Allow tests to run
