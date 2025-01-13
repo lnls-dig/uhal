@@ -17,6 +17,7 @@ jobs:
         CXX: ${{ matrix.compiler[1] }}
       options: --privileged
     strategy:
+      fail-fast: false
       matrix:
         distro:
           - [ "debian:testing", "apt update", "apt install -y" ]
