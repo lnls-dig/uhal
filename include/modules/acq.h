@@ -15,6 +15,7 @@ namespace acq {
 /* forward declaration */
 struct acq_core;
 
+/** This class isn't relevant for most users, see Controller. */
 class Core: public RegisterDecoder {
     std::unique_ptr<struct acq_core> regs_storage;
     struct acq_core &regs;
@@ -41,6 +42,14 @@ enum class acq_status {
     timeout,
 };
 
+/** For most users, the Core class isn't relevant, since it simply provides the
+ * current state of this core's registers, which doesn't reflect any hardware
+ * state beyond the acquisition state machine. This class is the relevant one,
+ * because it provides an interface to control an acquisition, and obtain its
+ * data.
+ *
+ * It can also be used to control an acquisition asynchronously and safely,
+ * while still registering the configuration for the next acquisition. */
 class Controller: public RegisterController {
     /* read from internal MemoryAllocator */
     size_t ram_start_addr, ram_end_addr;
