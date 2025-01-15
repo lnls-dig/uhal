@@ -28,6 +28,10 @@ class RegisterController: public RegisterDecoderBase {
     virtual void write_params();
 };
 
+/** Controller base class which can use the register fields as decoded by a
+ * RegisterDecoder to write into a device's registers. Any register field that
+ * should be exposed as writable should be decoded by the `rf_` prefixed
+ * functions from RegisterDecoder, instead of the functions from util-bits.h. */
 class RegisterDecoderController: public RegisterController {
     RegisterDecoder *pdec;
 
