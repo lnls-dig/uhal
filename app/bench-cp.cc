@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     auto tf = std::chrono::high_resolution_clock::now();
     auto d = tf - ti;
     std::cout << d / 1ms << " ms" << std::endl <<
-        (double)(s >> 20) / (d / 1.s) << " MB/s" << std::endl;
+        (double)(s >> 20) / (d / 1.0s) << " MB/s" << std::endl;
 
     return 0;
 }
