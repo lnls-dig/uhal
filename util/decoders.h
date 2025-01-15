@@ -31,6 +31,8 @@ namespace decoders {
     using data_key = std::pair<std::string_view, std::optional<unsigned>>;
 }
 
+/** This class defines base methods that will be used by both decoders and
+ * controllers. */
 class RegisterDecoderBase {
     /** Is set to true when set_devinfo() is called, used to protect us from
      * using uninitialized device information */
@@ -84,6 +86,14 @@ struct RegisterField {
     bool is_fixed_point = false;
 };
 
+/** This class defines a common interface to the FPGA cores on an AFC board.
+This class fulfils two main roles:
+
+- exposing register fields to a library user, who can address them by name (a
+string) and index (a number). This is provided by the `get_generic_data()`
+method;
+- printing register fields in a common format. This is provided by the `print()`
+method. */
 class RegisterDecoder: public RegisterDecoderBase {
     bool is_boolean_value(const char *) const;
     int32_t try_boolean_value(const char *, int32_t) const;
