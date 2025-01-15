@@ -186,13 +186,13 @@ void Controller::encode_params()
 {
     get_internal_values();
 
-    uint32_t *target_reg;
+    uint32_t *target_reg = &regs.cfg_val;
+
     auto insert_cfg = [&target_reg](auto option, uint32_t mask) {
         if (option)
             insert_bit(*target_reg, *option, mask);
     };
 
-    target_reg = &regs.cfg_val;
     insert_cfg(err_clr, FOFB_CC_REGS_CFG_VAL_ERR_CLR);
     insert_cfg(cc_enable, FOFB_CC_REGS_CFG_VAL_CC_ENABLE);
     insert_cfg(tfs_override, FOFB_CC_REGS_CFG_VAL_TFS_OVERRIDE);
