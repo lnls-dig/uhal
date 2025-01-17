@@ -14,5 +14,5 @@ tests = [
 ]
 foreach test_name : tests
   exe = executable(test_name, test_name + '.cc', dependencies: [utilities, catch2])
-  test(test_name, exe)
+  test(test_name, exe, env: test_env)
 endforeach
