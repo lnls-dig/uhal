@@ -6,6 +6,9 @@
 
 namespace ad9510 {
 
+/** This class doesn't inherit from RegisterController because it doesn't
+ * correspond directly to a register map. It uses an spi::Controller to
+ * communicate over SPI with an AD9510 IC. */
 class Controller {
     spi::Controller spi_regs;
 

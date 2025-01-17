@@ -10,6 +10,7 @@ namespace si57x_ctrl {
 
 struct wb_si57x_ctrl_regs;
 
+/** This class depends on Controller in order to provide correct values. */
 class Core: public RegisterDecoder {
     std::unique_ptr<struct wb_si57x_ctrl_regs> regs_storage;
     struct wb_si57x_ctrl_regs &regs;
@@ -21,6 +22,10 @@ class Core: public RegisterDecoder {
     ~Core() override;
 };
 
+/** This controller may need to reset the IC managed by this core, in order to
+ * obtain its startup parameters. These parameters are used to calculate the
+ * internal crystal oscillator's frequency, and allow core users to configure
+ * the IC using calibrated values, instead of datasheet ones. */
 class Controller: public RegisterDecoderController {
     std::unique_ptr<struct wb_si57x_ctrl_regs> regs_storage;
     struct wb_si57x_ctrl_regs &regs;
