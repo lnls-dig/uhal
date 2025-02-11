@@ -38,6 +38,12 @@ class Controller: public RegisterDecoderController {
     /** The device's internal crystal frequency. */
     double fxtal;
 
+    /** Update all registers and return state of busy flag. */
+    bool get_busy();
+    /** Loop until timeout while busy, return immediately otherwise. Updates all
+     * registers every iteration. Returns the final state of the busy flag. */
+    bool still_busy();
+
   public:
     /** The startup frequency has to be provided if read_startup_regs() is going
      * to be called. */

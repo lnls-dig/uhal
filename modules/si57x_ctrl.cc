@@ -1,3 +1,6 @@
+#include <chrono>
+#include <thread>
+
 #include "printer.h"
 #include "util.h"
 #include "si57x_util.h"
@@ -14,6 +17,10 @@ namespace {
         .device_id = SI57X_CTRL_DEVID,
         .abi_ver_major = 1
     };
+
+    using namespace std::chrono_literals;
+    constexpr auto busy_loop_time = 10ms;
+    constexpr unsigned busy_wait_attempts = 2s / busy_loop_time;
 }
 
 Core::Core(struct pcie_bars &bars):
@@ -71,10 +78,27 @@ Controller::Controller(struct pcie_bars &bars, double fstartup):
 }
 Controller::~Controller() = default;
 
-void Controller::write_params()
+bool Controller::get_busy()
 {
     dec.get_data();
-    if (dec.get_general_data<int32_t>("BUSY")) {
+    return dec.get_general_data<int32_t>("BUSY");
+}
+
+bool Controller::still_busy()
+{
+    bool busy = get_busy();
+    for (unsigned i = 0; busy && i < busy_wait_attempts; i++) {
+        std::this_thread::sleep_for(busy_loop_time);
+
+        busy = get_busy();
+    }
+
+    return busy;
+}
+
+void Controller::write_params()
+{
+    if (get_busy()) {
         /* clear any action bits */
         regs.ctl = 0;
         throw std::runtime_error("writes not allowed while busy");
@@ -94,11 +118,7 @@ bool Controller::read_startup_regs()
         write_general("READ_STRP_REGS", 1);
         write_params();
 
-        do {
-            dec.get_data();
-        } while (dec.get_general_data<int32_t>("BUSY"));
-
-        if (!dec.get_general_data<int32_t>("STRP_COMPLETE"))
+        if (still_busy() || !dec.get_general_data<int32_t>("STRP_COMPLETE"))
             return false;
     }
 
@@ -127,11 +147,7 @@ bool Controller::apply_config()
     write_general("APPLY_CFG", 1);
     write_params();
 
-    do {
-        dec.get_data();
-    } while (dec.get_general_data<int32_t>("BUSY"));
-
-    if (!dec.get_general_data<int32_t>("CFG_IN_SYNC"))
+    if (still_busy() || !dec.get_general_data<int32_t>("CFG_IN_SYNC"))
         return false;
 
     return true;
