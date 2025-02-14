@@ -22,13 +22,11 @@ foreach lang : languages
   endforeach
 endforeach
 
-
-subdir('third_party')
-
 thread_dep = dependency('threads')
 argparse = dependency('argparse', fallback: 'argparse')
 catch2 = dependency('catch2-with-main', fallback: 'catch2')
 sdbfs = dependency('sdbfs', fallback: 'sdbfs')
+ordered_map = dependency('ordered-map', fallback: 'ordered-map')
 
 header_dir = 'uhal'
 
