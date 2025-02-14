@@ -28,6 +28,7 @@ subdir('third_party')
 thread_dep = dependency('threads')
 argparse = dependency('argparse', fallback: 'argparse')
 catch2 = dependency('catch2-with-main', fallback: 'catch2')
+sdbfs = dependency('sdbfs', fallback: 'sdbfs')
 
 header_dir = 'uhal'
 
