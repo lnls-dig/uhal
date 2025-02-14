@@ -1,0 +1,9 @@
+[wrap-file]
+directory = fpga-config-space-lnls-v1.0.4
+source_url = https://github.com/lnls-dig/fpga-config-space/archive/refs/tags/lnls-v1.0.4.tar.gz
+source_filename = lnls-v1.0.4.tar.gz
+source_hash = 9f90e95373be0b2ee90391af67f9e56fe94f6a99663ffc3897f112f7bd2f465f
+patch_directory = sdbfs
+
+[provide]
+sdbfs = sdbfs_dep
