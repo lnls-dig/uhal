@@ -34,8 +34,6 @@ jobs:
       - name: Install dependencies
         run: ${{ matrix.distro.update_cmd }} && ${{ matrix.distro.install_cmd }} git meson ${{ matrix.distro.packages }} ${{ matrix.compiler.cc }}
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - name: Configure
         run: meson setup --buildtype release --werror -Dpcie_opt=${{ matrix.options.pcie_opt }} build || cat build/meson-logs/meson-log.txt /nonexistent
       - name: Build
