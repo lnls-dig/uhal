@@ -32,6 +32,8 @@ ordered_map = dependency('ordered-map', fallback: 'ordered-map')
 
 header_dir = 'uhal'
 
+test_env = ['LSAN_OPTIONS=use_tls=0:verbosity=1:log_threads=1']
+
 subdir('include')
 subdir('util')
 subdir('templates')
