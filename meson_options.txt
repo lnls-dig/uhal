@@ -4,3 +4,10 @@ option(
   type: 'boolean',
   value: true
 )
+
+option(
+  'build-tests',
+  description: 'build tests',
+  type: 'boolean',
+  value: true
+)
