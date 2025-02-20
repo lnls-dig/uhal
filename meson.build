@@ -15,6 +15,8 @@ if get_option('pcie_opt')
   endif
 endif
 
+build_tests = get_option('build-tests')
+
 foreach lang : languages
   compiler = meson.get_compiler(lang)
   foreach arg : ['-Wstrict-aliasing=3', '-Wvla', '-Wsuggest-override']
@@ -26,9 +28,12 @@ endforeach
 
 thread_dep = dependency('threads')
 argparse = dependency('argparse', fallback: 'argparse')
-catch2 = dependency('catch2-with-main', fallback: 'catch2')
 sdbfs = dependency('sdbfs', fallback: 'sdbfs')
 ordered_map = dependency('ordered-map', fallback: 'ordered-map')
+
+if build_tests
+  catch2 = dependency('catch2-with-main', fallback: 'catch2')
+endif
 
 header_dir = 'uhal'
 

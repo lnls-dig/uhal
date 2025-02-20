@@ -22,7 +22,9 @@ utilities = declare_dependency(
   dependencies: ordered_map
 )
 
-subdir('tests')
+if build_tests
+  subdir('tests')
+endif
 
 install_headers(
   [
