@@ -1,0 +1,40 @@
+name: Build and run tests with sanitizers
+on:
+  push:
+    branches:
+      - master
+
+  pull_request:
+
+jobs:
+  build-and-test-san:
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.distro.image }}
+      env:
+        LDFLAGS: ${{ matrix.link-n-sane.ldflags }}
+        CC: ${{ matrix.compiler.cc }}
+        CXX: ${{ matrix.compiler.cxx }}
+    strategy:
+      matrix:
+        distro:
+          - { image: "debian:testing", update_cmd: "apt update", install_cmd: "apt install -y" }
+        compiler:
+          - { cc: gcc, cxx: g++ }
+          - { cc: clang, cxx: clang++ }
+        sanitizer:
+          - { sanitizer: "address,undefined" }
+          - { sanitizer: "thread" }
+        options:
+          - { pcie_opt: "true" }
+          - { pcie_opt: "false" }
+    steps:
+      - name: Install dependencies
+        run: ${{ matrix.distro.update_cmd }} && ${{ matrix.distro.install_cmd }} git meson ${{ matrix.distro.packages }} ${{ matrix.compiler.cc }}
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: meson setup --buildtype debugoptimized -Dpcie_opt=${{ matrix.options.pcie_opt }} -Db_sanitize=${{ matrix.sanitizer.sanitizer }} build || cat build/meson-logs/meson-log.txt /nonexistent
+      - name: Build
+        run: ninja -C build
+      - name: Run tests
+        run: ninja -C build test
