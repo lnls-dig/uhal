@@ -58,4 +58,6 @@ int main()
         bar2_read_v(&bars, off, dest, bars.sizes[1] * 2 + 128);
         compare(off, 0, bars.sizes[1] * 2 + 128);
     }
+
+    free(dest);
 }
