@@ -45,7 +45,7 @@ uint32_t float2fixed(double v, unsigned point_pos, bool saturate)
     }
 
     /* used for values inside the valid range */
-    return v * ((uint64_t)1 << point_pos);
+    return (int32_t)(v * ((uint64_t)1 << point_pos));
 }
 
 double fixed2float(uint32_t v, unsigned point_pos)
