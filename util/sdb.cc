@@ -110,7 +110,7 @@ std::vector<struct sdb_synthesis_info> get_synthesis_info(struct pcie_bars *bars
         struct sdb_product *p = &d->sdb_component.product;
         if (p->record_type != sdb_type_synthesis) continue;
 
-        auto s = (struct sdb_synthesis *)(void *)d;
+        auto s = reinterpret_cast<struct sdb_synthesis *>(d);
 
         struct sdb_synthesis_info syninfo;
 
