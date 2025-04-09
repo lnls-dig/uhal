@@ -76,8 +76,8 @@ void Core::decode()
     for (unsigned i = 0; i < NUM_CHANNELS; i++) {
         for (unsigned j = 0; j < num_biquads; j++) {
             for (unsigned k = 0; k < COEFFS_PER_BIQUAD; k++) {
-                coefficients.values[i][k + COEFFS_PER_BIQUAD * j] =
-                    fixed2float(regs.ch[i].coeffs[k + TOTAL_PER_BIQUAD * j].val, fixed_point_coeff);
+                coefficients.values[i][k + (COEFFS_PER_BIQUAD * j)] =
+                    fixed2float(regs.ch[i].coeffs[k + (TOTAL_PER_BIQUAD * j)].val, fixed_point_coeff);
             }
         }
     }
@@ -128,8 +128,8 @@ void Controller::encode_params()
     for (unsigned i = 0; i < NUM_CHANNELS; i++) {
         for (unsigned j = 0; j < num_biquads; j++) {
             for (unsigned k = 0; k < COEFFS_PER_BIQUAD; k++) {
-                regs.ch[i].coeffs[k + TOTAL_PER_BIQUAD * j].val =
-                    float2fixed(coefficients.values[i][k + COEFFS_PER_BIQUAD * j], fixed_point_coeff);
+                regs.ch[i].coeffs[k + (TOTAL_PER_BIQUAD * j)].val =
+                    float2fixed(coefficients.values[i][k + (COEFFS_PER_BIQUAD * j)], fixed_point_coeff);
             }
         }
     }
@@ -143,7 +143,7 @@ void Controller::write_params()
         for (unsigned j = 0; j < num_biquads; j++) {
             bar4_write_v(
                 &bars,
-                addr + WB_FOFB_SHAPER_FILT_REGS_CH_COEFFS + i * sizeof(regs.ch[0]) + TOTAL_PER_BIQUAD * j * sizeof(uint32_t),
+                addr + WB_FOFB_SHAPER_FILT_REGS_CH_COEFFS + (i * sizeof(regs.ch[0])) + (TOTAL_PER_BIQUAD * j * sizeof(uint32_t)),
                 &regs.ch[i].coeffs[TOTAL_PER_BIQUAD * j].val,
                 COEFFS_PER_BIQUAD * sizeof(uint32_t));
         }

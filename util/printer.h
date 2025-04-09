@@ -19,7 +19,7 @@ enum class PrinterType {
     internal_custom_function,
 };
 
-typedef std::function<void(FILE *, bool, uint32_t)> printing_function;
+using printing_function = std::function<void (FILE *, bool, uint32_t)>;
 
 class Printer {
     PrinterType type;
@@ -37,6 +37,7 @@ class Printer {
     Printer(const char *name, const char *description, printing_function custom_fn);
     Printer(const char *name, const char *description, const char *not_truth, const char *truth);
 
+    [[nodiscard]]
     PrinterType get_type() const;
 
     template<typename T>

@@ -30,12 +30,12 @@
 #define PCIE_WB_PG_MASK                     ((PCIE_WB_PG_SIZE-1) << PCIE_WB_PG_SHIFT)
 
 /* PCIe SDRAM Address Page number and offset extractor */
-#define PCIE_ADDR_SDRAM_PG_OFFS(addr)       ((addr & PCIE_SDRAM_PG_MASK) >> PCIE_SDRAM_PG_SHIFT)
-#define PCIE_ADDR_SDRAM_PG(addr)            ((addr & ~PCIE_SDRAM_PG_MASK) >> PCIE_SDRAM_PG_MAX)
+#define PCIE_ADDR_SDRAM_PG_OFFS(addr)       (((addr) & PCIE_SDRAM_PG_MASK) >> PCIE_SDRAM_PG_SHIFT)
+#define PCIE_ADDR_SDRAM_PG(addr)            (((addr) & ~PCIE_SDRAM_PG_MASK) >> PCIE_SDRAM_PG_MAX)
 
 /* PCIe WB Address Page number and offset extractor */
-#define PCIE_ADDR_WB_PG_OFFS(addr)          ((addr & PCIE_WB_PG_MASK) >> PCIE_WB_PG_SHIFT)
-#define PCIE_ADDR_WB_PG(addr)               ((addr & ~PCIE_WB_PG_MASK) >> PCIE_WB_PG_MAX)
+#define PCIE_ADDR_WB_PG_OFFS(addr)          (((addr) & PCIE_WB_PG_MASK) >> PCIE_WB_PG_SHIFT)
+#define PCIE_ADDR_WB_PG(addr)               (((addr) & ~PCIE_WB_PG_MASK) >> PCIE_WB_PG_MAX)
 
 #define WB_QWORD_ACC                        3           /* 64-bit addressing */
 #define WB_DWORD_ACC                        2           /* 32-bit addressing */
@@ -138,7 +138,8 @@ void bar2_read_v(struct pcie_bars *bars, size_t addr, void *dest, size_t n)
         size_t i = 0;
 
 #ifdef USE_SSE41
-        const size_t alignment = 64, read_size = 1024;
+        const size_t alignment = 64;
+        const size_t read_size = 1024;
 
         size_t head = addr_now % alignment;
         head = head ? alignment - head : 0;
@@ -146,11 +147,14 @@ void bar2_read_v(struct pcie_bars *bars, size_t addr, void *dest, size_t n)
             destp[i] = *bar2_get_u32p_small(bars, addr_now, i);
 
         for (; i + (read_size-1) < to_read/4; i += read_size) {
-            __m128i a, b, c, d;
+            __m128i a;
+            __m128i b;
+            __m128i c;
+            __m128i d;
 
             _mm_mfence();
             for (size_t j = 0; j < 64; j++) {
-                size_t base = i + j * 16;
+                size_t base = i + (j * 16);
                 a = _mm_stream_load_si128((__m128i *)bar2_get_u32p_small(bars, addr_now, base));
                 b = _mm_stream_load_si128((__m128i *)bar2_get_u32p_small(bars, addr_now, base+4));
                 c = _mm_stream_load_si128((__m128i *)bar2_get_u32p_small(bars, addr_now, base+8));
@@ -295,7 +299,7 @@ static ssize_t uart_read_cmd(struct pcie_bars *bars, size_t addr, void *dest, ss
             if (line[0] == 'O') {
                 char *data = line + 1;
                 for (ssize_t i = 0; i < ((ans_str_size - 2) / 8) && i < num_words; i++) {
-                    int elements = sscanf(data + i*8, "%8x", dest_u32);
+                    int elements = sscanf(data + (i*8), "%8x", dest_u32);
                     dest_u32 += 1;
                     words_read += 1;
                     assert(elements == 1);

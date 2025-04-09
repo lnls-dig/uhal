@@ -22,7 +22,7 @@ class Core: public RegisterDecoder {
 
   public:
     Core(struct pcie_bars &);
-    ~Core();
+    ~Core() override;
 };
 
 class Controller: public RegisterDecoderController {

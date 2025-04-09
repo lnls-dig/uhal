@@ -21,6 +21,6 @@ struct sdb_synthesis_info {
     char user_name[16];
 };
 
-typedef std::function<bool(const struct sdb_device_info &)> device_match_fn;
+using device_match_fn = std::function<bool (const struct sdb_device_info &)>;
 
 #endif

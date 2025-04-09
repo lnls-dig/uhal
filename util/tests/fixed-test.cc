@@ -21,7 +21,9 @@ TEST_CASE("Roundtrip conversions - 3 bits integer", "[fixed]")
 TEST_CASE("Saturation", "[fixed]")
 {
     const unsigned point_pos = 31;
-    const double divisor = 1UL << 31, max = 0x7fffffff / divisor, min = -1.;
+    const double divisor = 1UL << 31;
+    const double max = 0x7fffffff / divisor;
+    const double min = -1.;
     std::tuple<double, double> values[] = {{.5, .5}, {1, max}, {1.1, max}, {157, max}, {-1, min}, {-1.005, min}, {-8, min}};
     for (auto &&[v, s]: values)
         CHECK(fixed2float(float2fixed(v, point_pos, true), point_pos) == s);

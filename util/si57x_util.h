@@ -27,7 +27,8 @@ struct si57x_parameters {
      * on failure. */
     bool set_freq(double);
     /** Get the output frequency, based on #fxtal, #rfreq, #n1 and #hs_div. */
-    double get_freq();
+    [[nodiscard]]
+    double get_freq() const;
 };
 
 #endif

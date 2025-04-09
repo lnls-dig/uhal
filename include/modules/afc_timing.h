@@ -39,7 +39,7 @@ class Controller: public RegisterDecoderController {
         uint8_t n1, hs_div;
     } rtm_clock = {}, afc_clock = {};
 
-    bool set_freq(double, struct Controller::clock &);
+    static bool set_freq(double, struct Controller::clock &);
 
   public:
     Controller(struct pcie_bars &);

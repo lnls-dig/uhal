@@ -134,7 +134,7 @@ void Core::decode()
     add_general("ALIVE", regs.alive);
 
     size_t i = 0;
-    for (auto clockp: {&regs.rtm_clock, &regs.afc_clock}) {
+    for (auto *clockp: {&regs.rtm_clock, &regs.afc_clock}) {
         add_channel("RFREQ_HI", i, clockp->rfreq_hi);
         add_channel("RFREQ_LO", i, clockp->rfreq_lo);
         add_channel("N1", i, extract_value<uint8_t>(clockp->n1_hs_div, TIMING_RTM_N1_MASK));

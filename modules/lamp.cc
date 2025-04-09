@@ -10,8 +10,8 @@ namespace lamp {
 #include "hw/wb_rtmlamp_ohwr_regs.h"
 
 namespace {
-    static constexpr unsigned NUM_CHAN = 12;
-    static constexpr unsigned TRIGGER_ENABLE_VERSION = 1;
+    constexpr unsigned NUM_CHAN = 12;
+    constexpr unsigned TRIGGER_ENABLE_VERSION = 1;
 
     constexpr unsigned LAMP_DEVID = 0xa1248bec;
     struct sdb_device_info ref_devinfo = {
@@ -88,7 +88,8 @@ Core::~Core() = default;
 
 void Core::decode()
 {
-    uint32_t t, *pt;
+    uint32_t t;
+    uint32_t *pt;
 
     /* add printer if this value ever gets flags;
      * this is being done for IOC compatibility */

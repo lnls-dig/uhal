@@ -18,10 +18,11 @@ static inline void clear_and_insert(uint32_t &dest, T value, uint32_t mask)
     unsigned shift = std::countr_zero(mask);
     uint32_t shifted_mask = mask >> shift;
 
-    T max, min;
+    T max;
+    T min;
     uint32_t uvalue;
     if constexpr (std::is_signed_v<T>) {
-        typedef typename std::make_unsigned<T>::type U;
+        using U = std::make_unsigned_t<T>;
 
         uint32_t umax = shifted_mask >> 1;
         /* in the case where mask == UINT32_MAX and value is signed, this would
@@ -67,7 +68,7 @@ static inline bool get_bit(uint32_t value, uint32_t mask)
 template<typename Signed>
 static inline int32_t sign_extend(uint32_t value)
 {
-    typedef typename std::make_unsigned<Signed>::type Unsigned;
+    using Unsigned = std::make_unsigned_t<Signed>;
     return (Signed)(Unsigned)value;
 }
 
@@ -98,9 +99,8 @@ static inline int32_t extract_value(uint32_t value, uint32_t mask, bool is_signe
     uint32_t intermediary = (value & mask) >> shift;
     if (is_signed) {
         return sign_extend(intermediary, popcount);
-    } else {
-        return intermediary;
     }
+    return intermediary;
 }
 
 /* XXX: remove this when there are no more users */

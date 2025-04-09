@@ -1,5 +1,6 @@
 #include <charconv>
 #include <string>
+#include <utility>
 
 #include "printer.h"
 
@@ -28,12 +29,12 @@ Printer::Printer(const char *name, const char *description, PrinterType type):
 }
 
 Printer::Printer(const char *name, const char *description, printing_function custom_fn):
-    type(PrinterType::internal_custom_function), name(name), description(description), custom_fn(custom_fn)
+    type(PrinterType::internal_custom_function), name(name), description(description), custom_fn(std::move(custom_fn))
 {
 }
 
 Printer::Printer(const char *name, const char *description, const char *not_truth, const char *truth):
-    type(PrinterType::boolean), name(name), description(description), boolean_names{truth, not_truth}
+    type(PrinterType::boolean), name(name), description(description), boolean_names{.truth=truth, .not_truth=not_truth}
 {
 }
 

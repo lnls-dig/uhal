@@ -68,6 +68,7 @@ bool Controller::set_reg(uint8_t addr, uint8_t rdata, spi::Channel channel)
 
 bool Controller::set_defaults(spi::Channel)
 {
+    (void)this;
     return false;
 }
 

@@ -21,7 +21,7 @@ const size_t acq_ram_per_core = acq_ram / max_acq_cores;
 class MemoryAllocator {
     std::unordered_map<struct pcie_bars *, int> counts;
 
-    MemoryAllocator() {}
+    MemoryAllocator() = default;
 
   public:
     std::array<size_t, 2> get_range(struct pcie_bars &bars)
@@ -175,7 +175,7 @@ void Core::decode()
     /* acquisition channel control */
     t = regs.acq_chan_ctl;
     /* will be used to determine how many channels to show in the next block */
-    unsigned num_chan = extract_value<uint32_t>(t, ACQ_CORE_ACQ_CHAN_CTL_NUM_CHAN_MASK);
+    auto num_chan = extract_value<uint32_t>(t, ACQ_CORE_ACQ_CHAN_CTL_NUM_CHAN_MASK);
     add_general("WHICH", extract_value<uint32_t>(t, ACQ_CORE_ACQ_CHAN_CTL_WHICH_MASK));
     add_general("DTRIG_WHICH", extract_value<uint32_t>(t, ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_MASK));
     add_general("NUM_CHAN", num_chan);
@@ -191,7 +191,8 @@ void Core::decode()
     memcpy(p, &regs.ch0_desc, sizeof p);
 
     for (unsigned i = 0; i < num_chan; i++) {
-        uint32_t desc = p[i*REGISTERS_PER_CHAN], adesc = p[i*REGISTERS_PER_CHAN + 1];
+        uint32_t desc = p[i*REGISTERS_PER_CHAN];
+        uint32_t adesc = p[(i*REGISTERS_PER_CHAN) + 1];
         add_channel("INT_WIDTH", i, extract_value<uint32_t>(desc, ACQ_CORE_CH0_DESC_INT_WIDTH_MASK));
         add_channel("NUM_COALESCE", i, extract_value<uint32_t>(desc, ACQ_CORE_CH0_DESC_NUM_COALESCE_MASK));
         add_channel("NUM_ATOMS", i, extract_value<uint32_t>(adesc, ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_MASK));
@@ -237,9 +238,9 @@ struct NoSamples: std::runtime_error {
 
 void Controller::get_internal_values()
 {
-    uint32_t channel_desc = bar4_read(&bars, addr + ACQ_CORE_CH0_DESC + 8*channel);
-    uint32_t num_coalesce = extract_value<uint32_t>(channel_desc, ACQ_CORE_CH0_DESC_NUM_COALESCE_MASK);
-    uint32_t int_width = extract_value<uint32_t>(channel_desc, ACQ_CORE_CH0_DESC_INT_WIDTH_MASK);
+    uint32_t channel_desc = bar4_read(&bars, addr + ACQ_CORE_CH0_DESC + (8*channel));
+    auto num_coalesce = extract_value<uint32_t>(channel_desc, ACQ_CORE_CH0_DESC_NUM_COALESCE_MASK);
+    auto int_width = extract_value<uint32_t>(channel_desc, ACQ_CORE_CH0_DESC_INT_WIDTH_MASK);
 
     /* int_width is in bits, so needs to be converted to bytes */
     sample_size = (int_width / 8) * num_coalesce;
@@ -248,7 +249,7 @@ void Controller::get_internal_values()
 
     alignment = (ddr3_payload_size > sample_size) ? ddr3_payload_size / sample_size : 1;
 
-    uint32_t channel_atom_desc = bar4_read(&bars, addr + ACQ_CORE_CH0_ATOM_DESC + 8*channel);
+    uint32_t channel_atom_desc = bar4_read(&bars, addr + ACQ_CORE_CH0_ATOM_DESC + (8*channel));
     channel_atom_width = extract_value<uint32_t>(channel_atom_desc, ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_MASK);
     channel_num_atoms = extract_value<uint32_t>(channel_atom_desc, ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_MASK);
 
@@ -267,14 +268,13 @@ void Controller::encode_params()
     auto align_extend = [](unsigned value, unsigned alignment, bool can_be_zero) -> unsigned {
         if (value == 0) {
             if (can_be_zero) return 0;
-            else return alignment;
+            return alignment;
         }
 
         unsigned extra = value % alignment;
         if (extra)
             return value + (alignment - extra);
-        else
-            return value;
+        return value;
     };
 
     if (post_samples + pre_samples == 0)
@@ -302,7 +302,7 @@ void Controller::encode_params()
         {"data", {false, true, false, false}},
         {"software", {false, false, true, false}},
     });
-    auto &trigger_setting = trigger_types.at(trigger_type);
+    const auto &trigger_setting = trigger_types.at(trigger_type);
     insert_bit(regs.ctl, trigger_setting[0], ACQ_CORE_CTL_FSM_ACQ_NOW);
     insert_bit(regs.trig_cfg, trigger_setting[1], ACQ_CORE_TRIG_CFG_HW_TRIG_EN);
     insert_bit(regs.trig_cfg, trigger_setting[2], ACQ_CORE_TRIG_CFG_SW_TRIG_EN);
@@ -381,8 +381,8 @@ std::vector<Data> Controller::get_result()
     m_step = acq_step::stop;
 
     /* total number of elements (samples*atoms) */
-    size_t total_samples = acq_pre_samples + acq_post_samples,
-           elements = total_samples * channel_num_atoms;
+    size_t total_samples = acq_pre_samples + acq_post_samples;
+    size_t elements = total_samples * channel_num_atoms;
     size_t total_bytes = elements * (channel_atom_width/8);
 
     /* this is an identity, just want to be sure */
@@ -422,8 +422,8 @@ std::vector<Data> Controller::get_result()
      * amount of samples */
     auto bytes2samples = [this](ssize_t v) -> ssize_t { return v / sample_size; };
     auto samples2bytes = [this](ssize_t v) -> ssize_t { return v * sample_size; };
-    const ssize_t max_bytes = ram_end_addr - ram_start_addr,
-          max_samples = bytes2samples(max_bytes);
+    const ssize_t max_bytes = ram_end_addr - ram_start_addr;
+    const ssize_t max_samples = bytes2samples(max_bytes);
     /* in order to simplify working with the acquisition circular buffer, think
      * first in terms of indexes into a circular buffer */
     const ssize_t trigger_index = bytes2samples(trigger_pos - ram_start_addr);
@@ -523,7 +523,7 @@ void Controller::print_csv(FILE *f, std::vector<T> &res)
     for (unsigned i = 0; i < (pre_samples + post_samples); i++) {
         for (unsigned j = 0; j < channel_num_atoms; j++) {
             char tmp[32];
-            auto r = std::to_chars(tmp, tmp + sizeof tmp, res[i * channel_num_atoms + j]);
+            auto r = std::to_chars(tmp, tmp + sizeof tmp, res[(i * channel_num_atoms) + j]);
             *r.ptr = '\0';
             fputs(tmp, f);
             fputc(',', f);
