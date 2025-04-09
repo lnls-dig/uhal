@@ -46,6 +46,10 @@ struct TestRegisterDecoder: public RegisterDecoder {
         add_general("RF_INT16", rf_extract_value(regs.gen, 0xFFFF0000, true));
 
         add_general("RF_DOUBLE", rf_fixed2float(rf_whole_register(regs.fixed_point), 23));
+
+        add_general(
+            "RF_KSUM",
+            rf_fixed2float(rf_extract_value(regs.fixed_point, 0x1ffffffUL), 24));
     }
 
     /* Test try_boolean_value */

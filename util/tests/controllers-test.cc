@@ -56,4 +56,12 @@ TEST_CASE("RegisterDecoderController write_general fixed-point", "[controllers-t
     CHECK_NOTHROW(ctl.write_general("RF_DOUBLE", 3.5));
     ctl.copy_regs_and_decode(dec);
     CHECK(dec.get_general_data<double>("RF_DOUBLE") == 3.5);
+
+    CHECK_NOTHROW(ctl.write_general("RF_KSUM", -1.));
+    ctl.copy_regs_and_decode(dec);
+    CHECK(dec.get_general_data<double>("RF_KSUM") == -1.);
+
+    CHECK_NOTHROW(ctl.write_general("RF_KSUM", 1.));
+    ctl.copy_regs_and_decode(dec);
+    CHECK(dec.get_general_data<double>("RF_KSUM") == 1.);
 }

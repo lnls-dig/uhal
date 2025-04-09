@@ -81,7 +81,9 @@ static inline int32_t sign_extend(uint32_t value, unsigned width)
         case 32:
             return sign_extend<int32_t>(value);
         default:
-            throw std::logic_error("invalid width should have been caught elsewhere");
+            int32_t m = 1;
+            m <<= width - 1;
+            return (value ^ m) - m;
     }
 }
 

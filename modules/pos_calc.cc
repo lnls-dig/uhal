@@ -136,7 +136,7 @@ void Core::decode()
     add_general("KY", rf_extract_value(regs.ky, POS_CALC_KY_VAL_MASK));
     add_general(
         "KSUM",
-        rf_fixed2float(rf_extract_value(regs.ksum, POS_CALC_KSUM_VAL_MASK), ksum_fixed_point_pos));
+        rf_fixed2float(rf_extract_value(regs.ksum, POS_CALC_KSUM_VAL_MASK, true), ksum_fixed_point_pos));
     add_general("TEST_DATA", rf_get_bit(regs.dds_cfg, POS_CALC_DDS_CFG_TEST_DATA));
 
     add_general("FOFB_SYNC_EN", rf_get_bit(regs.sw_tag, POS_CALC_SW_TAG_EN));
