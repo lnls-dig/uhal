@@ -51,17 +51,17 @@ struct SyncMaskRates {
     } tbt, facq, monit;
     SyncMaskRates(struct pos_calc &regs):
         tbt{
-            &regs.tbt_tag,
-            &regs.tbt_data_mask_ctl,
-            &regs.tbt_data_mask_samples,},
+            .tag = &regs.tbt_tag,
+            .data_mask_ctl = &regs.tbt_data_mask_ctl,
+            .data_mask_samples = &regs.tbt_data_mask_samples,},
         facq{
-            &regs.monit1_tag,
-            &regs.monit1_data_mask_ctl,
-            &regs.monit1_data_mask_samples,},
+            .tag = &regs.monit1_tag,
+            .data_mask_ctl = &regs.monit1_data_mask_ctl,
+            .data_mask_samples = &regs.monit1_data_mask_samples,},
         monit{
-            &regs.monit_tag,
-            &regs.monit_data_mask_ctl,
-            &regs.monit_data_mask_samples,}
+            .tag = &regs.monit_tag,
+            .data_mask_ctl = &regs.monit_data_mask_ctl,
+            .data_mask_samples = &regs.monit_data_mask_samples,}
     {
     }
 };

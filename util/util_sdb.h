@@ -18,7 +18,7 @@
  * makes it possible to gate functionality behind version checks. If \p
  * device_match is null, \p pos is ignored and this function simply prints all
  * SDB information. */
-std::optional<struct sdb_device_info> read_sdb(struct pcie_bars *, device_match_fn, unsigned);
+std::optional<struct sdb_device_info> read_sdb(struct pcie_bars *, const device_match_fn &, unsigned);
 
 std::vector<struct sdb_synthesis_info> get_synthesis_info(struct pcie_bars *);
 

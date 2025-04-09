@@ -36,7 +36,7 @@ class Controller: public RegisterDecoderController {
     /** The device's startup frequency. */
     double fstartup;
     /** The device's internal crystal frequency. */
-    double fxtal;
+    double fxtal{0};
 
     /** Update all registers and return state of busy flag. */
     bool get_busy();

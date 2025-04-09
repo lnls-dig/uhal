@@ -53,7 +53,7 @@ class RegisterDecoderController: public RegisterController {
         RegisterController::set_devinfo(devinfo);
     }
 
-    virtual void encode_params() override { }
+    void encode_params() override { }
 
     void write_general(const char *name, decoders::data_type value)
     {

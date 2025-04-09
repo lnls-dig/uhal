@@ -2,8 +2,8 @@
 #include <limits>
 
 #include <endian.h>
-#include <limits.h>
-#include <stdint.h>
+#include <climits>
+#include <cstdint>
 
 extern "C" {
 /* library uses "this" as a struct member name */
@@ -60,14 +60,14 @@ static void print_sdb(const struct sdb_device_info &devinfo, const struct sdb_pr
     static_assert(sizeof product->name == 19);
     fprintf(stdout, "%sname %19s id %08jx vendor %016jx version %04x.%04x addr %08jx\n",
         /* indent entries according to fs.depth */
-        indentation + indent * (max_indent - depth),
+        indentation + (indent * (max_indent - depth)),
         product->name,
         (uintmax_t)devinfo.device_id, (uintmax_t)devinfo.vendor_id,
         (unsigned)devinfo.abi_ver_major, (unsigned)devinfo.abi_ver_minor,
         (uintmax_t)devinfo.start_addr);
 }
 
-std::optional<struct sdb_device_info> read_sdb(struct pcie_bars *bars, device_match_fn device_match, unsigned pos)
+std::optional<struct sdb_device_info> read_sdb(struct pcie_bars *bars, const device_match_fn &device_match, unsigned pos)
 {
     struct sdbfs fs = sdbfs_init(bars);
     defer _(nullptr, [&fs](...){sdbfs_dev_destroy(&fs);});
@@ -89,7 +89,7 @@ std::optional<struct sdb_device_info> read_sdb(struct pcie_bars *bars, device_ma
         if (device_match) {
             if (device_match(devinfo)) {
                 if (pos == 0) return devinfo;
-                else pos--;
+                pos--;
             }
         } else {
             print_sdb(devinfo, p, fs, min_depth);
@@ -110,7 +110,7 @@ std::vector<struct sdb_synthesis_info> get_synthesis_info(struct pcie_bars *bars
         struct sdb_product *p = &d->sdb_component.product;
         if (p->record_type != sdb_type_synthesis) continue;
 
-        auto s = reinterpret_cast<struct sdb_synthesis *>(d);
+        auto *s = reinterpret_cast<struct sdb_synthesis *>(d);
 
         struct sdb_synthesis_info syninfo;
 
@@ -132,7 +132,7 @@ std::vector<struct sdb_synthesis_info> get_synthesis_info(struct pcie_bars *bars
         static_assert(sizeof syninfo.commit == sizeof s->commit_id * 2 + 1);
         /* sprintf nul-terminates it automatically for us */
         for (size_t i = 0; i < sizeof s->commit_id; i++)
-            sprintf(syninfo.commit + i*2, "%02x", s->commit_id[i]);
+            sprintf(syninfo.commit + (i*2), "%02x", s->commit_id[i]);
 
         copy_string(syninfo.tool_name, s->tool_name);
         syninfo.tool_version = ntohl(s->tool_version);

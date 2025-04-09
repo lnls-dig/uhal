@@ -14,7 +14,7 @@ int main()
     defer _(nullptr, [&bars](...){dev_close(bars);});
 
     const size_t s = bars.sizes[1] / sizeof(uint32_t);
-    uint32_t *p = reinterpret_cast<uint32_t *>(const_cast<void *>(bars.bar2));
+    auto *p = reinterpret_cast<uint32_t *>(const_cast<void *>(bars.bar2));
     for (size_t i = 0; i < s; i++)
         p[i] = i;
 
@@ -34,7 +34,7 @@ int main()
                 (void *)((unsigned char *)bars.bar2 + bar_off),
                 (void *)((unsigned char *)dest + dest_off),
                 to_read);
-            if (memcmp((unsigned char *)bars.bar2 + bar_off, (unsigned char *)dest + dest_off, to_read)) {
+            if (memcmp((unsigned char *)bars.bar2 + bar_off, (unsigned char *)dest + dest_off, to_read) != 0) {
                 std::cerr << "memcmp failed" << std::endl;
                 exit(1);
             }
@@ -55,8 +55,8 @@ int main()
     }
 
     for (auto off: offs) {
-        bar2_read_v(&bars, off, dest, bars.sizes[1] * 2 + 128);
-        compare(off, 0, bars.sizes[1] * 2 + 128);
+        bar2_read_v(&bars, off, dest, (bars.sizes[1] * 2) + 128);
+        compare(off, 0, (bars.sizes[1] * 2) + 128);
     }
 
     free(dest);

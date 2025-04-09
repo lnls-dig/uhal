@@ -50,7 +50,8 @@ bool si57x_parameters::calc_fxtal()
 
 bool si57x_parameters::set_freq(double freq)
 {
-    uint32_t n1_best, hs_div_best;
+    uint32_t n1_best;
+    uint32_t hs_div_best;
     uint64_t rfreq_best;
     double freq_err_best = 1e9;
     bool best_is_set = false;
@@ -84,7 +85,7 @@ bool si57x_parameters::set_freq(double freq)
     return true;
 }
 
-double si57x_parameters::get_freq()
+double si57x_parameters::get_freq() const
 {
     return fxtal * hw2val_rfreq(rfreq) / (hw2val_hs_div(hs_div) * hw2val_n1(n1));
 }

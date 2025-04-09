@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cstring>
+#include <ranges>
 #include <stdexcept>
 #include <type_traits>
 
@@ -68,13 +69,13 @@ void Core::read_monitors()
         get_register(
             WB_FOFB_PROCESSING_REGS_CH +
             WB_FOFB_PROCESSING_REGS_CH_SP_DECIM_DATA +
-            i * WB_FOFB_PROCESSING_REGS_CH_SIZE);
+            (i * WB_FOFB_PROCESSING_REGS_CH_SIZE));
 }
 
 void Core::decode()
 {
-    uint32_t fixed_point_gain = extract_value<uint32_t>(regs.fixed_point_pos.accs_gains, WB_FOFB_PROCESSING_REGS_FIXED_POINT_POS_ACCS_GAINS_VAL_MASK);
-    uint32_t fixed_point_coeff = extract_value<uint32_t>(regs.fixed_point_pos.coeff, WB_FOFB_PROCESSING_REGS_FIXED_POINT_POS_COEFF_VAL_MASK);
+    auto fixed_point_gain = extract_value<uint32_t>(regs.fixed_point_pos.accs_gains, WB_FOFB_PROCESSING_REGS_FIXED_POINT_POS_ACCS_GAINS_VAL_MASK);
+    auto fixed_point_coeff = extract_value<uint32_t>(regs.fixed_point_pos.coeff, WB_FOFB_PROCESSING_REGS_FIXED_POINT_POS_COEFF_VAL_MASK);
     add_general("FIXED_POINT_POS_GAINS", fixed_point_gain);
     add_general("FIXED_POINT_POS_COEFF", fixed_point_coeff);
 
@@ -97,8 +98,6 @@ void Core::decode()
     coefficients_x.resize(MAX_NUM_CHAN);
     coefficients_y.resize(MAX_NUM_CHAN);
 
-    /* XXX: use C++20's std::ranges::generate when available */
-
     for (unsigned i = 0; i < *number_of_channels; i++) {
         auto &ram_bank = regs.ch[i].coeff_ram_bank;
         const size_t elements = MAX_BPMS;
@@ -106,10 +105,10 @@ void Core::decode()
         coefficients_y[i].resize(elements);
 
         size_t u = 0;
-        std::generate(coefficients_x[i].begin(), coefficients_x[i].end(),
+        std::ranges::generate(coefficients_x[i],
             [&](){ return fixed2float(ram_bank[u++].data, fixed_point_coeff); });
         u = MAX_BPMS;
-        std::generate(coefficients_y[i].begin(), coefficients_y[i].end(),
+        std::ranges::generate(coefficients_y[i],
             [&](){ return fixed2float(ram_bank[u++].data, fixed_point_coeff); });
 
         add_channel("CH_ACC_CTL_FREEZE", i, get_bit(regs.ch[i].acc.ctl, WB_FOFB_PROCESSING_REGS_CH_ACC_CTL_FREEZE));
@@ -121,9 +120,9 @@ void Core::decode()
     }
 
     size_t u = 0;
-    std::generate(ref_orb_x.begin(), ref_orb_x.end(), [&](){ return (int32_t)regs.sps_ram_bank[u++].data; });
+    std::ranges::generate(ref_orb_x, [&](){ return (int32_t)regs.sps_ram_bank[u++].data; });
     u = MAX_BPMS; /* access the second half of the RAM bank */
-    std::generate(ref_orb_y.begin(), ref_orb_y.end(), [&](){ return (int32_t)regs.sps_ram_bank[u++].data; });
+    std::ranges::generate(ref_orb_y, [&](){ return (int32_t)regs.sps_ram_bank[u++].data; });
 }
 
 void Core::print(FILE *f, bool verbose) const

@@ -22,7 +22,7 @@ class Core: public RegisterDecoder {
 
   public:
     Core(struct pcie_bars &);
-    ~Core();
+    ~Core() override;
 
     std::vector<int32_t> ref_orb_x, ref_orb_y;
     std::vector<std::vector<double>> coefficients_x, coefficients_y;

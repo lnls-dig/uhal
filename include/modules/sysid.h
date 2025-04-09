@@ -28,7 +28,7 @@ class Core: public RegisterDecoder {
 
   public:
     Core(struct pcie_bars &);
-    ~Core();
+    ~Core() override;
 
     void print(FILE *, bool) const override;
 

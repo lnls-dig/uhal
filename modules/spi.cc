@@ -104,7 +104,7 @@ void Controller::set_devinfo_callback()
 
 int32_t Controller::get_divider(int32_t sys_freq, int32_t spi_freq)
 {
-    return sys_freq / (2 * spi_freq) - 1;
+    return (sys_freq / (2 * spi_freq)) - 1;
 }
 
 void Controller::set_defaults()

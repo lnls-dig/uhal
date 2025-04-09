@@ -3,9 +3,9 @@
 #include <fstream>
 #include <string>
 
-#include <errno.h>
+#include <cerrno>
 #include <fcntl.h>
-#include <string.h>
+#include <cstring>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -141,7 +141,7 @@ void dev_open_serial(struct pcie_bars &bars, const char *dev_file)
     xfail(tcsetattr(fd, TCSAFLUSH, &term));
 
     bars.fserport = fdopen(fd, "r+");
-    setvbuf(bars.fserport, NULL, _IOLBF, 0);
+    setvbuf(bars.fserport, nullptr, _IOLBF, 0);
 
     configure_mutexes(bars);
 }
