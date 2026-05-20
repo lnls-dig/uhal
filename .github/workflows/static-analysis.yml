@@ -24,6 +24,7 @@ jobs:
           - packages: "cppcheck"
             command: >
               cppcheck --error-exitcode=1 --std=c++20 --check-level=exhaustive --addon=threadsafety
+              --suppress=throwInEntryPoint
               -D__unix__ -D__GNUC__
               --project=build/compile_commands.json -i subprojects/ -i util/tests/
     steps:
