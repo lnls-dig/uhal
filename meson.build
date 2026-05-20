@@ -32,7 +32,11 @@ sdbfs = dependency('sdbfs', fallback: 'sdbfs')
 ordered_map = dependency('ordered-map', fallback: 'ordered-map')
 
 if build_tests
-    catch2 = dependency('catch2-with-main', fallback: 'catch2')
+    catch2 = dependency(
+        'catch2-with-main',
+        fallback: 'catch2',
+        default_options: 'tests=false',
+    )
 endif
 
 header_dir = 'uhal'
