@@ -31,19 +31,21 @@
 
 /* PCIe SDRAM Address Page number and offset extractor */
 #define PCIE_ADDR_SDRAM_PG_OFFS(addr)                                          \
-    ((addr & PCIE_SDRAM_PG_MASK) >> PCIE_SDRAM_PG_SHIFT)
+    (((addr) & PCIE_SDRAM_PG_MASK) >> PCIE_SDRAM_PG_SHIFT)
 #define PCIE_ADDR_SDRAM_PG(addr)                                               \
-    ((addr & ~PCIE_SDRAM_PG_MASK) >> PCIE_SDRAM_PG_MAX)
+    (((addr) & ~PCIE_SDRAM_PG_MASK) >> PCIE_SDRAM_PG_MAX)
 
 /* PCIe WB Address Page number and offset extractor */
 #define PCIE_ADDR_WB_PG_OFFS(addr)                                             \
-    ((addr & PCIE_WB_PG_MASK) >> PCIE_WB_PG_SHIFT)
-#define PCIE_ADDR_WB_PG(addr) ((addr & ~PCIE_WB_PG_MASK) >> PCIE_WB_PG_MAX)
+    (((addr) & PCIE_WB_PG_MASK) >> PCIE_WB_PG_SHIFT)
+#define PCIE_ADDR_WB_PG(addr) (((addr) & ~PCIE_WB_PG_MASK) >> PCIE_WB_PG_MAX)
 
-#define WB_QWORD_ACC 3 /* 64-bit addressing */
-#define WB_DWORD_ACC 2 /* 32-bit addressing */
-#define WB_WORD_ACC 1 /* 16-bit addressing */
-#define WB_BYTE_ACC 0 /* 8-bit addressing */
+enum {
+    WB_QWORD_ACC = 3, /* 64-bit addressing */
+    WB_DWORD_ACC = 2, /* 32-bit addressing */
+    WB_WORD_ACC = 1, /* 16-bit addressing */
+    WB_BYTE_ACC = 0 /* 8-bit addressing */
+};
 
 /* FPGA PCIe registers. These are inside bar0 and must match
  * the FPGA firmware */
@@ -65,17 +67,19 @@
 #define PCIE_CFG_REG_DMA_STA (8 << WB_DWORD_ACC)
 
 /* Relevant values for DMA registers */
-#define PCIE_CFG_DMA_CTRL_AINC (1 << 15)
-#define PCIE_CFG_DMA_CTRL_BAR_SHIFT 16
-#define PCIE_CFG_DMA_CTRL_LAST (1 << 24)
-#define PCIE_CFG_DMA_CTRL_VALID (1 << 25)
-#define PCIE_CFG_DMA_STA_DONE (1 << 0)
-#define PCIE_CFG_DMA_STA_TIMEOUT (1 << 4)
+enum {
+    PCIE_CFG_DMA_CTRL_AINC = (1 << 15),
+    PCIE_CFG_DMA_CTRL_BAR_SHIFT = 16,
+    PCIE_CFG_DMA_CTRL_LAST = (1 << 24),
+    PCIE_CFG_DMA_CTRL_VALID = (1 << 25),
+    PCIE_CFG_DMA_STA_DONE = (1 << 0),
+    PCIE_CFG_DMA_STA_TIMEOUT = (1 << 4)
+};
 
 /* Other registers and values */
 #define PCIE_CFG_REG_TX_CTRL (30 << WB_DWORD_ACC)
 #define PCIE_CFG_REG_EB_STACON (36 << WB_DWORD_ACC)
-#define PCIE_CFG_TX_CTRL_CHANNEL_RST 0x0A
+enum { PCIE_CFG_TX_CTRL_CHANNEL_RST = 0x0A };
 
 static void bar_generic_read_v(struct pcie_bars *bars, size_t addr, void *dest,
     size_t n, uint32_t (*fn)(struct pcie_bars *bars, size_t addr))
@@ -144,7 +148,8 @@ void bar2_read_v(struct pcie_bars *bars, size_t addr, void *dest, size_t n)
         size_t i = 0;
 
 #ifdef USE_SSE41
-        const size_t alignment = 64, read_size = 1024;
+        const size_t alignment = 64;
+        const size_t read_size = 1024;
 
         size_t head = addr_now % alignment;
         head = head ? alignment - head : 0;
@@ -152,11 +157,14 @@ void bar2_read_v(struct pcie_bars *bars, size_t addr, void *dest, size_t n)
             destp[i] = *bar2_get_u32p_small(bars, addr_now, i);
 
         for (; i + (read_size - 1) < to_read / 4; i += read_size) {
-            __m128i a, b, c, d;
+            __m128i a;
+            __m128i b;
+            __m128i c;
+            __m128i d;
 
             _mm_mfence();
             for (size_t j = 0; j < 64; j++) {
-                size_t base = i + j * 16;
+                size_t base = i + (j * 16);
                 a = _mm_stream_load_si128(
                     (__m128i *)bar2_get_u32p_small(bars, addr_now, base));
                 b = _mm_stream_load_si128(
@@ -181,7 +189,7 @@ void bar2_read_v(struct pcie_bars *bars, size_t addr, void *dest, size_t n)
                 c = _mm_load_si128(scratch + base + 2);
                 d = _mm_load_si128(scratch + base + 3);
 
-                base = i + j * 16;
+                base = i + (j * 16);
                 _mm_stream_si128((__m128i *)(destp + base), a);
                 _mm_stream_si128((__m128i *)(destp + base + 4), b);
                 _mm_stream_si128((__m128i *)(destp + base + 8), c);
@@ -195,7 +203,7 @@ void bar2_read_v(struct pcie_bars *bars, size_t addr, void *dest, size_t n)
         n -= to_read;
         addr += to_read;
         assert((to_read & 0x3) == 0);
-        destp = destp + to_read / 4;
+        destp = destp + (to_read / 4);
     }
 
     pthread_mutex_unlock(&bars->locks[BAR2]);
@@ -311,7 +319,7 @@ static ssize_t uart_read_cmd(
                 char *data = line + 1;
                 for (ssize_t i = 0;
                     i < ((ans_str_size - 2) / 8) && i < num_words; i++) {
-                    int elements = sscanf(data + i * 8, "%8x", dest_u32);
+                    int elements = sscanf(data + (i * 8), "%8x", dest_u32);
                     dest_u32 += 1;
                     words_read += 1;
                     assert(elements == 1);
@@ -359,7 +367,7 @@ void bar4_read_v(struct pcie_bars *bars, size_t addr, void *dest, size_t n)
             ssize_t words_read = uart_read_cmd(bars, addr, dest, words_to_read);
             assert(words_read == words_to_read);
             addr += words_to_read * 4;
-            dest = (unsigned char *)dest + words_to_read * 4;
+            dest = (unsigned char *)dest + (words_to_read * 4);
         }
 
         goto unlock;

@@ -96,7 +96,7 @@ Controller::Controller(struct pcie_bars &bars, double fstartup)
     , CONSTRUCTOR_REGS(struct wb_si57x_ctrl_regs)
     , dec(bars)
     , fstartup(fstartup)
-    , fxtal(0)
+
 {
     set_read_dest(regs);
 }
@@ -171,10 +171,7 @@ bool Controller::apply_config()
     write_general("APPLY_CFG", 1);
     write_params();
 
-    if (still_busy() || !dec.get_general_data<int32_t>("CFG_IN_SYNC"))
-        return false;
-
-    return true;
+    return !(still_busy() || !dec.get_general_data<int32_t>("CFG_IN_SYNC"));
 }
 
 bool Controller::set_freq(double freq)

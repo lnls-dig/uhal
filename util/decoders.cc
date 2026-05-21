@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <stdexcept>
+#include <utility>
 
 #include <tsl/ordered_map.h>
 
@@ -39,7 +40,7 @@ RegisterDecoder::RegisterDecoder(struct pcie_bars &bars,
 
     RegisterDecoderBase(bars, ref_devinfo)
     , pvt(new RegisterDecoderPrivate())
-    , printers(printers)
+    , printers(std::move(printers))
 {
 }
 RegisterDecoder::~RegisterDecoder() = default;
@@ -52,9 +53,8 @@ bool RegisterDecoder::is_boolean_value(const char *name) const
         auto type = printer_it->second.get_type();
         return type == PrinterType::boolean || type == PrinterType::progress
             || type == PrinterType::enable;
-    } else {
-        return false;
     }
+    return false;
 }
 
 int32_t RegisterDecoder::try_boolean_value(
@@ -102,7 +102,7 @@ void RegisterDecoder::add_channel_double(
     add_data_internal(name, pos, value);
 }
 
-size_t RegisterDecoder::register2offset(uint32_t *reg)
+size_t RegisterDecoder::register2offset(const uint32_t *reg)
 {
     auto rdp = (uintptr_t)read_dest;
     auto rp = (uintptr_t)reg;

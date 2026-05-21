@@ -8,7 +8,11 @@ TEST_CASE("Benchmark", "[decoders-benchmark]")
     TestRegisterDecoder dec { };
 
     dec.decode();
-    BENCHMARK("Set general values") { return dec.decode(); };
+    BENCHMARK("Set general values")
+    {
+        dec.decode();
+        return;
+    };
 
     BENCHMARK("Get general values - integer")
     {
@@ -20,7 +24,11 @@ TEST_CASE("Benchmark", "[decoders-benchmark]")
     };
 
     dec.channel_decode();
-    BENCHMARK("Set channel values") { return dec.channel_decode(); };
+    BENCHMARK("Set channel values")
+    {
+        dec.channel_decode();
+        return;
+    };
 
     BENCHMARK("Get channel values - integer")
     {

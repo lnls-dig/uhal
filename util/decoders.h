@@ -15,7 +15,7 @@
 
 #include "sdb-defs.h"
 
-#define LNLS_VENDORID 0x1000000000001215
+enum { LNLS_VENDORID = 0x1000000000001215 };
 
 struct RegisterDecoderPrivate;
 class Printer;
@@ -46,7 +46,7 @@ class RegisterDecoderBase {
      * initializer */
     bool check_devinfo = false;
 
-    bool match_devinfo(const struct sdb_device_info &) const;
+    [[nodiscard]] bool match_devinfo(const struct sdb_device_info &) const;
 
 protected:
     size_t read_size;
@@ -106,7 +106,7 @@ class RegisterDecoder : public RegisterDecoderBase {
     void rf_add_data_internal(
         const char *, decoders::data_key::second_type, RegisterField);
 
-    size_t register2offset(uint32_t *);
+    size_t register2offset(const uint32_t *);
     uint32_t *offset2register(size_t, void *);
 
     void write_internal(
@@ -146,15 +146,15 @@ protected:
         return rf_extract_value(value, UINT32_MAX, is_signed);
     }
     /** set RegisterField metadata for conversion to and from fixed point */
-    RegisterField rf_fixed2float(RegisterField, unsigned);
+    static RegisterField rf_fixed2float(RegisterField, unsigned);
 
     /** add_general() that takes a RegisterField */
-    inline void add_general(const char *name, RegisterField rf)
+    void add_general(const char *name, RegisterField rf)
     {
         rf_add_data_internal(name, std::nullopt, rf);
     }
     /** add_channel() that takes a RegisterField */
-    inline void add_channel(const char *name, unsigned pos, RegisterField rf)
+    void add_channel(const char *name, unsigned pos, RegisterField rf)
     {
         rf_add_data_internal(name, pos, rf);
     }
@@ -191,12 +191,11 @@ public:
 
     std::optional<unsigned> channel;
 
-    inline void write_general(
-        const char *name, decoders::data_type value, void *dest)
+    void write_general(const char *name, decoders::data_type value, void *dest)
     {
         write_internal(name, std::nullopt, value, dest);
     }
-    inline void write_channel(
+    void write_channel(
         const char *name, unsigned pos, decoders::data_type value, void *dest)
     {
         write_internal(name, pos, value, dest);
