@@ -40,3 +40,19 @@ jobs:
         run: ninja -C build
       - name: Run tests
         run: ninja -C build test
+  check-format:
+    runs-on: ubuntu-latest
+    container:
+      image: alpine:edge
+    steps:
+      - name: Install dependencies
+        run: apk add git meson clang musl-dev clang-extra-tools
+      - uses: actions/checkout@v4
+      - name: Configure git safe directory
+        run: git config --global --add safe.directory /__w/uhal/uhal
+      - name: Configure
+        run: meson setup build
+      - name: Format code
+        run: ninja -C build clang-format
+      - name: Check differences
+        run: git diff --exit-code
