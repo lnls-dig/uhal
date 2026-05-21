@@ -12,13 +12,13 @@ struct wb_si57x_ctrl_regs;
 
 /** This class depends on Controller setting up core and SI57x states correctly
  * in order to provide valid values. */
-class Core: public RegisterDecoder {
+class Core : public RegisterDecoder {
     std::unique_ptr<struct wb_si57x_ctrl_regs> regs_storage;
     struct wb_si57x_ctrl_regs &regs;
 
     void decode() override;
 
-  public:
+public:
     Core(struct pcie_bars &);
     ~Core() override;
 };
@@ -27,7 +27,7 @@ class Core: public RegisterDecoder {
  * obtain its startup parameters. These parameters are used to calculate the
  * internal crystal oscillator's frequency, and allow core users to configure
  * the IC using calibrated values, instead of datasheet ones. */
-class Controller: public RegisterDecoderController {
+class Controller : public RegisterDecoderController {
     std::unique_ptr<struct wb_si57x_ctrl_regs> regs_storage;
     struct wb_si57x_ctrl_regs &regs;
 
@@ -44,7 +44,7 @@ class Controller: public RegisterDecoderController {
      * registers every iteration. Returns the final state of the busy flag. */
     bool still_busy();
 
-  public:
+public:
     /** The startup frequency has to be provided if read_startup_regs() is going
      * to be called. */
     Controller(struct pcie_bars &, double = 0);

@@ -33,11 +33,15 @@ const uint32_t range_mask = 0x1ff000;
 TEST_CASE("clear_and_insert unsigned range", "[bits-test]")
 {
     uint32_t reg = 0;
-    CHECK_THROWS_AS(clear_and_insert(reg, 1000U, range_mask), std::runtime_error);
-    CHECK_THROWS_AS(clear_and_insert(reg, -1000, range_mask), std::runtime_error);
+    CHECK_THROWS_AS(
+        clear_and_insert(reg, 1000U, range_mask), std::runtime_error);
+    CHECK_THROWS_AS(
+        clear_and_insert(reg, -1000, range_mask), std::runtime_error);
 
-    CHECK_THROWS_AS(clear_and_insert(reg, 512U, range_mask), std::runtime_error);
-    CHECK_THROWS_AS(clear_and_insert(reg, -511, range_mask), std::runtime_error);
+    CHECK_THROWS_AS(
+        clear_and_insert(reg, 512U, range_mask), std::runtime_error);
+    CHECK_THROWS_AS(
+        clear_and_insert(reg, -511, range_mask), std::runtime_error);
 
     CHECK_NOTHROW(clear_and_insert(reg, 511U, range_mask));
     CHECK_NOTHROW(clear_and_insert(reg, 255U, range_mask));
@@ -47,11 +51,14 @@ TEST_CASE("clear_and_insert unsigned range", "[bits-test]")
 TEST_CASE("clear_and_insert signed range", "[bits-test]")
 {
     uint32_t reg = 0;
-    CHECK_THROWS_AS(clear_and_insert(reg, 1000, range_mask), std::runtime_error);
-    CHECK_THROWS_AS(clear_and_insert(reg, -1000, range_mask), std::runtime_error);
+    CHECK_THROWS_AS(
+        clear_and_insert(reg, 1000, range_mask), std::runtime_error);
+    CHECK_THROWS_AS(
+        clear_and_insert(reg, -1000, range_mask), std::runtime_error);
 
     CHECK_THROWS_AS(clear_and_insert(reg, 256, range_mask), std::runtime_error);
-    CHECK_THROWS_AS(clear_and_insert(reg, -257, range_mask), std::runtime_error);
+    CHECK_THROWS_AS(
+        clear_and_insert(reg, -257, range_mask), std::runtime_error);
 
     CHECK_NOTHROW(clear_and_insert(reg, 255, range_mask));
     CHECK_NOTHROW(clear_and_insert(reg, 0, range_mask));
@@ -94,6 +101,7 @@ TEST_CASE("extract_value all bits set", "[bits-test]")
     CHECK(extract_value(0xffff, 0xffff, false) == 0xffff);
     CHECK(extract_value(0xffff, 0xffff, true) == -1);
 
-    CHECK((uint32_t)extract_value(0xffffffff, 0xffffffff, false) == 0xffffffffU);
+    CHECK(
+        (uint32_t)extract_value(0xffffffff, 0xffffffff, false) == 0xffffffffU);
     CHECK(extract_value(0xffffffff, 0xffffffff, true) == -1);
 }

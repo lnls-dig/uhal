@@ -15,7 +15,7 @@ using namespace std::chrono_literals;
 /* forward declaration */
 struct pos_calc;
 
-class Core: public RegisterDecoder {
+class Core : public RegisterDecoder {
     std::unique_ptr<struct pos_calc> regs_storage;
     struct pos_calc &regs;
 
@@ -27,7 +27,7 @@ class Core: public RegisterDecoder {
     void read_fifo_amps();
     void decode_fifo_amps();
 
-  public:
+public:
     Core(struct pcie_bars &);
     ~Core() override;
 
@@ -35,13 +35,13 @@ class Core: public RegisterDecoder {
     void get_fifo_amps();
 };
 
-class Controller: public RegisterDecoderController {
+class Controller : public RegisterDecoderController {
     std::unique_ptr<struct pos_calc> regs_storage;
     struct pos_calc &regs;
 
     Core dec;
 
-  public:
+public:
     Controller(struct pcie_bars &);
     ~Controller();
 

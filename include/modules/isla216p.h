@@ -11,9 +11,10 @@ class Controller {
 
     fmc250m_4ch::Core f250_regs;
     mutable std::optional<struct sdb_device_info> f250_devinfo;
-    mutable std::optional<struct sdb_device_info> spi_first_devinfo, spi_second_devinfo;
+    mutable std::optional<struct sdb_device_info> spi_first_devinfo,
+        spi_second_devinfo;
 
-  public:
+public:
     Controller(struct pcie_bars &);
 
     bool match_devinfo(const struct sdb_device_info &);

@@ -1,24 +1,25 @@
 #include <stdexcept>
 
-#include "pcie.h"
 #include "decoders.h"
+#include "pcie.h"
 
-RegisterDecoderBase::RegisterDecoderBase(struct pcie_bars &bars, const struct sdb_device_info &ref_devinfo):
-    vendor_id(ref_devinfo.vendor_id),
-    device_id(ref_devinfo.device_id),
-    major_version(ref_devinfo.abi_ver_major),
-    check_devinfo(true),
-    bars(bars),
-    match_devinfo_lambda([this](auto const &devinfo){ return match_devinfo(devinfo); })
+RegisterDecoderBase::RegisterDecoderBase(
+    struct pcie_bars &bars, const struct sdb_device_info &ref_devinfo)
+    : vendor_id(ref_devinfo.vendor_id)
+    , device_id(ref_devinfo.device_id)
+    , major_version(ref_devinfo.abi_ver_major)
+    , check_devinfo(true)
+    , bars(bars)
+    , match_devinfo_lambda(
+          [this](auto const &devinfo) { return match_devinfo(devinfo); })
 {
 }
 
-bool RegisterDecoderBase::match_devinfo(const struct sdb_device_info &match) const
+bool RegisterDecoderBase::match_devinfo(
+    const struct sdb_device_info &match) const
 {
-    return
-      match.vendor_id == vendor_id &&
-      match.device_id == device_id &&
-      match.abi_ver_major == major_version;
+    return match.vendor_id == vendor_id && match.device_id == device_id
+        && match.abi_ver_major == major_version;
 }
 
 void RegisterDecoderBase::set_devinfo(const struct sdb_device_info &new_devinfo)

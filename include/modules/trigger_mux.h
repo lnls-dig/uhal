@@ -13,25 +13,25 @@ namespace trigger_mux {
 /* forward declaration */
 struct trigger_mux_regs;
 
-class Core: public RegisterDecoder {
+class Core : public RegisterDecoder {
     std::unique_ptr<struct trigger_mux_regs> regs_storage;
     struct trigger_mux_regs &regs;
 
     void decode() override;
 
-  public:
+public:
     Core(struct pcie_bars &);
     ~Core();
 };
 
-class Controller: public RegisterController {
-  protected:
+class Controller : public RegisterController {
+protected:
     std::unique_ptr<struct trigger_mux_regs> regs_storage;
     struct trigger_mux_regs &regs;
 
     void encode_params() override;
 
-  public:
+public:
     Controller(struct pcie_bars &);
     ~Controller();
 

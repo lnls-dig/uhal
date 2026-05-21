@@ -43,7 +43,8 @@ TEST_CASE("get_freq", "[si57x-test]")
 }
 
 /* based on scripts/si57-clk-calc.py from afc-gw
- * https://github.com/lnls-dig/afc-gw/blob/eb03f2a6b4653d1831e80d305d0977ba4d6597b6/scripts/si57-clk-calc.py */
+ * https://github.com/lnls-dig/afc-gw/blob/eb03f2a6b4653d1831e80d305d0977ba4d6597b6/scripts/si57-clk-calc.py
+ */
 TEST_CASE("set_freq success", "[si57x-test]")
 {
     si57x_parameters params;

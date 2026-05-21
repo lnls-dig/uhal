@@ -1,9 +1,9 @@
 #include <arpa/inet.h>
 #include <cstring>
 
+#include "modules/spi.h"
 #include "printer.h"
 #include "util.h"
-#include "modules/spi.h"
 
 namespace spi {
 
@@ -30,29 +30,31 @@ namespace {
     constexpr uint64_t CERN_VENDORID = 0x000000000000ce42;
     constexpr unsigned SPI_DEVID = 0xe503947e;
     struct sdb_device_info ref_devinfo = {
-        .vendor_id = CERN_VENDORID,
-        .device_id = SPI_DEVID,
-        .abi_ver_major = 1
+        .vendor_id = CERN_VENDORID, .device_id = SPI_DEVID, .abi_ver_major = 1
     };
 }
 
-Core::Core(struct pcie_bars &bars):
-    RegisterDecoder(bars, ref_devinfo, {
-        PRINTER("X", "RX/TX registers", PrinterType::value_hex),
-        PRINTER("CHARLEN", "size of message in bits (the max of 128 bits is encoded as 0)", PrinterType::value),
-        PRINTER("BSY", "Busy flag", PrinterType::boolean),
-        PRINTER("RXNEG", "", PrinterType::boolean),
-        PRINTER("TXNEG", "", PrinterType::boolean),
-        PRINTER("LSB", "", PrinterType::boolean),
-        PRINTER("IE", "", PrinterType::boolean),
-        PRINTER("ASS", "", PrinterType::boolean),
-        PRINTER("DIVIDER", "", PrinterType::value),
-        PRINTER("SS", "Slave select", PrinterType::value_hex),
-        PRINTER("BIDIR_CHARLEN", "", PrinterType::value),
-        PRINTER("BIDIR_EN", "", PrinterType::enable),
-        PRINTER("RX_SINGLE", "", PrinterType::value_hex),
-    }),
-    CONSTRUCTOR_REGS(struct spi)
+Core::Core(struct pcie_bars &bars)
+    : RegisterDecoder(bars, ref_devinfo,
+          {
+              PRINTER("X", "RX/TX registers", PrinterType::value_hex),
+              PRINTER("CHARLEN",
+                  "size of message in bits (the max of 128 bits is encoded as "
+                  "0)",
+                  PrinterType::value),
+              PRINTER("BSY", "Busy flag", PrinterType::boolean),
+              PRINTER("RXNEG", "", PrinterType::boolean),
+              PRINTER("TXNEG", "", PrinterType::boolean),
+              PRINTER("LSB", "", PrinterType::boolean),
+              PRINTER("IE", "", PrinterType::boolean),
+              PRINTER("ASS", "", PrinterType::boolean),
+              PRINTER("DIVIDER", "", PrinterType::value),
+              PRINTER("SS", "Slave select", PrinterType::value_hex),
+              PRINTER("BIDIR_CHARLEN", "", PrinterType::value),
+              PRINTER("BIDIR_EN", "", PrinterType::enable),
+              PRINTER("RX_SINGLE", "", PrinterType::value_hex),
+          })
+    , CONSTRUCTOR_REGS(struct spi)
 {
     set_read_dest(regs);
 
@@ -67,7 +69,8 @@ void Core::decode()
     add_channel("X", 2, rf_whole_register(regs.x2));
     add_channel("X", 3, rf_whole_register(regs.x3));
 
-    add_general("CHARLEN", rf_extract_value(regs.ctrl, SPI_PROTO_CTRL_CHARLEN_MASK));
+    add_general(
+        "CHARLEN", rf_extract_value(regs.ctrl, SPI_PROTO_CTRL_CHARLEN_MASK));
     add_general("BSY", rf_get_bit(regs.ctrl, SPI_PROTO_CTRL_BSY));
     add_general("RXNEG", rf_get_bit(regs.ctrl, SPI_PROTO_CTRL_RXNEG));
     add_general("TXNEG", rf_get_bit(regs.ctrl, SPI_PROTO_CTRL_TXNEG));
@@ -75,11 +78,13 @@ void Core::decode()
     add_general("IE", rf_get_bit(regs.ctrl, SPI_PROTO_CTRL_IE));
     add_general("ASS", rf_get_bit(regs.ctrl, SPI_PROTO_CTRL_ASS));
 
-    add_general("DIVIDER", rf_extract_value(regs.divider, SPI_PROTO_DIVIDER_MASK));
+    add_general(
+        "DIVIDER", rf_extract_value(regs.divider, SPI_PROTO_DIVIDER_MASK));
 
     add_general("SS", rf_extract_value(regs.ss, SPI_PROTO_SS_MASK));
 
-    add_general("BIDIR_CHARLEN", rf_extract_value(regs.cfg_bidir, SPI_PROTO_CFG_BIDIR_CHARLEN_MASK));
+    add_general("BIDIR_CHARLEN",
+        rf_extract_value(regs.cfg_bidir, SPI_PROTO_CFG_BIDIR_CHARLEN_MASK));
     add_general("BIDIR_EN", rf_get_bit(regs.cfg_bidir, SPI_PROTO_CFG_BIDIR_EN));
 
     add_channel("RX_SINGLE", 0, rf_whole_register(regs.rx0_single));
@@ -88,19 +93,16 @@ void Core::decode()
     add_channel("RX_SINGLE", 3, rf_whole_register(regs.rx3_single));
 }
 
-Controller::Controller(struct pcie_bars &bars):
-    RegisterDecoderController(bars, ref_devinfo, &dec),
-    CONSTRUCTOR_REGS(struct spi),
-    dec(bars)
+Controller::Controller(struct pcie_bars &bars)
+    : RegisterDecoderController(bars, ref_devinfo, &dec)
+    , CONSTRUCTOR_REGS(struct spi)
+    , dec(bars)
 {
     set_read_dest(regs);
 }
 Controller::~Controller() = default;
 
-void Controller::set_devinfo_callback()
-{
-    set_defaults();
-}
+void Controller::set_devinfo_callback() { set_defaults(); }
 
 int32_t Controller::get_divider(int32_t sys_freq, int32_t spi_freq)
 {
@@ -116,12 +118,14 @@ void Controller::set_defaults()
     write_params();
 }
 
-bool Controller::write_read_data(const unsigned char *wdata, size_t wsize, unsigned char *rdata, size_t rsize, Channel slave)
+bool Controller::write_read_data(const unsigned char *wdata, size_t wsize,
+    unsigned char *rdata, size_t rsize, Channel slave)
 {
     if (wsize + rsize > 16)
         throw std::logic_error("unsupported wsize + rsize");
     if (wsize + rsize > 4)
-        throw std::logic_error("TODO: deal with commands spanning more than one register");
+        throw std::logic_error(
+            "TODO: deal with commands spanning more than one register");
     if (rsize > 1)
         throw std::logic_error("TODO: deal with reading more than one byte");
 
@@ -138,7 +142,8 @@ bool Controller::write_read_data(const unsigned char *wdata, size_t wsize, unsig
     /* the bytes were in network order (MSB first), and were copied into x0, so
      * we need to revert that */
     regs.x0 = ntohl(regs.x0);
-    /* now the bytes are at the register's MSB, so we need to shift them to LSB */
+    /* now the bytes are at the register's MSB, so we need to shift them to LSB
+     */
     regs.x0 >>= (4 - wsize) * 8;
     /* finally, we need to make room for the response bytes */
     regs.x0 <<= rsize * 8;

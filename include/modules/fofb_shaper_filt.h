@@ -1,8 +1,8 @@
 #ifndef FOFB_SHAPER_FILT_H
 #define FOFB_SHAPER_FILT_H
 
-#include <vector>
 #include <memory>
+#include <vector>
 
 #include "controllers.h"
 #include "decoders.h"
@@ -18,7 +18,7 @@ struct filter_coefficients {
 /* forward declaration */
 struct wb_fofb_shaper_filt_regs;
 
-class Core: public RegisterDecoder {
+class Core : public RegisterDecoder {
     std::unique_ptr<struct wb_fofb_shaper_filt_regs> regs_storage;
     struct wb_fofb_shaper_filt_regs &regs;
 
@@ -26,7 +26,7 @@ class Core: public RegisterDecoder {
     void read_monitors() override;
     void decode_monitors() override;
 
-  public:
+public:
     Core(struct pcie_bars &);
     ~Core();
 
@@ -35,8 +35,8 @@ class Core: public RegisterDecoder {
     filter_coefficients coefficients;
 };
 
-class Controller: public RegisterController {
-  protected:
+class Controller : public RegisterController {
+protected:
     std::unique_ptr<struct wb_fofb_shaper_filt_regs> regs_storage;
     struct wb_fofb_shaper_filt_regs &regs;
 
@@ -45,7 +45,7 @@ class Controller: public RegisterController {
     void set_devinfo_callback() override;
     void encode_params() override;
 
-  public:
+public:
     Controller(struct pcie_bars &);
     ~Controller();
 

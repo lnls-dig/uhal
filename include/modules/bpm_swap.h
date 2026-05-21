@@ -11,25 +11,25 @@ namespace bpm_swap {
 /* forward declaration */
 struct bpm_swap_regs;
 
-class Core: public RegisterDecoder {
+class Core : public RegisterDecoder {
     std::unique_ptr<struct bpm_swap_regs> regs_storage;
     struct bpm_swap_regs &regs;
 
     void decode() override;
 
-  public:
+public:
     Core(struct pcie_bars &);
     ~Core() override;
 };
 
-class Controller: public RegisterController {
+class Controller : public RegisterController {
     std::unique_ptr<struct bpm_swap_regs> regs_storage;
     struct bpm_swap_regs &regs;
 
     void encode_params() override;
     void write_params() override;
 
-  public:
+public:
     Controller(struct pcie_bars &);
     ~Controller();
 

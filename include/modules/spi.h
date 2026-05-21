@@ -12,28 +12,28 @@ struct spi;
 
 struct Channel {
     unsigned channel;
-    Channel(unsigned channel):
-        channel(channel)
+    Channel(unsigned channel)
+        : channel(channel)
     {
         if (channel > 8)
             throw std::logic_error("bad spi slave index");
     }
 };
 
-class Core: public RegisterDecoder {
+class Core : public RegisterDecoder {
     std::unique_ptr<struct spi> regs_storage;
     struct spi &regs;
 
     void decode() override;
 
-  public:
+public:
     Core(struct pcie_bars &);
     ~Core() override;
 };
 
 /** Even though the decoder supports the bidirectional registers, this
  * implementation does not support them whatsoever. */
-class Controller: public RegisterDecoderController {
+class Controller : public RegisterDecoderController {
     std::unique_ptr<struct spi> regs_storage;
     struct spi &regs;
 
@@ -42,13 +42,14 @@ class Controller: public RegisterDecoderController {
     void set_devinfo_callback() override;
     static int32_t get_divider(int32_t, int32_t);
 
-  public:
+public:
     Controller(struct pcie_bars &);
     ~Controller();
 
     void set_defaults();
 
-    bool write_read_data(const unsigned char *, size_t, unsigned char *, size_t, Channel = {0});
+    bool write_read_data(const unsigned char *, size_t, unsigned char *, size_t,
+        Channel = { 0 });
 };
 
 } /* namespace spi */

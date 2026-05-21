@@ -13,12 +13,12 @@ namespace sys_id {
 struct wb_fofb_sys_id_regs;
 
 class distortion_levels {
-  public:
+public:
     distortion_levels(size_t);
     std::vector<int16_t> prbs_0, prbs_1;
 };
 
-class Core: public RegisterDecoder {
+class Core : public RegisterDecoder {
     std::unique_ptr<struct wb_fofb_sys_id_regs> regs_storage;
     struct wb_fofb_sys_id_regs &regs;
 
@@ -26,7 +26,7 @@ class Core: public RegisterDecoder {
     void read_monitors() override;
     void decode_monitors() override;
 
-  public:
+public:
     Core(struct pcie_bars &);
     ~Core();
 
@@ -36,15 +36,15 @@ class Core: public RegisterDecoder {
     distortion_levels posx_distortion, posy_distortion;
 };
 
-class Controller: public RegisterController {
-  protected:
+class Controller : public RegisterController {
+protected:
     std::unique_ptr<struct wb_fofb_sys_id_regs> regs_storage;
     struct wb_fofb_sys_id_regs &regs;
 
     void set_devinfo_callback() override;
     void encode_params() override;
 
-  public:
+public:
     Controller(struct pcie_bars &);
     ~Controller();
 

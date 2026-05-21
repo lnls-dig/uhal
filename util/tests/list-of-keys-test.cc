@@ -5,9 +5,9 @@
 TEST_CASE("tsl::ordered_map with multiple entries", "[list-of-keys]")
 {
     tsl::ordered_map<std::string_view, int> map = {
-        {"first", 0},
-        {"second", 0},
-        {"third", 0},
+        { "first", 0 },
+        { "second", 0 },
+        { "third", 0 },
     };
 
     CHECK(list_of_keys(map) == "first, second, third");
@@ -16,7 +16,7 @@ TEST_CASE("tsl::ordered_map with multiple entries", "[list-of-keys]")
 TEST_CASE("tsl::ordered_map with single entry", "[list-of-keys]")
 {
     tsl::ordered_map<std::string_view, int> map = {
-        {"first", 0},
+        { "first", 0 },
     };
 
     CHECK(list_of_keys(map) == "first");

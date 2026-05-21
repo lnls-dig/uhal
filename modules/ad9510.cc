@@ -1,12 +1,12 @@
+#include "modules/ad9510.h"
 #include "printer.h"
 #include "util.h"
-#include "modules/ad9510.h"
 
 namespace ad9510 {
 
-Controller::Controller(struct pcie_bars &bars):
-    spi_regs(bars),
-    fac_regs(bars)
+Controller::Controller(struct pcie_bars &bars)
+    : spi_regs(bars)
+    , fac_regs(bars)
 {
 }
 

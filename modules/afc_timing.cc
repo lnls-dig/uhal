@@ -1,10 +1,10 @@
 #include <cmath>
 #include <stdexcept>
 
-#include "printer.h"
-#include "util.h"
-#include "si57x_util.h"
 #include "modules/afc_timing.h"
+#include "printer.h"
+#include "si57x_util.h"
+#include "util.h"
 
 namespace afc_timing {
 
@@ -33,23 +33,23 @@ namespace {
     constexpr unsigned NUM_CHANNELS = 18;
 
     constexpr unsigned AFC_TIMING_DEVID = 0xbe10be10;
-    struct sdb_device_info ref_devinfo = {
-        .vendor_id = LNLS_VENDORID,
+    struct sdb_device_info ref_devinfo = { .vendor_id = LNLS_VENDORID,
         .device_id = AFC_TIMING_DEVID,
-        .abi_ver_major = 2
-    };
+        .abi_ver_major = 2 };
 }
 
 /* Make sure we have the right number of channels by using:
  * - the size of registers for a given channel
  * - the number of channels
  * - the size of registers for all channels */
-static_assert((TIMING_REG_AMC1 - TIMING_REG_AMC0) * NUM_CHANNELS == TIMING_REG_FMC2CH4_WDT - TIMING_REG_AMC0 + 4);
+static_assert((TIMING_REG_AMC1 - TIMING_REG_AMC0) * NUM_CHANNELS
+    == TIMING_REG_FMC2CH4_WDT - TIMING_REG_AMC0 + 4);
 
 struct afc_timing {
     uint32_t stat, alive;
     struct {
-        uint32_t rfreq_hi, rfreq_lo, n1_hs_div, freq_control_loop, phase_control_loop, maf;
+        uint32_t rfreq_hi, rfreq_lo, n1_hs_div, freq_control_loop,
+            phase_control_loop, maf;
     } rtm_clock, afc_clock;
     struct {
         uint32_t config, pulses, count, evt, dly, wdt;
@@ -57,54 +57,79 @@ struct afc_timing {
     uint32_t dbg_ctl, dbg_cfg_1, dbg_cfg_2, dbg_sta;
 };
 
-Core::Core(struct pcie_bars &bars):
-    RegisterDecoder(bars, ref_devinfo, {
-        PRINTER("LINK", "Fiber link", PrinterType::enable),
-        PRINTER("RXEN", "RX Enable", PrinterType::enable),
-        PRINTER("EVREN", "Event receiver enable", PrinterType::boolean),
-        PRINTER("LOCKED_AFC_FREQ", "AFC PLL frequency lock status", PrinterType::boolean),
-        PRINTER("LOCKED_AFC_PHASE", "AFC PLL phase lock status", PrinterType::boolean),
-        PRINTER("LOCKED_RTM_FREQ", "RTM PLL frequency lock status", PrinterType::boolean),
-        PRINTER("LOCKED_RTM_PHASE", "RTM PLL phase lock status", PrinterType::boolean),
-        PRINTER("LOCKED_GT0", "GT0 PLL lock status", PrinterType::boolean),
-        PRINTER("LOCKED_AFC_FREQ_LTC", "Latched AFC PLL frequency lock status", PrinterType::boolean),
-        PRINTER("LOCKED_AFC_PHASE_LTC", "Latched AFC PLL phase lock status", PrinterType::boolean),
-        PRINTER("LOCKED_RTM_FREQ_LTC", "Latched RTM PLL frequency lock status", PrinterType::boolean),
-        PRINTER("LOCKED_RTM_PHASE_LTC", "Latched RTM PLL phase lock status", PrinterType::boolean),
-        PRINTER("LOCKED_GT0_LTC", "Latched GT0 PLL lock status", PrinterType::boolean),
-        PRINTER("ALIVE", "Alive counter", PrinterType::value),
+Core::Core(struct pcie_bars &bars)
+    : RegisterDecoder(bars, ref_devinfo,
+          {
+              PRINTER("LINK", "Fiber link", PrinterType::enable),
+              PRINTER("RXEN", "RX Enable", PrinterType::enable),
+              PRINTER("EVREN", "Event receiver enable", PrinterType::boolean),
+              PRINTER("LOCKED_AFC_FREQ", "AFC PLL frequency lock status",
+                  PrinterType::boolean),
+              PRINTER("LOCKED_AFC_PHASE", "AFC PLL phase lock status",
+                  PrinterType::boolean),
+              PRINTER("LOCKED_RTM_FREQ", "RTM PLL frequency lock status",
+                  PrinterType::boolean),
+              PRINTER("LOCKED_RTM_PHASE", "RTM PLL phase lock status",
+                  PrinterType::boolean),
+              PRINTER(
+                  "LOCKED_GT0", "GT0 PLL lock status", PrinterType::boolean),
+              PRINTER("LOCKED_AFC_FREQ_LTC",
+                  "Latched AFC PLL frequency lock status",
+                  PrinterType::boolean),
+              PRINTER("LOCKED_AFC_PHASE_LTC",
+                  "Latched AFC PLL phase lock status", PrinterType::boolean),
+              PRINTER("LOCKED_RTM_FREQ_LTC",
+                  "Latched RTM PLL frequency lock status",
+                  PrinterType::boolean),
+              PRINTER("LOCKED_RTM_PHASE_LTC",
+                  "Latched RTM PLL phase lock status", PrinterType::boolean),
+              PRINTER("LOCKED_GT0_LTC", "Latched GT0 PLL lock status",
+                  PrinterType::boolean),
+              PRINTER("ALIVE", "Alive counter", PrinterType::value),
 
-        PRINTER("RFREQ_HI", "Si57x RFREQ MSB", PrinterType::value),
-        PRINTER("RFREQ_LO", "Si57x RFREQ LSB", PrinterType::value),
-        PRINTER("N1", "Si57x N1", PrinterType::value),
-        PRINTER("HS_DIV", "Si57x HS_DIV", PrinterType::value),
-        PRINTER("FREQ_KP", "Frequency proportional gain", PrinterType::value),
-        PRINTER("FREQ_KI", "Frequency integral gain", PrinterType::value),
-        PRINTER("PHASE_KP", "Phase proportional gain", PrinterType::value),
-        PRINTER("PHASE_KI", "Phase integral gain", PrinterType::value),
-        PRINTER("MAF_NAVG", "DDMTD average number", PrinterType::value),
-        PRINTER("MAF_DIV_EXP", "DDMTD divider exponent (2^N)", PrinterType::value),
+              PRINTER("RFREQ_HI", "Si57x RFREQ MSB", PrinterType::value),
+              PRINTER("RFREQ_LO", "Si57x RFREQ LSB", PrinterType::value),
+              PRINTER("N1", "Si57x N1", PrinterType::value),
+              PRINTER("HS_DIV", "Si57x HS_DIV", PrinterType::value),
+              PRINTER(
+                  "FREQ_KP", "Frequency proportional gain", PrinterType::value),
+              PRINTER("FREQ_KI", "Frequency integral gain", PrinterType::value),
+              PRINTER(
+                  "PHASE_KP", "Phase proportional gain", PrinterType::value),
+              PRINTER("PHASE_KI", "Phase integral gain", PrinterType::value),
+              PRINTER("MAF_NAVG", "DDMTD average number", PrinterType::value),
+              PRINTER("MAF_DIV_EXP", "DDMTD divider exponent (2^N)",
+                  PrinterType::value),
 
-        PRINTER("CH_EN", "Channel enable", PrinterType::enable),
-        PRINTER("CH_POL", "Channel polarity", PrinterType::boolean),
-        PRINTER("CH_LOG", "Channel time log", PrinterType::enable),
-        PRINTER("CH_ITL", "Channel interlock", PrinterType::enable),
-        PRINTER("CH_SRC", "Channel output source", PrinterType::value),
-        PRINTER("CH_DIR", "Channel output direction", PrinterType::boolean),
-        PRINTER("CH_PULSES", "Channel pulses", PrinterType::value),
-        PRINTER("CH_COUNT", "Channel count", PrinterType::value),
-        PRINTER("CH_EVT", "Channel event code", PrinterType::value),
-        PRINTER("CH_DLY", "Channel delay to trigger output", PrinterType::value),
-        PRINTER("CH_WDT", "Channel trigger output width", PrinterType::value),
+              PRINTER("CH_EN", "Channel enable", PrinterType::enable),
+              PRINTER("CH_POL", "Channel polarity", PrinterType::boolean),
+              PRINTER("CH_LOG", "Channel time log", PrinterType::enable),
+              PRINTER("CH_ITL", "Channel interlock", PrinterType::enable),
+              PRINTER("CH_SRC", "Channel output source", PrinterType::value),
+              PRINTER(
+                  "CH_DIR", "Channel output direction", PrinterType::boolean),
+              PRINTER("CH_PULSES", "Channel pulses", PrinterType::value),
+              PRINTER("CH_COUNT", "Channel count", PrinterType::value),
+              PRINTER("CH_EVT", "Channel event code", PrinterType::value),
+              PRINTER("CH_DLY", "Channel delay to trigger output",
+                  PrinterType::value),
+              PRINTER(
+                  "CH_WDT", "Channel trigger output width", PrinterType::value),
 
-        PRINTER("DBG_EN", "Enables upstream debug mode", PrinterType::enable),
-        PRINTER("DBG_EVT_DS_START", "Downstream start event", PrinterType::value),
-        PRINTER("DBG_EVT_US", "Upstream event", PrinterType::value),
-        PRINTER("DBG_EVT_SPACING", "Upstream event spacing", PrinterType::value),
-        PRINTER("DBG_EVT_REPS", "Upstream event repetitions", PrinterType::value),
-        PRINTER("DBG_COUNTER", "Counts how many times the debugging procedure was triggered", PrinterType::value),
-    }),
-    CONSTRUCTOR_REGS(struct afc_timing)
+              PRINTER(
+                  "DBG_EN", "Enables upstream debug mode", PrinterType::enable),
+              PRINTER("DBG_EVT_DS_START", "Downstream start event",
+                  PrinterType::value),
+              PRINTER("DBG_EVT_US", "Upstream event", PrinterType::value),
+              PRINTER("DBG_EVT_SPACING", "Upstream event spacing",
+                  PrinterType::value),
+              PRINTER("DBG_EVT_REPS", "Upstream event repetitions",
+                  PrinterType::value),
+              PRINTER("DBG_COUNTER",
+                  "Counts how many times the debugging procedure was triggered",
+                  PrinterType::value),
+          })
+    , CONSTRUCTOR_REGS(struct afc_timing)
 {
     set_read_dest(regs);
 
@@ -124,27 +149,44 @@ void Core::decode()
     add_general("LOCKED_RTM_FREQ", get_bit(*pt, TIMING_STAT_LOCKED_RTM_FREQ));
     add_general("LOCKED_RTM_PHASE", get_bit(*pt, TIMING_STAT_LOCKED_RTM_PHASE));
     add_general("LOCKED_GT0", get_bit(*pt, TIMING_STAT_LOCKED_GT0));
-    add_general("LOCKED_AFC_FREQ_LTC", get_bit(*pt, TIMING_STAT_LOCKED_AFC_FREQ_LTC));
-    add_general("LOCKED_AFC_PHASE_LTC", get_bit(*pt, TIMING_STAT_LOCKED_AFC_PHASE_LTC));
-    add_general("LOCKED_RTM_FREQ_LTC", get_bit(*pt, TIMING_STAT_LOCKED_RTM_FREQ_LTC));
-    add_general("LOCKED_RTM_PHASE_LTC", get_bit(*pt, TIMING_STAT_LOCKED_RTM_PHASE_LTC));
+    add_general(
+        "LOCKED_AFC_FREQ_LTC", get_bit(*pt, TIMING_STAT_LOCKED_AFC_FREQ_LTC));
+    add_general(
+        "LOCKED_AFC_PHASE_LTC", get_bit(*pt, TIMING_STAT_LOCKED_AFC_PHASE_LTC));
+    add_general(
+        "LOCKED_RTM_FREQ_LTC", get_bit(*pt, TIMING_STAT_LOCKED_RTM_FREQ_LTC));
+    add_general(
+        "LOCKED_RTM_PHASE_LTC", get_bit(*pt, TIMING_STAT_LOCKED_RTM_PHASE_LTC));
     add_general("LOCKED_GT0_LTC", get_bit(*pt, TIMING_STAT_LOCKED_GT0_LTC));
-    add_general("RST_LOCKED_LTCS", rf_get_bit(*pt, TIMING_STAT_RST_LOCKED_LTCS));
+    add_general(
+        "RST_LOCKED_LTCS", rf_get_bit(*pt, TIMING_STAT_RST_LOCKED_LTCS));
 
     add_general("ALIVE", regs.alive);
 
     size_t i = 0;
-    for (auto clockp: {&regs.rtm_clock, &regs.afc_clock}) {
+    for (auto clockp : { &regs.rtm_clock, &regs.afc_clock }) {
         add_channel("RFREQ_HI", i, clockp->rfreq_hi);
         add_channel("RFREQ_LO", i, clockp->rfreq_lo);
-        add_channel("N1", i, extract_value<uint8_t>(clockp->n1_hs_div, TIMING_RTM_N1_MASK));
-        add_channel("HS_DIV", i, extract_value<uint8_t>(clockp->n1_hs_div, TIMING_RTM_HS_DIV_MASK));
-        add_channel("FREQ_KP", i, rf_extract_value(clockp->freq_control_loop, TIMING_RTM_FREQ_KP_MASK, true));
-        add_channel("FREQ_KI", i, rf_extract_value(clockp->freq_control_loop, TIMING_RTM_FREQ_KI_MASK, true));
-        add_channel("PHASE_KP", i, rf_extract_value(clockp->phase_control_loop, TIMING_RTM_PHASE_KP_MASK, true));
-        add_channel("PHASE_KI", i, rf_extract_value(clockp->phase_control_loop, TIMING_RTM_PHASE_KI_MASK, true));
-        add_channel("MAF_NAVG", i, rf_extract_value(clockp->maf, TIMING_RTM_MAF_NAVG_MASK));
-        add_channel("MAF_DIV_EXP", i, rf_extract_value(clockp->maf, TIMING_RTM_MAF_DIV_EXP_MASK));
+        add_channel("N1", i,
+            extract_value<uint8_t>(clockp->n1_hs_div, TIMING_RTM_N1_MASK));
+        add_channel("HS_DIV", i,
+            extract_value<uint8_t>(clockp->n1_hs_div, TIMING_RTM_HS_DIV_MASK));
+        add_channel("FREQ_KP", i,
+            rf_extract_value(
+                clockp->freq_control_loop, TIMING_RTM_FREQ_KP_MASK, true));
+        add_channel("FREQ_KI", i,
+            rf_extract_value(
+                clockp->freq_control_loop, TIMING_RTM_FREQ_KI_MASK, true));
+        add_channel("PHASE_KP", i,
+            rf_extract_value(
+                clockp->phase_control_loop, TIMING_RTM_PHASE_KP_MASK, true));
+        add_channel("PHASE_KI", i,
+            rf_extract_value(
+                clockp->phase_control_loop, TIMING_RTM_PHASE_KI_MASK, true));
+        add_channel("MAF_NAVG", i,
+            rf_extract_value(clockp->maf, TIMING_RTM_MAF_NAVG_MASK));
+        add_channel("MAF_DIV_EXP", i,
+            rf_extract_value(clockp->maf, TIMING_RTM_MAF_DIV_EXP_MASK));
         i++;
     }
 
@@ -158,7 +200,8 @@ void Core::decode()
         add_channel("CH_ITL", i, rf_get_bit(*pt, TIMING_AMC0_ITL));
 
         auto ch_src = rf_extract_value(*pt, TIMING_AMC0_SRC_MASK);
-        assert(std::get<int32_t>(ch_src.value) < (ssize_t)Controller::sources_list.size());
+        assert(std::get<int32_t>(ch_src.value)
+            < (ssize_t)Controller::sources_list.size());
         add_channel("CH_SRC", i, ch_src);
 
         add_channel("CH_DIR", i, rf_get_bit(*pt, TIMING_AMC0_DIR));
@@ -176,18 +219,21 @@ void Core::decode()
     add_general("DBG_EN", rf_get_bit(*pt, TIMING_DBG_CTL_EN));
     add_general("DBG_COUNTER_RST", rf_get_bit(*pt, TIMING_DBG_CTL_COUNTER_RST));
     pt = &regs.dbg_cfg_1;
-    add_general("DBG_EVT_DS_START", rf_extract_value(*pt, TIMING_DBG_CFG_1_EVT_DS_START_MASK));
-    add_general("DBG_EVT_US", rf_extract_value(*pt, TIMING_DBG_CFG_1_EVT_US_MASK));
-    add_general("DBG_EVT_SPACING", rf_extract_value(*pt, TIMING_DBG_CFG_1_EVT_SPACING_MASK));
+    add_general("DBG_EVT_DS_START",
+        rf_extract_value(*pt, TIMING_DBG_CFG_1_EVT_DS_START_MASK));
+    add_general(
+        "DBG_EVT_US", rf_extract_value(*pt, TIMING_DBG_CFG_1_EVT_US_MASK));
+    add_general("DBG_EVT_SPACING",
+        rf_extract_value(*pt, TIMING_DBG_CFG_1_EVT_SPACING_MASK));
 
     add_general("DBG_EVT_REPS", rf_whole_register(regs.dbg_cfg_2));
     add_general("DBG_COUNTER", regs.dbg_sta);
 }
 
-Controller::Controller(struct pcie_bars &bars):
-    RegisterDecoderController(bars, ref_devinfo, &dec),
-    CONSTRUCTOR_REGS(struct afc_timing),
-    dec(bars)
+Controller::Controller(struct pcie_bars &bars)
+    : RegisterDecoderController(bars, ref_devinfo, &dec)
+    , CONSTRUCTOR_REGS(struct afc_timing)
+    , dec(bars)
 {
     set_read_dest(regs);
 }
@@ -205,14 +251,8 @@ const std::vector<std::string> Controller::sources_list = {
     "Clock7",
 };
 
-bool Controller::set_rtm_freq(double freq)
-{
-    return set_freq(freq, rtm_clock);
-}
-bool Controller::set_afc_freq(double freq)
-{
-    return set_freq(freq, afc_clock);
-}
+bool Controller::set_rtm_freq(double freq) { return set_freq(freq, rtm_clock); }
+bool Controller::set_afc_freq(double freq) { return set_freq(freq, afc_clock); }
 
 bool Controller::set_freq(double freq, struct clock &clock)
 {
@@ -233,8 +273,10 @@ void Controller::encode_params()
         registers.rfreq_hi = parameters.rfreq >> 20;
         registers.rfreq_lo = parameters.rfreq & 0xfffff;
 
-        clear_and_insert(registers.n1_hs_div, parameters.n1, TIMING_RTM_N1_MASK);
-        clear_and_insert(registers.n1_hs_div, parameters.hs_div, TIMING_RTM_HS_DIV_MASK);
+        clear_and_insert(
+            registers.n1_hs_div, parameters.n1, TIMING_RTM_N1_MASK);
+        clear_and_insert(
+            registers.n1_hs_div, parameters.hs_div, TIMING_RTM_HS_DIV_MASK);
     };
     setup_clock(rtm_clock, regs.rtm_clock);
     setup_clock(afc_clock, regs.afc_clock);

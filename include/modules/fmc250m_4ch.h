@@ -10,18 +10,18 @@ namespace fmc250m_4ch {
 
 struct fmc250m_4ch;
 
-class Core: public RegisterDecoder {
+class Core : public RegisterDecoder {
     std::unique_ptr<struct fmc250m_4ch> regs_storage;
     struct fmc250m_4ch &regs;
 
     void decode() override;
 
-  public:
+public:
     Core(struct pcie_bars &);
     ~Core() override;
 };
 
-class Controller: public RegisterDecoderController {
+class Controller : public RegisterDecoderController {
     std::unique_ptr<struct fmc250m_4ch> regs_storage;
     struct fmc250m_4ch &regs;
 
@@ -29,7 +29,7 @@ class Controller: public RegisterDecoderController {
 
     void unset_commands() override;
 
-  public:
+public:
     Controller(struct pcie_bars &);
     ~Controller();
 };

@@ -1,10 +1,10 @@
 #include <cmath>
 #include <stdexcept>
 
+#include "modules/bpm_swap.h"
 #include "pcie.h"
 #include "printer.h"
 #include "util.h"
-#include "modules/bpm_swap.h"
 
 namespace bpm_swap {
 
@@ -12,25 +12,26 @@ namespace bpm_swap {
 
 namespace {
     constexpr unsigned BPM_SWAP_DEVID = 0x12897592;
-    struct sdb_device_info ref_devinfo = {
-        .vendor_id = LNLS_VENDORID,
+    struct sdb_device_info ref_devinfo = { .vendor_id = LNLS_VENDORID,
         .device_id = BPM_SWAP_DEVID,
-        .abi_ver_major = 1
-    };
+        .abi_ver_major = 1 };
 }
 
 struct bpm_swap_regs {
     uint32_t ctrl, dly;
 };
 
-Core::Core(struct pcie_bars &bars):
-    RegisterDecoder(bars, ref_devinfo, {
-        PRINTER("MODE", "Operation mode of first pair", PrinterType::value),
-        PRINTER("DIV_F_CNT_EN", "Swap phase sync enable", PrinterType::enable),
-        PRINTER("DIV_F", "Swap divisor", PrinterType::value),
-        PRINTER("DLY", "Swap delay", PrinterType::value),
-    }),
-    CONSTRUCTOR_REGS(struct bpm_swap_regs)
+Core::Core(struct pcie_bars &bars)
+    : RegisterDecoder(bars, ref_devinfo,
+          {
+              PRINTER(
+                  "MODE", "Operation mode of first pair", PrinterType::value),
+              PRINTER("DIV_F_CNT_EN", "Swap phase sync enable",
+                  PrinterType::enable),
+              PRINTER("DIV_F", "Swap divisor", PrinterType::value),
+              PRINTER("DLY", "Swap delay", PrinterType::value),
+          })
+    , CONSTRUCTOR_REGS(struct bpm_swap_regs)
 {
     set_read_dest(regs);
 }
@@ -43,15 +44,16 @@ void Core::decode()
     t = regs.ctrl;
     add_general("MODE", extract_value<uint8_t>(t, BPM_SWAP_CTRL_MODE_MASK));
     add_general("DIV_F_CNT_EN", get_bit(t, BPM_SWAP_CTRL_SWAP_DIV_F_CNT_EN));
-    add_general("DIV_F", extract_value<uint16_t>(t, BPM_SWAP_CTRL_SWAP_DIV_F_MASK));
+    add_general(
+        "DIV_F", extract_value<uint16_t>(t, BPM_SWAP_CTRL_SWAP_DIV_F_MASK));
 
     t = regs.dly;
     add_general("DLY", extract_value<uint16_t>(t, BPM_SWAP_DLY_DESWAP_MASK));
 }
 
-Controller::Controller(struct pcie_bars &bars):
-    RegisterController(bars, ref_devinfo),
-    CONSTRUCTOR_REGS(struct bpm_swap_regs)
+Controller::Controller(struct pcie_bars &bars)
+    : RegisterController(bars, ref_devinfo)
+    , CONSTRUCTOR_REGS(struct bpm_swap_regs)
 {
     set_read_dest(regs);
 }

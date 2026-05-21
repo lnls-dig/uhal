@@ -41,9 +41,11 @@ static inline void clear_and_insert(uint32_t &dest, T value, uint32_t mask)
     }
 
     if (value < min)
-        throw std::runtime_error("value " + std::to_string(value) + " less than min (" + std::to_string(min) + ")");
+        throw std::runtime_error("value " + std::to_string(value)
+            + " less than min (" + std::to_string(min) + ")");
     if (value > max)
-        throw std::runtime_error("value " + std::to_string(value) + " greater than max (" + std::to_string(max) + ")");
+        throw std::runtime_error("value " + std::to_string(value)
+            + " greater than max (" + std::to_string(max) + ")");
 
     dest &= UINT32_MAX & ~mask;
     dest |= (uvalue << shift) & mask;
@@ -64,8 +66,7 @@ static inline bool get_bit(uint32_t value, uint32_t mask)
     return value & mask;
 }
 
-template<typename Signed>
-static inline int32_t sign_extend(uint32_t value)
+template <typename Signed> static inline int32_t sign_extend(uint32_t value)
 {
     typedef typename std::make_unsigned<Signed>::type Unsigned;
     return (Signed)(Unsigned)value;
@@ -74,18 +75,20 @@ static inline int32_t sign_extend(uint32_t value)
 static inline int32_t sign_extend(uint32_t value, unsigned width)
 {
     switch (width) {
-        case 8:
-            return sign_extend<int8_t>(value);
-        case 16:
-            return sign_extend<int16_t>(value);
-        case 32:
-            return sign_extend<int32_t>(value);
-        default:
-            throw std::logic_error("invalid width should have been caught elsewhere");
+    case 8:
+        return sign_extend<int8_t>(value);
+    case 16:
+        return sign_extend<int16_t>(value);
+    case 32:
+        return sign_extend<int32_t>(value);
+    default:
+        throw std::logic_error(
+            "invalid width should have been caught elsewhere");
     }
 }
 
-static inline int32_t extract_value(uint32_t value, uint32_t mask, bool is_signed=false)
+static inline int32_t extract_value(
+    uint32_t value, uint32_t mask, bool is_signed = false)
 {
     unsigned shift = std::countr_zero(mask);
     unsigned popcount = std::popcount(mask);
@@ -104,7 +107,7 @@ static inline int32_t extract_value(uint32_t value, uint32_t mask, bool is_signe
 }
 
 /* XXX: remove this when there are no more users */
-template<typename T>
+template <typename T>
 static inline T extract_value(uint32_t value, uint32_t mask)
 {
     return extract_value(value, mask, std::is_signed_v<T>);

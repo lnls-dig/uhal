@@ -5,9 +5,9 @@
 #ifndef PCIE_STRUCT_H
 #define PCIE_STRUCT_H
 
-#include <stdio.h>
 #include <pthread.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <sys/types.h>
 
 enum bar_lock {

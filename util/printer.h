@@ -3,8 +3,8 @@
 
 #include <cstdint>
 #include <cstdio>
-#include <stdexcept>
 #include <functional>
+#include <stdexcept>
 
 enum class PrinterType {
     /* boolean values */
@@ -28,22 +28,26 @@ class Printer {
     struct {
         const char *truth;
         const char *not_truth;
-    } boolean_names{};
+    } boolean_names { };
 
     printing_function custom_fn;
 
-  public:
+public:
     Printer(const char *name, const char *description, PrinterType type);
-    Printer(const char *name, const char *description, printing_function custom_fn);
-    Printer(const char *name, const char *description, const char *not_truth, const char *truth);
+    Printer(
+        const char *name, const char *description, printing_function custom_fn);
+    Printer(const char *name, const char *description, const char *not_truth,
+        const char *truth);
 
     PrinterType get_type() const;
 
-    template<typename T>
-    void print(FILE *, bool, unsigned, T) const;
+    template <typename T> void print(FILE *, bool, unsigned, T) const;
 };
 
 /* helper for defining std::unordered_map<std::string_view, Printer> */
-#define PRINTER(name, ...) {name, {name, __VA_ARGS__}}
+#define PRINTER(name, ...)                                                     \
+    {                                                                          \
+        name, { name, __VA_ARGS__ }                                            \
+    }
 
 #endif

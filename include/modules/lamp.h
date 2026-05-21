@@ -14,18 +14,18 @@ struct wb_rtmlamp_ohwr_regs;
 
 extern const std::vector<std::string> mode_list;
 
-class Core: public RegisterDecoder {
+class Core : public RegisterDecoder {
     std::unique_ptr<struct wb_rtmlamp_ohwr_regs> regs_storage;
     struct wb_rtmlamp_ohwr_regs &regs;
 
     void decode() override;
 
-  public:
+public:
     Core(struct pcie_bars &);
     ~Core();
 };
 
-class Controller: public RegisterDecoderController {
+class Controller : public RegisterDecoderController {
     std::unique_ptr<struct wb_rtmlamp_ohwr_regs> regs_storage;
     struct wb_rtmlamp_ohwr_regs &regs;
 
@@ -33,7 +33,7 @@ class Controller: public RegisterDecoderController {
 
     void unset_commands() override;
 
-  public:
+public:
     Controller(struct pcie_bars &);
     virtual ~Controller();
 };

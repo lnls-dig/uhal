@@ -20,15 +20,15 @@
 struct RegisterDecoderPrivate;
 class Printer;
 
-#define CONSTRUCTOR_REGS(type) regs_storage(new type ()), regs(*regs_storage)
+#define CONSTRUCTOR_REGS(type) regs_storage(new type()), regs(*regs_storage)
 
 namespace decoders {
-    /** int32_t is so far a generic enough type to be used here, but int64_t
-     * can be considered if it ever becomes an issue. We use double for
-     * floating point values */
-    using data_type = std::variant<std::int32_t, double>;
+/** int32_t is so far a generic enough type to be used here, but int64_t
+ * can be considered if it ever becomes an issue. We use double for
+ * floating point values */
+using data_type = std::variant<std::int32_t, double>;
 
-    using data_key = std::pair<std::string_view, std::optional<unsigned>>;
+using data_key = std::pair<std::string_view, std::optional<unsigned>>;
 }
 
 /** This class defines base methods that will be used by both decoders and
@@ -48,7 +48,7 @@ class RegisterDecoderBase {
 
     bool match_devinfo(const struct sdb_device_info &) const;
 
-  protected:
+protected:
     size_t read_size;
     void *read_dest;
 
@@ -69,7 +69,7 @@ class RegisterDecoderBase {
     /** Read values from BAR4 into #read_dest */
     virtual void read();
 
-  public:
+public:
     void check_devinfo_is_set() const;
     virtual void set_devinfo(const struct sdb_device_info &);
 
@@ -94,7 +94,7 @@ string) and index (a number). This is provided by the `get_generic_data()`
 method;
 - printing register fields in a common format. This is provided by the `print()`
 method. */
-class RegisterDecoder: public RegisterDecoderBase {
+class RegisterDecoder : public RegisterDecoderBase {
     bool is_boolean_value(const char *) const;
     int32_t try_boolean_value(const char *, int32_t) const;
 
@@ -103,21 +103,24 @@ class RegisterDecoder: public RegisterDecoderBase {
     template <class T>
     void add_data_internal(const char *, decoders::data_key::second_type, T);
 
-    void rf_add_data_internal(const char *, decoders::data_key::second_type, RegisterField);
+    void rf_add_data_internal(
+        const char *, decoders::data_key::second_type, RegisterField);
 
     size_t register2offset(uint32_t *);
     uint32_t *offset2register(size_t, void *);
 
-    void write_internal(const char *, std::optional<unsigned>, decoders::data_type, void *);
+    void write_internal(
+        const char *, std::optional<unsigned>, decoders::data_type, void *);
 
-  protected:
+protected:
     /** A device that has multiple channels will set this to the maximum amount
      * of channels */
     std::optional<unsigned> number_of_channels;
 
     std::unordered_map<std::string_view, Printer> printers;
 
-    RegisterDecoder(struct pcie_bars &, const struct sdb_device_info &, std::unordered_map<std::string_view, Printer>);
+    RegisterDecoder(struct pcie_bars &, const struct sdb_device_info &,
+        std::unordered_map<std::string_view, Printer>);
 
     /** Save an int32_t (or smaller) value to a key */
     void add_general(const char *, int32_t);
@@ -135,10 +138,10 @@ class RegisterDecoder: public RegisterDecoderBase {
      * RegisterDecoderBase#read_dest and RegisterDecoderBase#read_size */
     RegisterField rf_get_bit(uint32_t &, uint32_t);
     /** equivalent to rf_get_bit() for extract_value() */
-    RegisterField rf_extract_value(uint32_t &, uint32_t, bool=false);
+    RegisterField rf_extract_value(uint32_t &, uint32_t, bool = false);
     /** equivalent to rf_extract_value() with mask=UINT32_MAX, useful for when
      * values take up a whole register and a MASK macro isn't defined */
-    RegisterField rf_whole_register(uint32_t &value, bool is_signed=false)
+    RegisterField rf_whole_register(uint32_t &value, bool is_signed = false)
     {
         return rf_extract_value(value, UINT32_MAX, is_signed);
     }
@@ -165,16 +168,15 @@ class RegisterDecoder: public RegisterDecoderBase {
      * decode only changing values */
     virtual void decode_monitors();
 
-  public:
+public:
     virtual ~RegisterDecoder();
     /** Read from device and decode registers. Choose between all values or
      * only monitors */
-    void get_data(bool=false);
+    void get_data(bool = false);
     void binary_dump(FILE *) const;
     virtual void print(FILE *, bool) const;
 
-    template <class T>
-    T get_general_data(const char *name) const
+    template <class T> T get_general_data(const char *name) const
     {
         return std::get<T>(get_generic_data(name));
     }
@@ -184,15 +186,18 @@ class RegisterDecoder: public RegisterDecoderBase {
         return std::get<T>(get_generic_data(name, channel_index));
     }
 
-    decoders::data_type get_generic_data(const char *, decoders::data_key::second_type=std::nullopt) const;
+    decoders::data_type get_generic_data(
+        const char *, decoders::data_key::second_type = std::nullopt) const;
 
     std::optional<unsigned> channel;
 
-    inline void write_general(const char *name, decoders::data_type value, void *dest)
+    inline void write_general(
+        const char *name, decoders::data_type value, void *dest)
     {
         write_internal(name, std::nullopt, value, dest);
     }
-    inline void write_channel(const char *name, unsigned pos, decoders::data_type value, void *dest)
+    inline void write_channel(
+        const char *name, unsigned pos, decoders::data_type value, void *dest)
     {
         write_internal(name, pos, value, dest);
     }

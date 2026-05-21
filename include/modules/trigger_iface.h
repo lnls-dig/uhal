@@ -13,25 +13,25 @@ namespace trigger_iface {
 /* forward declaration */
 struct trigger_iface_regs;
 
-class Core: public RegisterDecoder {
+class Core : public RegisterDecoder {
     std::unique_ptr<struct trigger_iface_regs> regs_storage;
     struct trigger_iface_regs &regs;
 
     void decode() override;
 
-  public:
+public:
     Core(struct pcie_bars &);
     ~Core();
 };
 
-class Controller: public RegisterController {
-  protected:
+class Controller : public RegisterController {
+protected:
     std::unique_ptr<struct trigger_iface_regs> regs_storage;
     struct trigger_iface_regs &regs;
 
     void encode_params() override;
 
-  public:
+public:
     Controller(struct pcie_bars &);
     ~Controller();
 
@@ -39,7 +39,8 @@ class Controller: public RegisterController {
 
     struct parameters {
         /* rcv_count_rst and transm_count_rst are cleared automatically */
-        std::optional<bool> direction, direction_polarity, rcv_count_rst, transm_count_rst;
+        std::optional<bool> direction, direction_polarity, rcv_count_rst,
+            transm_count_rst;
         std::optional<uint8_t> rcv_len, transm_len;
     };
     std::vector<struct parameters> parameters;

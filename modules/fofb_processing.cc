@@ -3,52 +3,76 @@
 #include <stdexcept>
 #include <type_traits>
 
+#include "modules/fofb_processing.h"
 #include "pcie.h"
 #include "printer.h"
 #include "util.h"
-#include "modules/fofb_processing.h"
 
 namespace fofb_processing {
 
 #include "hw/wb_fofb_processing_regs.h"
 
-static_assert(WB_FOFB_PROCESSING_REGS_SPS_RAM_BANK == offsetof(wb_fofb_processing_regs, sps_ram_bank));
-/* check channel 1 to make sure all values are correct, including the channel size */
-static_assert(WB_FOFB_PROCESSING_REGS_CH + WB_FOFB_PROCESSING_REGS_CH_COEFF_RAM_BANK + WB_FOFB_PROCESSING_REGS_CH_SIZE ==
-    offsetof(wb_fofb_processing_regs, ch[1].coeff_ram_bank));
+static_assert(WB_FOFB_PROCESSING_REGS_SPS_RAM_BANK
+    == offsetof(wb_fofb_processing_regs, sps_ram_bank));
+/* check channel 1 to make sure all values are correct, including the channel
+ * size */
+static_assert(WB_FOFB_PROCESSING_REGS_CH
+        + WB_FOFB_PROCESSING_REGS_CH_COEFF_RAM_BANK
+        + WB_FOFB_PROCESSING_REGS_CH_SIZE
+    == offsetof(wb_fofb_processing_regs, ch[1].coeff_ram_bank));
 
 namespace {
     constexpr unsigned MAX_NUM_CHAN = 12, MAX_BPMS = 256;
 
     constexpr unsigned FOFB_PROCESSING_DEVID = 0x49681ca6;
-    struct sdb_device_info ref_devinfo = {
-        .vendor_id = LNLS_VENDORID,
+    struct sdb_device_info ref_devinfo = { .vendor_id = LNLS_VENDORID,
         .device_id = FOFB_PROCESSING_DEVID,
-        .abi_ver_major = 4
-    };
+        .abi_ver_major = 4 };
 }
 
-Core::Core(struct pcie_bars &bars):
-    RegisterDecoder(bars, ref_devinfo, {
-        PRINTER("FIXED_POINT_POS_COEFF", "Position of point in fixed point representation of coefficientes", PrinterType::value),
-        PRINTER("FIXED_POINT_POS_GAINS", "Position of point in fixed point representation of gains", PrinterType::value),
-        PRINTER("INTLK_CTL_SRC_EN_ORB_DISTORT", "Enable orbit distortion interlock source", PrinterType::enable),
-        PRINTER("INTLK_CTL_SRC_EN_PACKET_LOSS", "Enable packet loss interlock source", PrinterType::enable),
-        PRINTER("INTLK_STA", "Loop interlock flags register", PrinterType::value_hex),
-        PRINTER("INTLK_STA_ORB_DISTORT", "Orbit distortion loop interlock flag", PrinterType::boolean),
-        PRINTER("INTLK_STA_PACKET_LOSS", "Packet loss loop interlock flag", PrinterType::boolean),
-        PRINTER("INTLK_ORB_DISTORT_LIMIT", "Orbit distortion limit", PrinterType::value),
-        PRINTER("INTLK_MIN_NUM_PACKETS", "Minimum number of packets per timeframe", PrinterType::value),
-        PRINTER("SP_DECIM_RATIO_MAX", "Maximum setpoint decimation ratio", PrinterType::value),
+Core::Core(struct pcie_bars &bars)
+    : RegisterDecoder(bars, ref_devinfo,
+          {
+              PRINTER("FIXED_POINT_POS_COEFF",
+                  "Position of point in fixed point representation of "
+                  "coefficientes",
+                  PrinterType::value),
+              PRINTER("FIXED_POINT_POS_GAINS",
+                  "Position of point in fixed point representation of gains",
+                  PrinterType::value),
+              PRINTER("INTLK_CTL_SRC_EN_ORB_DISTORT",
+                  "Enable orbit distortion interlock source",
+                  PrinterType::enable),
+              PRINTER("INTLK_CTL_SRC_EN_PACKET_LOSS",
+                  "Enable packet loss interlock source", PrinterType::enable),
+              PRINTER("INTLK_STA", "Loop interlock flags register",
+                  PrinterType::value_hex),
+              PRINTER("INTLK_STA_ORB_DISTORT",
+                  "Orbit distortion loop interlock flag", PrinterType::boolean),
+              PRINTER("INTLK_STA_PACKET_LOSS",
+                  "Packet loss loop interlock flag", PrinterType::boolean),
+              PRINTER("INTLK_ORB_DISTORT_LIMIT", "Orbit distortion limit",
+                  PrinterType::value),
+              PRINTER("INTLK_MIN_NUM_PACKETS",
+                  "Minimum number of packets per timeframe",
+                  PrinterType::value),
+              PRINTER("SP_DECIM_RATIO_MAX", "Maximum setpoint decimation ratio",
+                  PrinterType::value),
 
-        PRINTER("CH_ACC_CTL_FREEZE", "Freeze accumulator", PrinterType::enable),
-        PRINTER("CH_ACC_GAIN", "Accumulator gain", PrinterType::value_float),
-        PRINTER("CH_ACC_LIMITS_MAX", "Maximum saturation value", PrinterType::value),
-        PRINTER("CH_ACC_LIMITS_MIN", "Minimum saturation value", PrinterType::value),
-        PRINTER("CH_SP_DECIM_DATA", "Decimated setpoint", PrinterType::value),
-        PRINTER("CH_SP_DECIM_RATIO", "Setpoint decimation ratio", PrinterType::value),
-    }),
-    CONSTRUCTOR_REGS(struct wb_fofb_processing_regs)
+              PRINTER("CH_ACC_CTL_FREEZE", "Freeze accumulator",
+                  PrinterType::enable),
+              PRINTER(
+                  "CH_ACC_GAIN", "Accumulator gain", PrinterType::value_float),
+              PRINTER("CH_ACC_LIMITS_MAX", "Maximum saturation value",
+                  PrinterType::value),
+              PRINTER("CH_ACC_LIMITS_MIN", "Minimum saturation value",
+                  PrinterType::value),
+              PRINTER(
+                  "CH_SP_DECIM_DATA", "Decimated setpoint", PrinterType::value),
+              PRINTER("CH_SP_DECIM_RATIO", "Setpoint decimation ratio",
+                  PrinterType::value),
+          })
+    , CONSTRUCTOR_REGS(struct wb_fofb_processing_regs)
 {
     set_read_dest(regs);
 
@@ -65,27 +89,34 @@ void Core::read_monitors()
 
     get_register(WB_FOFB_PROCESSING_REGS_LOOP_INTLK_STA);
     for (unsigned i = 0; i < *number_of_channels; i++)
-        get_register(
-            WB_FOFB_PROCESSING_REGS_CH +
-            WB_FOFB_PROCESSING_REGS_CH_SP_DECIM_DATA +
-            i * WB_FOFB_PROCESSING_REGS_CH_SIZE);
+        get_register(WB_FOFB_PROCESSING_REGS_CH
+            + WB_FOFB_PROCESSING_REGS_CH_SP_DECIM_DATA
+            + i * WB_FOFB_PROCESSING_REGS_CH_SIZE);
 }
 
 void Core::decode()
 {
-    uint32_t fixed_point_gain = extract_value<uint32_t>(regs.fixed_point_pos.accs_gains, WB_FOFB_PROCESSING_REGS_FIXED_POINT_POS_ACCS_GAINS_VAL_MASK);
-    uint32_t fixed_point_coeff = extract_value<uint32_t>(regs.fixed_point_pos.coeff, WB_FOFB_PROCESSING_REGS_FIXED_POINT_POS_COEFF_VAL_MASK);
+    uint32_t fixed_point_gain
+        = extract_value<uint32_t>(regs.fixed_point_pos.accs_gains,
+            WB_FOFB_PROCESSING_REGS_FIXED_POINT_POS_ACCS_GAINS_VAL_MASK);
+    uint32_t fixed_point_coeff
+        = extract_value<uint32_t>(regs.fixed_point_pos.coeff,
+            WB_FOFB_PROCESSING_REGS_FIXED_POINT_POS_COEFF_VAL_MASK);
     add_general("FIXED_POINT_POS_GAINS", fixed_point_gain);
     add_general("FIXED_POINT_POS_COEFF", fixed_point_coeff);
 
     uint32_t t;
     t = regs.loop_intlk.ctl;
-    add_general("INTLK_CTL_SRC_EN_ORB_DISTORT", get_bit(t, WB_FOFB_PROCESSING_REGS_LOOP_INTLK_CTL_SRC_EN_ORB_DISTORT));
-    add_general("INTLK_CTL_SRC_EN_PACKET_LOSS", get_bit(t, WB_FOFB_PROCESSING_REGS_LOOP_INTLK_CTL_SRC_EN_PACKET_LOSS));
+    add_general("INTLK_CTL_SRC_EN_ORB_DISTORT",
+        get_bit(t, WB_FOFB_PROCESSING_REGS_LOOP_INTLK_CTL_SRC_EN_ORB_DISTORT));
+    add_general("INTLK_CTL_SRC_EN_PACKET_LOSS",
+        get_bit(t, WB_FOFB_PROCESSING_REGS_LOOP_INTLK_CTL_SRC_EN_PACKET_LOSS));
     t = regs.loop_intlk.sta;
     add_general("INTLK_STA", t);
-    add_general("INTLK_STA_ORB_DISTORT", get_bit(t, WB_FOFB_PROCESSING_REGS_LOOP_INTLK_STA_ORB_DISTORT));
-    add_general("INTLK_STA_PACKET_LOSS", get_bit(t, WB_FOFB_PROCESSING_REGS_LOOP_INTLK_STA_PACKET_LOSS));
+    add_general("INTLK_STA_ORB_DISTORT",
+        get_bit(t, WB_FOFB_PROCESSING_REGS_LOOP_INTLK_STA_ORB_DISTORT));
+    add_general("INTLK_STA_PACKET_LOSS",
+        get_bit(t, WB_FOFB_PROCESSING_REGS_LOOP_INTLK_STA_PACKET_LOSS));
 
     add_general("INTLK_ORB_DISTORT_LIMIT", regs.loop_intlk.orb_distort_limit);
     add_general("INTLK_MIN_NUM_PACKETS", regs.loop_intlk.min_num_pkts);
@@ -106,24 +137,42 @@ void Core::decode()
         coefficients_y[i].resize(elements);
 
         size_t u = 0;
-        std::generate(coefficients_x[i].begin(), coefficients_x[i].end(),
-            [&](){ return fixed2float(ram_bank[u++].data, fixed_point_coeff); });
+        std::generate(
+            coefficients_x[i].begin(), coefficients_x[i].end(), [&]() {
+                return fixed2float(ram_bank[u++].data, fixed_point_coeff);
+            });
         u = MAX_BPMS;
-        std::generate(coefficients_y[i].begin(), coefficients_y[i].end(),
-            [&](){ return fixed2float(ram_bank[u++].data, fixed_point_coeff); });
+        std::generate(
+            coefficients_y[i].begin(), coefficients_y[i].end(), [&]() {
+                return fixed2float(ram_bank[u++].data, fixed_point_coeff);
+            });
 
-        add_channel("CH_ACC_CTL_FREEZE", i, get_bit(regs.ch[i].acc.ctl, WB_FOFB_PROCESSING_REGS_CH_ACC_CTL_FREEZE));
-        add_channel_double("CH_ACC_GAIN", i, fixed2float(regs.ch[i].acc.gain, fixed_point_gain));
-        add_channel("CH_ACC_LIMITS_MAX", i, extract_value<int32_t>(regs.ch[i].sp_limits.max, WB_FOFB_PROCESSING_REGS_CH_SP_LIMITS_MAX_VAL_MASK));
-        add_channel("CH_ACC_LIMITS_MIN", i, extract_value<int32_t>(regs.ch[i].sp_limits.min, WB_FOFB_PROCESSING_REGS_CH_SP_LIMITS_MIN_VAL_MASK));
-        add_channel("CH_SP_DECIM_DATA", i, extract_value<int32_t>(regs.ch[i].sp_decim.data, WB_FOFB_PROCESSING_REGS_CH_SP_DECIM_DATA_VAL_MASK));
-        add_channel("CH_SP_DECIM_RATIO", i, extract_value<int32_t>(regs.ch[i].sp_decim.ratio, WB_FOFB_PROCESSING_REGS_CH_SP_DECIM_RATIO_VAL_MASK) + 1);
+        add_channel("CH_ACC_CTL_FREEZE", i,
+            get_bit(
+                regs.ch[i].acc.ctl, WB_FOFB_PROCESSING_REGS_CH_ACC_CTL_FREEZE));
+        add_channel_double("CH_ACC_GAIN", i,
+            fixed2float(regs.ch[i].acc.gain, fixed_point_gain));
+        add_channel("CH_ACC_LIMITS_MAX", i,
+            extract_value<int32_t>(regs.ch[i].sp_limits.max,
+                WB_FOFB_PROCESSING_REGS_CH_SP_LIMITS_MAX_VAL_MASK));
+        add_channel("CH_ACC_LIMITS_MIN", i,
+            extract_value<int32_t>(regs.ch[i].sp_limits.min,
+                WB_FOFB_PROCESSING_REGS_CH_SP_LIMITS_MIN_VAL_MASK));
+        add_channel("CH_SP_DECIM_DATA", i,
+            extract_value<int32_t>(regs.ch[i].sp_decim.data,
+                WB_FOFB_PROCESSING_REGS_CH_SP_DECIM_DATA_VAL_MASK));
+        add_channel("CH_SP_DECIM_RATIO", i,
+            extract_value<int32_t>(regs.ch[i].sp_decim.ratio,
+                WB_FOFB_PROCESSING_REGS_CH_SP_DECIM_RATIO_VAL_MASK)
+                + 1);
     }
 
     size_t u = 0;
-    std::generate(ref_orb_x.begin(), ref_orb_x.end(), [&](){ return (int32_t)regs.sps_ram_bank[u++].data; });
+    std::generate(ref_orb_x.begin(), ref_orb_x.end(),
+        [&]() { return (int32_t)regs.sps_ram_bank[u++].data; });
     u = MAX_BPMS; /* access the second half of the RAM bank */
-    std::generate(ref_orb_y.begin(), ref_orb_y.end(), [&](){ return (int32_t)regs.sps_ram_bank[u++].data; });
+    std::generate(ref_orb_y.begin(), ref_orb_y.end(),
+        [&]() { return (int32_t)regs.sps_ram_bank[u++].data; });
 }
 
 void Core::print(FILE *f, bool verbose) const
@@ -134,31 +183,36 @@ void Core::print(FILE *f, bool verbose) const
 
     if (verbose) {
         fputs("reference orbit x:\n", f);
-        for (auto v: ref_orb_x) fprintf(f, "%d ", (int)v);
+        for (auto v : ref_orb_x)
+            fprintf(f, "%d ", (int)v);
 
         fputs("\nreference orbit y:\n", f);
-        for (auto v: ref_orb_y) fprintf(f, "%d ", (int)v);
+        for (auto v : ref_orb_y)
+            fprintf(f, "%d ", (int)v);
         fputc('\n', f);
     }
 
     if (verbose && channel) {
         fputs("coefficients for x:\n", f);
-        for (auto v: coefficients_x[*channel]) fprintf(f, "%lf ", v);
+        for (auto v : coefficients_x[*channel])
+            fprintf(f, "%lf ", v);
 
         fputs("\ncoefficients for y:\n", f);
-        for (auto v: coefficients_y[*channel]) fprintf(f, "%lf ", v);
+        for (auto v : coefficients_y[*channel])
+            fprintf(f, "%lf ", v);
         fputc('\n', f);
     }
 }
 
-Controller::Controller(struct pcie_bars &bars):
-    RegisterController(bars, ref_devinfo),
-    CONSTRUCTOR_REGS(struct wb_fofb_processing_regs),
-    ref_orb_x(MAX_BPMS), ref_orb_y(MAX_BPMS),
-    parameters(MAX_NUM_CHAN)
+Controller::Controller(struct pcie_bars &bars)
+    : RegisterController(bars, ref_devinfo)
+    , CONSTRUCTOR_REGS(struct wb_fofb_processing_regs)
+    , ref_orb_x(MAX_BPMS)
+    , ref_orb_y(MAX_BPMS)
+    , parameters(MAX_NUM_CHAN)
 {
     set_read_dest(regs);
-    for (auto &p: parameters) {
+    for (auto &p : parameters) {
         p.coefficients_x.resize(MAX_BPMS);
         p.coefficients_y.resize(MAX_BPMS);
     }
@@ -168,15 +222,20 @@ Controller::~Controller() = default;
 void Controller::set_devinfo_callback()
 {
     read();
-    fixed_point_coeff = extract_value<uint32_t>(regs.fixed_point_pos.coeff, WB_FOFB_PROCESSING_REGS_FIXED_POINT_POS_COEFF_VAL_MASK);
-    fixed_point_gains = extract_value<uint32_t>(regs.fixed_point_pos.accs_gains, WB_FOFB_PROCESSING_REGS_FIXED_POINT_POS_ACCS_GAINS_VAL_MASK);
+    fixed_point_coeff = extract_value<uint32_t>(regs.fixed_point_pos.coeff,
+        WB_FOFB_PROCESSING_REGS_FIXED_POINT_POS_COEFF_VAL_MASK);
+    fixed_point_gains = extract_value<uint32_t>(regs.fixed_point_pos.accs_gains,
+        WB_FOFB_PROCESSING_REGS_FIXED_POINT_POS_ACCS_GAINS_VAL_MASK);
 }
 
 void Controller::encode_params()
 {
-    insert_bit(regs.loop_intlk.ctl, intlk_sta_clr, WB_FOFB_PROCESSING_REGS_LOOP_INTLK_CTL_STA_CLR);
-    insert_bit(regs.loop_intlk.ctl, intlk_en_orb_distort, WB_FOFB_PROCESSING_REGS_LOOP_INTLK_CTL_SRC_EN_ORB_DISTORT);
-    insert_bit(regs.loop_intlk.ctl, intlk_en_packet_loss, WB_FOFB_PROCESSING_REGS_LOOP_INTLK_CTL_SRC_EN_PACKET_LOSS);
+    insert_bit(regs.loop_intlk.ctl, intlk_sta_clr,
+        WB_FOFB_PROCESSING_REGS_LOOP_INTLK_CTL_STA_CLR);
+    insert_bit(regs.loop_intlk.ctl, intlk_en_orb_distort,
+        WB_FOFB_PROCESSING_REGS_LOOP_INTLK_CTL_SRC_EN_ORB_DISTORT);
+    insert_bit(regs.loop_intlk.ctl, intlk_en_packet_loss,
+        WB_FOFB_PROCESSING_REGS_LOOP_INTLK_CTL_SRC_EN_PACKET_LOSS);
 
     regs.loop_intlk.orb_distort_limit = orb_distort_limit;
     regs.loop_intlk.min_num_pkts = min_num_packets;
@@ -191,17 +250,26 @@ void Controller::encode_params()
             throw std::runtime_error("decimation ratio can't be 0");
 
         for (unsigned j = 0; j < MAX_BPMS; j++) {
-            regs.ch[i].coeff_ram_bank[j].data = float2fixed(parameters[i].coefficients_x[j], fixed_point_coeff);
-            regs.ch[i].coeff_ram_bank[j + MAX_BPMS].data = float2fixed(parameters[i].coefficients_y[j], fixed_point_coeff);
+            regs.ch[i].coeff_ram_bank[j].data = float2fixed(
+                parameters[i].coefficients_x[j], fixed_point_coeff);
+            regs.ch[i].coeff_ram_bank[j + MAX_BPMS].data = float2fixed(
+                parameters[i].coefficients_y[j], fixed_point_coeff);
         }
 
-        insert_bit(regs.ch[i].acc.ctl, parameters[i].acc_clear, WB_FOFB_PROCESSING_REGS_CH_ACC_CTL_CLEAR);
-        insert_bit(regs.ch[i].acc.ctl, parameters[i].acc_freeze, WB_FOFB_PROCESSING_REGS_CH_ACC_CTL_FREEZE);
-        regs.ch[i].acc.gain = float2fixed(parameters[i].acc_gain, fixed_point_gains);
+        insert_bit(regs.ch[i].acc.ctl, parameters[i].acc_clear,
+            WB_FOFB_PROCESSING_REGS_CH_ACC_CTL_CLEAR);
+        insert_bit(regs.ch[i].acc.ctl, parameters[i].acc_freeze,
+            WB_FOFB_PROCESSING_REGS_CH_ACC_CTL_FREEZE);
+        regs.ch[i].acc.gain
+            = float2fixed(parameters[i].acc_gain, fixed_point_gains);
 
-        clear_and_insert(regs.ch[i].sp_limits.max, parameters[i].sp_limit_max, WB_FOFB_PROCESSING_REGS_CH_SP_LIMITS_MAX_VAL_MASK);
-        clear_and_insert(regs.ch[i].sp_limits.min, parameters[i].sp_limit_min, WB_FOFB_PROCESSING_REGS_CH_SP_LIMITS_MIN_VAL_MASK);
-        clear_and_insert(regs.ch[i].sp_decim.ratio, parameters[i].sp_decim_ratio - 1, WB_FOFB_PROCESSING_REGS_CH_SP_DECIM_RATIO_VAL_MASK);
+        clear_and_insert(regs.ch[i].sp_limits.max, parameters[i].sp_limit_max,
+            WB_FOFB_PROCESSING_REGS_CH_SP_LIMITS_MAX_VAL_MASK);
+        clear_and_insert(regs.ch[i].sp_limits.min, parameters[i].sp_limit_min,
+            WB_FOFB_PROCESSING_REGS_CH_SP_LIMITS_MIN_VAL_MASK);
+        clear_and_insert(regs.ch[i].sp_decim.ratio,
+            parameters[i].sp_decim_ratio - 1,
+            WB_FOFB_PROCESSING_REGS_CH_SP_DECIM_RATIO_VAL_MASK);
     }
 }
 
@@ -211,7 +279,8 @@ void Controller::write_params()
 
     /* reset clear flags */
     intlk_sta_clr = false;
-    for (auto &p: parameters) p.acc_clear = false;
+    for (auto &p : parameters)
+        p.acc_clear = false;
 }
 
 } /* namespace fofb_processing */

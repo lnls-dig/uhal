@@ -1,9 +1,9 @@
 #include <stdexcept>
 
+#include "modules/orbit_intlk.h"
 #include "pcie.h"
 #include "printer.h"
 #include "util.h"
-#include "modules/orbit_intlk.h"
 
 namespace orbit_intlk {
 
@@ -11,11 +11,9 @@ namespace orbit_intlk {
 
 namespace {
     constexpr unsigned ORBIT_INTLK_DEVID = 0x87efeda8;
-    struct sdb_device_info ref_devinfo = {
-        .vendor_id = LNLS_VENDORID,
+    struct sdb_device_info ref_devinfo = { .vendor_id = LNLS_VENDORID,
         .device_id = ORBIT_INTLK_DEVID,
-        .abi_ver_major = 1
-    };
+        .abi_ver_major = 1 };
 }
 
 struct orbit_intlk_regs {
@@ -34,49 +32,61 @@ struct orbit_intlk_regs {
     } trans_diff, ang_diff;
 };
 
-static_assert(sizeof(struct orbit_intlk_regs) == ORBIT_INTLK_REG_ANG_Y_DIFF + sizeof(uint32_t));
-static_assert(offsetof(orbit_intlk_regs, min.trans.y) == ORBIT_INTLK_REG_TRANS_MIN_Y);
-static_assert(offsetof(orbit_intlk_regs, trans_diff.y) == ORBIT_INTLK_REG_TRANS_Y_DIFF);
+static_assert(sizeof(struct orbit_intlk_regs)
+    == ORBIT_INTLK_REG_ANG_Y_DIFF + sizeof(uint32_t));
+static_assert(
+    offsetof(orbit_intlk_regs, min.trans.y) == ORBIT_INTLK_REG_TRANS_MIN_Y);
+static_assert(
+    offsetof(orbit_intlk_regs, trans_diff.y) == ORBIT_INTLK_REG_TRANS_Y_DIFF);
 
-Core::Core(struct pcie_bars &bars):
-    RegisterDecoder(bars, ref_devinfo, {
-        PRINTER("EN", "Interlock enable", PrinterType::enable),
-        PRINTER("MIN_SUM_EN", "Interlock minimum sum enable", PrinterType::enable),
-        PRINTER("POS_EN", "Position Interlock enable", PrinterType::enable),
-        PRINTER("ANG_EN", "Angular Interlock enable", PrinterType::enable),
-        PRINTER("POS_UPPER_X", "", PrinterType::boolean),
-        PRINTER("POS_UPPER_Y", "", PrinterType::boolean),
-        PRINTER("POS_UPPER_LTC_X", "", PrinterType::boolean),
-        PRINTER("POS_UPPER_LTC_Y", "", PrinterType::boolean),
-        PRINTER("ANG_UPPER_X", "", PrinterType::boolean),
-        PRINTER("ANG_UPPER_Y", "", PrinterType::boolean),
-        PRINTER("ANG_UPPER_LTC_X", "", PrinterType::boolean),
-        PRINTER("ANG_UPPER_LTC_Y", "", PrinterType::boolean),
-        PRINTER("INTLK", "Interlock Trip", PrinterType::boolean),
-        PRINTER("INTLK_LTC", "Interlock Trip Latch", PrinterType::boolean),
-        PRINTER("POS_LOWER_X", "", PrinterType::boolean),
-        PRINTER("POS_LOWER_Y", "", PrinterType::boolean),
-        PRINTER("POS_LOWER_LTC_X", "", PrinterType::boolean),
-        PRINTER("POS_LOWER_LTC_Y", "", PrinterType::boolean),
-        PRINTER("ANG_LOWER_X", "", PrinterType::boolean),
-        PRINTER("ANG_LOWER_Y", "", PrinterType::boolean),
-        PRINTER("ANG_LOWER_LTC_X", "", PrinterType::boolean),
-        PRINTER("ANG_LOWER_LTC_Y", "", PrinterType::boolean),
-        PRINTER("MIN_SUM", "Minimum Sum Threshold", PrinterType::value),
-        PRINTER("POS_MAX_X", "Maximum X Threshold", PrinterType::value),
-        PRINTER("POS_MAX_Y", "Maximum Y Threshold", PrinterType::value),
-        PRINTER("ANG_MAX_X", "Maximum X Threshold", PrinterType::value),
-        PRINTER("ANG_MAX_Y", "Maximum Y Threshold", PrinterType::value),
-        PRINTER("POS_MIN_X", "Minimum X Threshold", PrinterType::value),
-        PRINTER("POS_MIN_Y", "Minimum Y Threshold", PrinterType::value),
-        PRINTER("ANG_MIN_X", "Minimum X Threshold", PrinterType::value),
-        PRINTER("ANG_MIN_Y", "Minimum Y Threshold", PrinterType::value),
-        PRINTER("POS_X_INST", "Instantaneous X Position", PrinterType::value),
-        PRINTER("POS_Y_INST", "Instantaneous Y Position", PrinterType::value),
-        PRINTER("ANG_X_INST", "Instantaneous X Angle", PrinterType::value),
-        PRINTER("ANG_Y_INST", "Instantaneous Y Angle", PrinterType::value),
-    }),
-    CONSTRUCTOR_REGS(struct orbit_intlk_regs)
+Core::Core(struct pcie_bars &bars)
+    : RegisterDecoder(bars, ref_devinfo,
+          {
+              PRINTER("EN", "Interlock enable", PrinterType::enable),
+              PRINTER("MIN_SUM_EN", "Interlock minimum sum enable",
+                  PrinterType::enable),
+              PRINTER(
+                  "POS_EN", "Position Interlock enable", PrinterType::enable),
+              PRINTER(
+                  "ANG_EN", "Angular Interlock enable", PrinterType::enable),
+              PRINTER("POS_UPPER_X", "", PrinterType::boolean),
+              PRINTER("POS_UPPER_Y", "", PrinterType::boolean),
+              PRINTER("POS_UPPER_LTC_X", "", PrinterType::boolean),
+              PRINTER("POS_UPPER_LTC_Y", "", PrinterType::boolean),
+              PRINTER("ANG_UPPER_X", "", PrinterType::boolean),
+              PRINTER("ANG_UPPER_Y", "", PrinterType::boolean),
+              PRINTER("ANG_UPPER_LTC_X", "", PrinterType::boolean),
+              PRINTER("ANG_UPPER_LTC_Y", "", PrinterType::boolean),
+              PRINTER("INTLK", "Interlock Trip", PrinterType::boolean),
+              PRINTER(
+                  "INTLK_LTC", "Interlock Trip Latch", PrinterType::boolean),
+              PRINTER("POS_LOWER_X", "", PrinterType::boolean),
+              PRINTER("POS_LOWER_Y", "", PrinterType::boolean),
+              PRINTER("POS_LOWER_LTC_X", "", PrinterType::boolean),
+              PRINTER("POS_LOWER_LTC_Y", "", PrinterType::boolean),
+              PRINTER("ANG_LOWER_X", "", PrinterType::boolean),
+              PRINTER("ANG_LOWER_Y", "", PrinterType::boolean),
+              PRINTER("ANG_LOWER_LTC_X", "", PrinterType::boolean),
+              PRINTER("ANG_LOWER_LTC_Y", "", PrinterType::boolean),
+              PRINTER("MIN_SUM", "Minimum Sum Threshold", PrinterType::value),
+              PRINTER("POS_MAX_X", "Maximum X Threshold", PrinterType::value),
+              PRINTER("POS_MAX_Y", "Maximum Y Threshold", PrinterType::value),
+              PRINTER("ANG_MAX_X", "Maximum X Threshold", PrinterType::value),
+              PRINTER("ANG_MAX_Y", "Maximum Y Threshold", PrinterType::value),
+              PRINTER("POS_MIN_X", "Minimum X Threshold", PrinterType::value),
+              PRINTER("POS_MIN_Y", "Minimum Y Threshold", PrinterType::value),
+              PRINTER("ANG_MIN_X", "Minimum X Threshold", PrinterType::value),
+              PRINTER("ANG_MIN_Y", "Minimum Y Threshold", PrinterType::value),
+              PRINTER(
+                  "POS_X_INST", "Instantaneous X Position", PrinterType::value),
+              PRINTER(
+                  "POS_Y_INST", "Instantaneous Y Position", PrinterType::value),
+              PRINTER(
+                  "ANG_X_INST", "Instantaneous X Angle", PrinterType::value),
+              PRINTER(
+                  "ANG_Y_INST", "Instantaneous Y Angle", PrinterType::value),
+          })
+    , CONSTRUCTOR_REGS(struct orbit_intlk_regs)
 {
     set_read_dest(regs);
 }
@@ -95,22 +105,30 @@ void Core::decode()
     t = regs.sts;
     add_general("POS_UPPER_X", get_bit(t, ORBIT_INTLK_STS_TRANS_BIGGER_X));
     add_general("POS_UPPER_Y", get_bit(t, ORBIT_INTLK_STS_TRANS_BIGGER_Y));
-    add_general("POS_UPPER_LTC_X", get_bit(t, ORBIT_INTLK_STS_TRANS_BIGGER_LTC_X));
-    add_general("POS_UPPER_LTC_Y", get_bit(t, ORBIT_INTLK_STS_TRANS_BIGGER_LTC_Y));
+    add_general(
+        "POS_UPPER_LTC_X", get_bit(t, ORBIT_INTLK_STS_TRANS_BIGGER_LTC_X));
+    add_general(
+        "POS_UPPER_LTC_Y", get_bit(t, ORBIT_INTLK_STS_TRANS_BIGGER_LTC_Y));
     add_general("ANG_UPPER_X", get_bit(t, ORBIT_INTLK_STS_ANG_BIGGER_X));
     add_general("ANG_UPPER_Y", get_bit(t, ORBIT_INTLK_STS_ANG_BIGGER_Y));
-    add_general("ANG_UPPER_LTC_X", get_bit(t, ORBIT_INTLK_STS_ANG_BIGGER_LTC_X));
-    add_general("ANG_UPPER_LTC_Y", get_bit(t, ORBIT_INTLK_STS_ANG_BIGGER_LTC_Y));
+    add_general(
+        "ANG_UPPER_LTC_X", get_bit(t, ORBIT_INTLK_STS_ANG_BIGGER_LTC_X));
+    add_general(
+        "ANG_UPPER_LTC_Y", get_bit(t, ORBIT_INTLK_STS_ANG_BIGGER_LTC_Y));
     add_general("INTLK", get_bit(t, ORBIT_INTLK_STS_INTLK));
     add_general("INTLK_LTC", get_bit(t, ORBIT_INTLK_STS_INTLK_LTC));
     add_general("POS_LOWER_X", get_bit(t, ORBIT_INTLK_STS_TRANS_SMALLER_X));
     add_general("POS_LOWER_Y", get_bit(t, ORBIT_INTLK_STS_TRANS_SMALLER_Y));
-    add_general("POS_LOWER_LTC_X", get_bit(t, ORBIT_INTLK_STS_TRANS_SMALLER_LTC_X));
-    add_general("POS_LOWER_LTC_Y", get_bit(t, ORBIT_INTLK_STS_TRANS_SMALLER_LTC_Y));
+    add_general(
+        "POS_LOWER_LTC_X", get_bit(t, ORBIT_INTLK_STS_TRANS_SMALLER_LTC_X));
+    add_general(
+        "POS_LOWER_LTC_Y", get_bit(t, ORBIT_INTLK_STS_TRANS_SMALLER_LTC_Y));
     add_general("ANG_LOWER_X", get_bit(t, ORBIT_INTLK_STS_ANG_SMALLER_X));
     add_general("ANG_LOWER_Y", get_bit(t, ORBIT_INTLK_STS_ANG_SMALLER_Y));
-    add_general("ANG_LOWER_LTC_X", get_bit(t, ORBIT_INTLK_STS_ANG_SMALLER_LTC_X));
-    add_general("ANG_LOWER_LTC_Y", get_bit(t, ORBIT_INTLK_STS_ANG_SMALLER_LTC_Y));
+    add_general(
+        "ANG_LOWER_LTC_X", get_bit(t, ORBIT_INTLK_STS_ANG_SMALLER_LTC_X));
+    add_general(
+        "ANG_LOWER_LTC_Y", get_bit(t, ORBIT_INTLK_STS_ANG_SMALLER_LTC_Y));
 
     add_general("MIN_SUM", regs.min_sum);
     add_general("POS_MAX_X", regs.max.trans.x);
@@ -128,9 +146,9 @@ void Core::decode()
     add_general("ANG_Y_INST", regs.ang_diff.y);
 }
 
-Controller::Controller(struct pcie_bars &bars):
-    RegisterController(bars, ref_devinfo),
-    CONSTRUCTOR_REGS(struct orbit_intlk_regs)
+Controller::Controller(struct pcie_bars &bars)
+    : RegisterController(bars, ref_devinfo)
+    , CONSTRUCTOR_REGS(struct orbit_intlk_regs)
 {
     set_read_dest(regs);
 }

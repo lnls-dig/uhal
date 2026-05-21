@@ -7,10 +7,10 @@
 #include <thread>
 #include <type_traits>
 
+#include "modules/acq.h"
 #include "pcie.h"
 #include "printer.h"
 #include "util.h"
-#include "modules/acq.h"
 
 namespace {
 
@@ -21,19 +21,20 @@ const size_t acq_ram_per_core = acq_ram / max_acq_cores;
 class MemoryAllocator {
     std::unordered_map<struct pcie_bars *, int> counts;
 
-    MemoryAllocator() {}
+    MemoryAllocator() { }
 
-  public:
+public:
     std::array<size_t, 2> get_range(struct pcie_bars &bars)
     {
         auto index = counts[&bars];
         counts[&bars]++;
 
         if (counts[&bars] >= max_acq_cores) {
-            throw std::logic_error("we only support up to " + std::to_string(max_acq_cores) + " acq");
+            throw std::logic_error("we only support up to "
+                + std::to_string(max_acq_cores) + " acq");
         }
 
-        return {index * acq_ram_per_core, (index+1) * acq_ram_per_core};
+        return { index * acq_ram_per_core, (index + 1) * acq_ram_per_core };
     }
 
     static MemoryAllocator &get_memory_allocator()
@@ -60,62 +61,99 @@ namespace {
 
     constexpr unsigned ACQ_DEVID = 0x4519a0ad;
     struct sdb_device_info ref_devinfo = {
-        .vendor_id = LNLS_VENDORID,
-        .device_id = ACQ_DEVID,
-        .abi_ver_major = 2
+        .vendor_id = LNLS_VENDORID, .device_id = ACQ_DEVID, .abi_ver_major = 2
     };
 }
 
-
-Core::Core(struct pcie_bars &bars):
-    RegisterDecoder(bars, ref_devinfo, {
-        PRINTER("FSQ_ACQ_NOW", "Acquire data immediately and don't wait for any trigger", "wait on trigger", "acquire immediately"),
-        PRINTER("FSM_STATE", "State machine status",
-            [](FILE *f, bool v, uint32_t value){
-                (void)v;
-                static const char *fsm_states[] = {"IDLE", "PRE_TRIG", "WAIT_TRIG", "POST_TRIG", "DECR_SHOT"};
-                switch (value) {
-                    case 0: case 6: case 7:
-                        fprintf(f, "illegal (%u)", value);
-                        break;
-                    case 1: case 2: case 3: case 4: case 5:
-                        fprintf(f, "%s", fsm_states[value-1]);
-                        break;
-                }
-                fputc('\n', f);
-            }
-        ),
-        PRINTER("FSM_ACQ_DONE", "FSM acquisition status", PrinterType::progress),
-        PRINTER("FC_TRANS_DONE", "External flow control transfer status", PrinterType::boolean),
-        PRINTER("FC_FULL", "External flow control FIFO full status", "full", "full (data may be lost)"),
-        PRINTER("DDR3_TRANS_DONE", "DDR3 transfer status", PrinterType::progress),
-        PRINTER("HW_TRIG_SEL", "Hardware trigger selection", "internal", "external"),
-        PRINTER("HW_TRIG_POL", "Hardware trigger polarity", "positive edge", "negative edge"),
-        PRINTER("HW_TRIG_EN", "Hardware trigger enable", PrinterType::enable),
-        PRINTER("SW_TRIG_EN", "Software trigger enable", PrinterType::enable),
-        PRINTER("INT_TRIG_SEL", "Atom selection for internal trigger", PrinterType::value),
-        PRINTER("THRES_FILT", "Internal trigger threshold glitch filter", PrinterType::value),
-        PRINTER("TRIG_DATA_THRES", "Threshold for internal trigger", PrinterType::value),
-        PRINTER("TRIG_DLY", "Trigger delay value", PrinterType::value),
-        PRINTER("NB", "Number of shots required in multi-shot mode, one if in single-shot mode", PrinterType::value),
-        PRINTER("MULTISHOT_RAM_SIZE_IMPL", "MultiShot RAM size reg implemented", PrinterType::boolean),
-        PRINTER("MULTISHOT_RAM_SIZE", "MultiShot RAM size", PrinterType::value),
-        PRINTER("TRIG_POS", "Trigger address in DDR memory", PrinterType::value_hex),
-        PRINTER("PRE_SAMPLES", "Number of requested pre-trigger samples", PrinterType::value),
-        PRINTER("POST_SAMPLES", "Number of requested post-trigger samples", PrinterType::value),
-        PRINTER("SAMPLES_CNT", "Samples counter", PrinterType::value),
-        PRINTER("DDR3_START_ADDR", "Start address in DDR3 memory for the next acquisition", PrinterType::value_hex),
-        PRINTER("DDR3_END_ADDR", "End address in DDR3 memory for the next acquisition", PrinterType::value_hex),
-        PRINTER("WHICH", "Acquisition channel selection", PrinterType::value),
-        PRINTER("DTRIG_WHICH", "Data-driven channel selection", PrinterType::value),
-        PRINTER("NUM_CHAN", "Number of acquisition channels", PrinterType::value),
-        /* per channel info */
-        PRINTER("INT_WIDTH", "Internal Channel Width", PrinterType::value),
-        PRINTER("NUM_COALESCE", "Number of coalescing words", PrinterType::value),
-        PRINTER("NUM_ATOMS", "Number of atoms inside the complete data word", PrinterType::value),
-        PRINTER("ATOM_WIDTH", "Atom width in bits", PrinterType::value),
-    }),
-    CONSTRUCTOR_REGS(struct acq_core)
+Core::Core(struct pcie_bars &bars)
+    : RegisterDecoder(bars, ref_devinfo,
+          {
+              PRINTER("FSQ_ACQ_NOW",
+                  "Acquire data immediately and don't wait for any trigger",
+                  "wait on trigger", "acquire immediately"),
+              PRINTER("FSM_STATE", "State machine status",
+                  [](FILE *f, bool v, uint32_t value) {
+                      (void)v;
+                      static const char *fsm_states[] = { "IDLE", "PRE_TRIG",
+                          "WAIT_TRIG", "POST_TRIG", "DECR_SHOT" };
+                      switch (value) {
+                      case 0:
+                      case 6:
+                      case 7:
+                          fprintf(f, "illegal (%u)", value);
+                          break;
+                      case 1:
+                      case 2:
+                      case 3:
+                      case 4:
+                      case 5:
+                          fprintf(f, "%s", fsm_states[value - 1]);
+                          break;
+                      }
+                      fputc('\n', f);
+                  }),
+              PRINTER("FSM_ACQ_DONE", "FSM acquisition status",
+                  PrinterType::progress),
+              PRINTER("FC_TRANS_DONE", "External flow control transfer status",
+                  PrinterType::boolean),
+              PRINTER("FC_FULL", "External flow control FIFO full status",
+                  "full", "full (data may be lost)"),
+              PRINTER("DDR3_TRANS_DONE", "DDR3 transfer status",
+                  PrinterType::progress),
+              PRINTER("HW_TRIG_SEL", "Hardware trigger selection", "internal",
+                  "external"),
+              PRINTER("HW_TRIG_POL", "Hardware trigger polarity",
+                  "positive edge", "negative edge"),
+              PRINTER(
+                  "HW_TRIG_EN", "Hardware trigger enable", PrinterType::enable),
+              PRINTER(
+                  "SW_TRIG_EN", "Software trigger enable", PrinterType::enable),
+              PRINTER("INT_TRIG_SEL", "Atom selection for internal trigger",
+                  PrinterType::value),
+              PRINTER("THRES_FILT", "Internal trigger threshold glitch filter",
+                  PrinterType::value),
+              PRINTER("TRIG_DATA_THRES", "Threshold for internal trigger",
+                  PrinterType::value),
+              PRINTER("TRIG_DLY", "Trigger delay value", PrinterType::value),
+              PRINTER("NB",
+                  "Number of shots required in multi-shot mode, one if in "
+                  "single-shot mode",
+                  PrinterType::value),
+              PRINTER("MULTISHOT_RAM_SIZE_IMPL",
+                  "MultiShot RAM size reg implemented", PrinterType::boolean),
+              PRINTER("MULTISHOT_RAM_SIZE", "MultiShot RAM size",
+                  PrinterType::value),
+              PRINTER("TRIG_POS", "Trigger address in DDR memory",
+                  PrinterType::value_hex),
+              PRINTER("PRE_SAMPLES", "Number of requested pre-trigger samples",
+                  PrinterType::value),
+              PRINTER("POST_SAMPLES",
+                  "Number of requested post-trigger samples",
+                  PrinterType::value),
+              PRINTER("SAMPLES_CNT", "Samples counter", PrinterType::value),
+              PRINTER("DDR3_START_ADDR",
+                  "Start address in DDR3 memory for the next acquisition",
+                  PrinterType::value_hex),
+              PRINTER("DDR3_END_ADDR",
+                  "End address in DDR3 memory for the next acquisition",
+                  PrinterType::value_hex),
+              PRINTER(
+                  "WHICH", "Acquisition channel selection", PrinterType::value),
+              PRINTER("DTRIG_WHICH", "Data-driven channel selection",
+                  PrinterType::value),
+              PRINTER("NUM_CHAN", "Number of acquisition channels",
+                  PrinterType::value),
+              /* per channel info */
+              PRINTER(
+                  "INT_WIDTH", "Internal Channel Width", PrinterType::value),
+              PRINTER("NUM_COALESCE", "Number of coalescing words",
+                  PrinterType::value),
+              PRINTER("NUM_ATOMS",
+                  "Number of atoms inside the complete data word",
+                  PrinterType::value),
+              PRINTER("ATOM_WIDTH", "Atom width in bits", PrinterType::value),
+          })
+    , CONSTRUCTOR_REGS(struct acq_core)
 {
     set_read_dest(regs);
 }
@@ -132,7 +170,8 @@ void Core::decode()
     /* status register */
     t = regs.sta;
 
-    add_general("FSM_STATE", extract_value<uint32_t>(t, ACQ_CORE_STA_FSM_STATE_MASK));
+    add_general(
+        "FSM_STATE", extract_value<uint32_t>(t, ACQ_CORE_STA_FSM_STATE_MASK));
     add_general("FSM_ACQ_DONE", get_bit(t, ACQ_CORE_STA_FSM_ACQ_DONE));
     add_general("FC_TRANS_DONE", get_bit(t, ACQ_CORE_STA_FC_TRANS_DONE));
     add_general("FC_FULL", get_bit(t, ACQ_CORE_STA_FC_FULL));
@@ -144,11 +183,13 @@ void Core::decode()
     add_general("HW_TRIG_POL", get_bit(t, ACQ_CORE_TRIG_CFG_HW_TRIG_POL));
     add_general("HW_TRIG_EN", get_bit(t, ACQ_CORE_TRIG_CFG_HW_TRIG_EN));
     add_general("SW_TRIG_EN", get_bit(t, ACQ_CORE_TRIG_CFG_SW_TRIG_EN));
-    add_general("INT_TRIG_SEL", extract_value<uint32_t>(t, ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_MASK) + 1);
+    add_general("INT_TRIG_SEL",
+        extract_value<uint32_t>(t, ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_MASK) + 1);
 
     /* trigger data config thresold */
     t = regs.trig_data_cfg;
-    add_general("THRES_FILT", extract_value<uint32_t>(t, ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_MASK));
+    add_general("THRES_FILT",
+        extract_value<uint32_t>(t, ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_MASK));
 
     /* trigger */
     add_general("TRIG_DATA_THRES", (int32_t)regs.trig_data_thres);
@@ -157,8 +198,10 @@ void Core::decode()
     /* number of shots */
     t = regs.shots;
     add_general("NB", extract_value<uint32_t>(t, ACQ_CORE_SHOTS_NB_MASK));
-    add_general("MULTISHOT_RAM_SIZE_IMPL", get_bit(t, ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_IMPL));
-    add_general("MULTISHOT_RAM_SIZE", extract_value<uint32_t>(t, ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_MASK));
+    add_general("MULTISHOT_RAM_SIZE_IMPL",
+        get_bit(t, ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_IMPL));
+    add_general("MULTISHOT_RAM_SIZE",
+        extract_value<uint32_t>(t, ACQ_CORE_SHOTS_MULTISHOT_RAM_SIZE_MASK));
 
     /* trigger address register */
     add_general("TRIG_POS", regs.trig_pos);
@@ -175,33 +218,46 @@ void Core::decode()
     /* acquisition channel control */
     t = regs.acq_chan_ctl;
     /* will be used to determine how many channels to show in the next block */
-    unsigned num_chan = extract_value<uint32_t>(t, ACQ_CORE_ACQ_CHAN_CTL_NUM_CHAN_MASK);
-    add_general("WHICH", extract_value<uint32_t>(t, ACQ_CORE_ACQ_CHAN_CTL_WHICH_MASK));
-    add_general("DTRIG_WHICH", extract_value<uint32_t>(t, ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_MASK));
+    unsigned num_chan
+        = extract_value<uint32_t>(t, ACQ_CORE_ACQ_CHAN_CTL_NUM_CHAN_MASK);
+    add_general(
+        "WHICH", extract_value<uint32_t>(t, ACQ_CORE_ACQ_CHAN_CTL_WHICH_MASK));
+    add_general("DTRIG_WHICH",
+        extract_value<uint32_t>(t, ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_MASK));
     add_general("NUM_CHAN", num_chan);
 
     if (num_chan > MAX_NUM_CHAN) {
-        throw std::runtime_error("max number of supported channels is 12, received " + std::to_string(num_chan) + "\n");
+        throw std::runtime_error(
+            "max number of supported channels is 12, received "
+            + std::to_string(num_chan) + "\n");
     }
     number_of_channels = num_chan;
 
     /* channel description and atom description - 24 channels maximum (0-23).
-     * the loop being used depends on the struct having no padding and elements in a set order */
+     * the loop being used depends on the struct having no padding and elements
+     * in a set order */
     uint32_t p[MAX_NUM_CHAN * REGISTERS_PER_CHAN];
     memcpy(p, &regs.ch0_desc, sizeof p);
 
     for (unsigned i = 0; i < num_chan; i++) {
-        uint32_t desc = p[i*REGISTERS_PER_CHAN], adesc = p[i*REGISTERS_PER_CHAN + 1];
-        add_channel("INT_WIDTH", i, extract_value<uint32_t>(desc, ACQ_CORE_CH0_DESC_INT_WIDTH_MASK));
-        add_channel("NUM_COALESCE", i, extract_value<uint32_t>(desc, ACQ_CORE_CH0_DESC_NUM_COALESCE_MASK));
-        add_channel("NUM_ATOMS", i, extract_value<uint32_t>(adesc, ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_MASK));
-        add_channel("ATOM_WIDTH", i, extract_value<uint32_t>(adesc, ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_MASK));
+        uint32_t desc = p[i * REGISTERS_PER_CHAN],
+                 adesc = p[i * REGISTERS_PER_CHAN + 1];
+        add_channel("INT_WIDTH", i,
+            extract_value<uint32_t>(desc, ACQ_CORE_CH0_DESC_INT_WIDTH_MASK));
+        add_channel("NUM_COALESCE", i,
+            extract_value<uint32_t>(desc, ACQ_CORE_CH0_DESC_NUM_COALESCE_MASK));
+        add_channel("NUM_ATOMS", i,
+            extract_value<uint32_t>(
+                adesc, ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_MASK));
+        add_channel("ATOM_WIDTH", i,
+            extract_value<uint32_t>(
+                adesc, ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_MASK));
     }
 }
 
-Controller::Controller(struct pcie_bars &bars):
-    RegisterController(bars, ref_devinfo),
-    CONSTRUCTOR_REGS(struct acq_core)
+Controller::Controller(struct pcie_bars &bars)
+    : RegisterController(bars, ref_devinfo)
+    , CONSTRUCTOR_REGS(struct acq_core)
 {
     set_read_dest(regs);
 
@@ -219,40 +275,61 @@ void Controller::set_devinfo_callback()
     stop_acquisition();
 }
 
-struct BadSampleSize: std::logic_error {
+struct BadSampleSize : std::logic_error {
     using std::logic_error::logic_error;
 };
-struct BadAtomWidth: std::logic_error {
-    BadAtomWidth(): std::logic_error("we only support 8, 16 and 32 bit atoms") {}
+struct BadAtomWidth : std::logic_error {
+    BadAtomWidth()
+        : std::logic_error("we only support 8, 16 and 32 bit atoms")
+    {
+    }
 };
-struct BadPostSamples: std::runtime_error {
-    BadPostSamples(): std::runtime_error("post samples should be 0") {}
+struct BadPostSamples : std::runtime_error {
+    BadPostSamples()
+        : std::runtime_error("post samples should be 0")
+    {
+    }
 };
-struct TooManySamples: std::runtime_error {
-    TooManySamples(): std::runtime_error("too many samples") {}
+struct TooManySamples : std::runtime_error {
+    TooManySamples()
+        : std::runtime_error("too many samples")
+    {
+    }
 };
-struct NoSamples: std::runtime_error {
-    NoSamples(): std::runtime_error("no samples requested") {}
+struct NoSamples : std::runtime_error {
+    NoSamples()
+        : std::runtime_error("no samples requested")
+    {
+    }
 };
 
 void Controller::get_internal_values()
 {
-    uint32_t channel_desc = bar4_read(&bars, addr + ACQ_CORE_CH0_DESC + 8*channel);
-    uint32_t num_coalesce = extract_value<uint32_t>(channel_desc, ACQ_CORE_CH0_DESC_NUM_COALESCE_MASK);
-    uint32_t int_width = extract_value<uint32_t>(channel_desc, ACQ_CORE_CH0_DESC_INT_WIDTH_MASK);
+    uint32_t channel_desc
+        = bar4_read(&bars, addr + ACQ_CORE_CH0_DESC + 8 * channel);
+    uint32_t num_coalesce = extract_value<uint32_t>(
+        channel_desc, ACQ_CORE_CH0_DESC_NUM_COALESCE_MASK);
+    uint32_t int_width = extract_value<uint32_t>(
+        channel_desc, ACQ_CORE_CH0_DESC_INT_WIDTH_MASK);
 
     /* int_width is in bits, so needs to be converted to bytes */
     sample_size = (int_width / 8) * num_coalesce;
     if (std::popcount(sample_size) != 1)
         throw BadSampleSize("we can only handle power of 2 sample sizes");
 
-    alignment = (ddr3_payload_size > sample_size) ? ddr3_payload_size / sample_size : 1;
+    alignment = (ddr3_payload_size > sample_size)
+        ? ddr3_payload_size / sample_size
+        : 1;
 
-    uint32_t channel_atom_desc = bar4_read(&bars, addr + ACQ_CORE_CH0_ATOM_DESC + 8*channel);
-    channel_atom_width = extract_value<uint32_t>(channel_atom_desc, ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_MASK);
-    channel_num_atoms = extract_value<uint32_t>(channel_atom_desc, ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_MASK);
+    uint32_t channel_atom_desc
+        = bar4_read(&bars, addr + ACQ_CORE_CH0_ATOM_DESC + 8 * channel);
+    channel_atom_width = extract_value<uint32_t>(
+        channel_atom_desc, ACQ_CORE_CH0_ATOM_DESC_ATOM_WIDTH_MASK);
+    channel_num_atoms = extract_value<uint32_t>(
+        channel_atom_desc, ACQ_CORE_CH0_ATOM_DESC_NUM_ATOMS_MASK);
 
-    if (channel_atom_width != 8 && channel_atom_width != 16 && channel_atom_width != 32)
+    if (channel_atom_width != 8 && channel_atom_width != 16
+        && channel_atom_width != 32)
         throw BadAtomWidth();
 }
 
@@ -262,12 +339,16 @@ void Controller::encode_params()
     acq_pre_samples = pre_samples;
     acq_post_samples = post_samples;
 
-    clear_and_insert(regs.acq_chan_ctl, channel, ACQ_CORE_ACQ_CHAN_CTL_WHICH_MASK);
+    clear_and_insert(
+        regs.acq_chan_ctl, channel, ACQ_CORE_ACQ_CHAN_CTL_WHICH_MASK);
 
-    auto align_extend = [](unsigned value, unsigned alignment, bool can_be_zero) -> unsigned {
+    auto align_extend
+        = [](unsigned value, unsigned alignment, bool can_be_zero) -> unsigned {
         if (value == 0) {
-            if (can_be_zero) return 0;
-            else return alignment;
+            if (can_be_zero)
+                return 0;
+            else
+                return alignment;
         }
 
         unsigned extra = value % alignment;
@@ -283,8 +364,10 @@ void Controller::encode_params()
     if (post_samples != 0 && trigger_type == "now")
         throw BadPostSamples();
 
-    const size_t pre_samples_aligned = align_extend(pre_samples, alignment, false);
-    const size_t post_samples_aligned = align_extend(post_samples, alignment, trigger_type == "now");
+    const size_t pre_samples_aligned
+        = align_extend(pre_samples, alignment, false);
+    const size_t post_samples_aligned
+        = align_extend(post_samples, alignment, trigger_type == "now");
 
     const size_t max_samples = (ram_end_addr - ram_start_addr) / sample_size;
     if (pre_samples_aligned + post_samples_aligned >= max_samples)
@@ -295,24 +378,31 @@ void Controller::encode_params()
 
     clear_and_insert(regs.shots, number_shots, ACQ_CORE_SHOTS_NB_MASK);
 
-    const static tsl::ordered_map<std::string_view, std::array<bool, 4>> trigger_types({
-        /* CTL_FSM_ACQ_NOW, TRIG_CFG_HW_TRIG_EN, TRIG_CFG_SW_TRIG_EN, TRIG_CFG_HW_TRIG_SEL */
-        {"now", {true, false, false, false}},
-        {"external", {false, true, false, true}},
-        {"data", {false, true, false, false}},
-        {"software", {false, false, true, false}},
-    });
+    const static tsl::ordered_map<std::string_view, std::array<bool, 4>>
+        trigger_types({
+            /* CTL_FSM_ACQ_NOW, TRIG_CFG_HW_TRIG_EN, TRIG_CFG_SW_TRIG_EN,
+               TRIG_CFG_HW_TRIG_SEL */
+            { "now", { true, false, false, false } },
+            { "external", { false, true, false, true } },
+            { "data", { false, true, false, false } },
+            { "software", { false, false, true, false } },
+        });
     auto &trigger_setting = trigger_types.at(trigger_type);
     insert_bit(regs.ctl, trigger_setting[0], ACQ_CORE_CTL_FSM_ACQ_NOW);
     insert_bit(regs.trig_cfg, trigger_setting[1], ACQ_CORE_TRIG_CFG_HW_TRIG_EN);
     insert_bit(regs.trig_cfg, trigger_setting[2], ACQ_CORE_TRIG_CFG_SW_TRIG_EN);
-    insert_bit(regs.trig_cfg, trigger_setting[3], ACQ_CORE_TRIG_CFG_HW_TRIG_SEL);
+    insert_bit(
+        regs.trig_cfg, trigger_setting[3], ACQ_CORE_TRIG_CFG_HW_TRIG_SEL);
 
     regs.trig_data_thres = data_trigger_threshold;
-    insert_bit(regs.trig_cfg, data_trigger_polarity_neg, ACQ_CORE_TRIG_CFG_HW_TRIG_POL);
-    clear_and_insert(regs.trig_cfg, data_trigger_sel, ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_MASK);
-    clear_and_insert(regs.trig_data_cfg, data_trigger_filt, ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_MASK);
-    clear_and_insert(regs.acq_chan_ctl, data_trigger_channel, ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_MASK);
+    insert_bit(regs.trig_cfg, data_trigger_polarity_neg,
+        ACQ_CORE_TRIG_CFG_HW_TRIG_POL);
+    clear_and_insert(
+        regs.trig_cfg, data_trigger_sel, ACQ_CORE_TRIG_CFG_INT_TRIG_SEL_MASK);
+    clear_and_insert(regs.trig_data_cfg, data_trigger_filt,
+        ACQ_CORE_TRIG_DATA_CFG_THRES_FILT_MASK);
+    clear_and_insert(regs.acq_chan_ctl, data_trigger_channel,
+        ACQ_CORE_ACQ_CHAN_CTL_DTRIG_WHICH_MASK);
     regs.trig_dly = trigger_delay;
 
     regs.ddr3_start_addr = ram_start_addr;
@@ -323,7 +413,8 @@ void Controller::encode_params()
 acq_error Controller::start_acquisition()
 {
     if (m_step != acq_step::stop)
-        throw std::logic_error("acquisition should only be started if it's not currently running");
+        throw std::logic_error(
+            "acquisition should only be started if it's not currently running");
 
     try {
         write_params();
@@ -362,8 +453,12 @@ void Controller::stop_acquisition()
 }
 
 #define ACQ_CORE_STA_FSM_IDLE (1 << ACQ_CORE_STA_FSM_STATE_SHIFT)
-#define COMPLETE_MASK  (ACQ_CORE_STA_FSM_STATE_MASK | ACQ_CORE_STA_FSM_ACQ_DONE | ACQ_CORE_STA_FC_TRANS_DONE | ACQ_CORE_STA_DDR3_TRANS_DONE)
-#define COMPLETE_VALUE (ACQ_CORE_STA_FSM_IDLE       | ACQ_CORE_STA_FSM_ACQ_DONE | ACQ_CORE_STA_FC_TRANS_DONE | ACQ_CORE_STA_DDR3_TRANS_DONE)
+#define COMPLETE_MASK                                                          \
+    (ACQ_CORE_STA_FSM_STATE_MASK | ACQ_CORE_STA_FSM_ACQ_DONE                   \
+        | ACQ_CORE_STA_FC_TRANS_DONE | ACQ_CORE_STA_DDR3_TRANS_DONE)
+#define COMPLETE_VALUE                                                         \
+    (ACQ_CORE_STA_FSM_IDLE | ACQ_CORE_STA_FSM_ACQ_DONE                         \
+        | ACQ_CORE_STA_FC_TRANS_DONE | ACQ_CORE_STA_DDR3_TRANS_DONE)
 
 bool Controller::acquisition_ready()
 {
@@ -373,8 +468,7 @@ bool Controller::acquisition_ready()
 
 /* XXX: evaluate performance difference from reusing a vector from the caller
  * instead of always creating a new one */
-template <class Data>
-std::vector<Data> Controller::get_result()
+template <class Data> std::vector<Data> Controller::get_result()
 {
     if (m_step != acq_step::done)
         throw std::logic_error("get_result() called in the wrong step");
@@ -383,11 +477,12 @@ std::vector<Data> Controller::get_result()
     /* total number of elements (samples*atoms) */
     size_t total_samples = acq_pre_samples + acq_post_samples,
            elements = total_samples * channel_num_atoms;
-    size_t total_bytes = elements * (channel_atom_width/8);
+    size_t total_bytes = elements * (channel_atom_width / 8);
 
     /* this is an identity, just want to be sure */
-    if (total_bytes != (total_samples) * sample_size)
-        throw std::logic_error("elements * channel_atom_width/8 different from samples * sample_size");
+    if (total_bytes != (total_samples)*sample_size)
+        throw std::logic_error("elements * channel_atom_width/8 different from "
+                               "samples * sample_size");
 
     /* how we interpret the contents of FPGA memory depends on atom width,
      * so we need intermediate vectors for any size atoms */
@@ -403,27 +498,30 @@ std::vector<Data> Controller::get_result()
         data_pointer = v.data();
     };
     switch (channel_atom_width) {
-        case 8:
-            set_data(v8);
-            break;
-        case 16:
-            set_data(v16);
-            break;
-        case 32:
-            set_data(v32);
-            break;
+    case 8:
+        set_data(v8);
+        break;
+    case 16:
+        set_data(v16);
+        break;
+    case 32:
+        set_data(v32);
+        break;
     }
 
     size_t trigger_pos = bar4_read(&bars, addr + ACQ_CORE_TRIG_POS);
     if (trigger_pos < ram_start_addr || trigger_pos >= ram_end_addr)
-        throw std::runtime_error("trigger_pos is outside of valid address range");
+        throw std::runtime_error(
+            "trigger_pos is outside of valid address range");
 
     /* these functions convert bytes (as an offset from ram_start_addr) into
      * amount of samples */
-    auto bytes2samples = [this](ssize_t v) -> ssize_t { return v / sample_size; };
-    auto samples2bytes = [this](ssize_t v) -> ssize_t { return v * sample_size; };
+    auto bytes2samples
+        = [this](ssize_t v) -> ssize_t { return v / sample_size; };
+    auto samples2bytes
+        = [this](ssize_t v) -> ssize_t { return v * sample_size; };
     const ssize_t max_bytes = ram_end_addr - ram_start_addr,
-          max_samples = bytes2samples(max_bytes);
+                  max_samples = bytes2samples(max_bytes);
     /* in order to simplify working with the acquisition circular buffer, think
      * first in terms of indexes into a circular buffer */
     const ssize_t trigger_index = bytes2samples(trigger_pos - ram_start_addr);
@@ -438,66 +536,79 @@ std::vector<Data> Controller::get_result()
     /* we have to use >= to account for acquisitions with just one sample */
     if (end_index >= start_index) {
         /* copy when the acquisition sits in a contiguous segment in RAM */
-        bar2_read_v(&bars, ram_start_addr + samples2bytes(start_index), data_pointer, total_bytes);
+        bar2_read_v(&bars, ram_start_addr + samples2bytes(start_index),
+            data_pointer, total_bytes);
     } else {
         /* copy when the acquisition wraps around the buffer */
         const ssize_t first_read = samples2bytes(max_samples - start_index);
         /* copy from the start of the acquisition to the end of the buffer */
-        bar2_read_v(&bars, ram_start_addr + samples2bytes(start_index), data_pointer, first_read);
+        bar2_read_v(&bars, ram_start_addr + samples2bytes(start_index),
+            data_pointer, first_read);
         /* copy from the start of the buffer to the end of the acquisition */
-        bar2_read_v(&bars, ram_start_addr, (unsigned char *)data_pointer + first_read, total_bytes - first_read);
+        bar2_read_v(&bars, ram_start_addr,
+            (unsigned char *)data_pointer + first_read,
+            total_bytes - first_read);
     }
 
     auto convert_result = [elements](auto &v) -> std::vector<Data> {
-        if constexpr (sizeof v[0] == sizeof(Data)) return v;
+        if constexpr (sizeof v[0] == sizeof(Data))
+            return v;
         std::vector<Data> result;
         result.resize(elements);
         std::ranges::copy(v, result.begin());
         return result;
     };
     switch (channel_atom_width) {
-        case 8:
-            return convert_result(v8);
-            break;
-        case 16:
-            return convert_result(v16);
-            break;
-        case 32:
-            return convert_result(v32);
-            break;
+    case 8:
+        return convert_result(v8);
+        break;
+    case 16:
+        return convert_result(v16);
+        break;
+    case 32:
+        return convert_result(v32);
+        break;
     }
 
     throw std::logic_error("should be unreachable");
 }
 
-template<class Data>
-std::vector<Data> Controller::result(std::optional<std::chrono::milliseconds> wait_time)
+template <class Data>
+std::vector<Data> Controller::result(
+    std::optional<std::chrono::milliseconds> wait_time)
 {
     start_acquisition();
 
     std::chrono::steady_clock::time_point start_time;
-    if (wait_time) start_time = std::chrono::steady_clock::now();
+    if (wait_time)
+        start_time = std::chrono::steady_clock::now();
 
     acq_status r;
     do {
         r = get_acq_status();
-        if (r == acq_status::in_progress) std::this_thread::sleep_for(acq_loop_time);
-    } while (
-        r == acq_status::in_progress &&
-        (!wait_time || std::chrono::steady_clock::now() - start_time < *wait_time)
-    );
+        if (r == acq_status::in_progress)
+            std::this_thread::sleep_for(acq_loop_time);
+    } while (r == acq_status::in_progress
+        && (!wait_time
+            || std::chrono::steady_clock::now() - start_time < *wait_time));
 
     if (r == acq_status::success)
         return get_result<Data>();
 
     throw std::runtime_error("acquisition failed");
 }
-template std::vector<uint32_t> Controller::result(std::optional<std::chrono::milliseconds>);
-template std::vector<uint16_t> Controller::result(std::optional<std::chrono::milliseconds>);
-template std::vector<uint8_t> Controller::result(std::optional<std::chrono::milliseconds>);
-template std::vector<int32_t> Controller::result(std::optional<std::chrono::milliseconds>);
-template std::vector<int16_t> Controller::result(std::optional<std::chrono::milliseconds>);
-template std::vector<int8_t> Controller::result(std::optional<std::chrono::milliseconds>);
+template std::vector<uint32_t> Controller::result(
+    std::optional<std::chrono::milliseconds>);
+template std::vector<uint16_t> Controller::result(
+    std::optional<std::chrono::milliseconds>);
+template std::vector<uint8_t> Controller::result(
+    std::optional<std::chrono::milliseconds>);
+template std::vector<int32_t> Controller::result(
+    std::optional<std::chrono::milliseconds>);
+template std::vector<int16_t> Controller::result(
+    std::optional<std::chrono::milliseconds>);
+template std::vector<int8_t> Controller::result(
+    std::optional<std::chrono::milliseconds>);
 
 acq_status Controller::get_acq_status()
 {
@@ -517,13 +628,13 @@ acq_status Controller::get_acq_status()
     throw std::logic_error("should be unreachable");
 }
 
-template<typename T>
-void Controller::print_csv(FILE *f, std::vector<T> &res)
+template <typename T> void Controller::print_csv(FILE *f, std::vector<T> &res)
 {
     for (unsigned i = 0; i < (pre_samples + post_samples); i++) {
         for (unsigned j = 0; j < channel_num_atoms; j++) {
             char tmp[32];
-            auto r = std::to_chars(tmp, tmp + sizeof tmp, res[i * channel_num_atoms + j]);
+            auto r = std::to_chars(
+                tmp, tmp + sizeof tmp, res[i * channel_num_atoms + j]);
             *r.ptr = '\0';
             fputs(tmp, f);
             fputc(',', f);

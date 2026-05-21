@@ -13,18 +13,18 @@ namespace afc_timing {
 /* forward declaration */
 struct afc_timing;
 
-class Core: public RegisterDecoder {
+class Core : public RegisterDecoder {
     std::unique_ptr<struct afc_timing> regs_storage;
     struct afc_timing &regs;
 
     void decode() override;
 
-  public:
+public:
     Core(struct pcie_bars &);
     ~Core() override;
 };
 
-class Controller: public RegisterDecoderController {
+class Controller : public RegisterDecoderController {
     std::unique_ptr<struct afc_timing> regs_storage;
     struct afc_timing &regs;
 
@@ -37,11 +37,11 @@ class Controller: public RegisterDecoderController {
     struct clock {
         uint64_t rfreq;
         uint8_t n1, hs_div;
-    } rtm_clock = {}, afc_clock = {};
+    } rtm_clock = { }, afc_clock = { };
 
     bool set_freq(double, struct Controller::clock &);
 
-  public:
+public:
     Controller(struct pcie_bars &);
     ~Controller();
 

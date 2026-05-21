@@ -10,24 +10,24 @@ namespace fmc_adc_common {
 
 struct fmc_adc_common;
 
-class Core: public RegisterDecoder {
+class Core : public RegisterDecoder {
     std::unique_ptr<struct fmc_adc_common> regs_storage;
     struct fmc_adc_common &regs;
 
     void decode() override;
 
-  public:
+public:
     Core(struct pcie_bars &);
     ~Core() override;
 };
 
-class Controller: public RegisterDecoderController {
+class Controller : public RegisterDecoderController {
     std::unique_ptr<struct fmc_adc_common> regs_storage;
     struct fmc_adc_common &regs;
 
     Core dec;
 
-  public:
+public:
     Controller(struct pcie_bars &);
     ~Controller();
 };

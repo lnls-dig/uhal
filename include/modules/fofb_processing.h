@@ -12,7 +12,7 @@ namespace fofb_processing {
 /* forward declaration */
 struct wb_fofb_processing_regs;
 
-class Core: public RegisterDecoder {
+class Core : public RegisterDecoder {
     std::unique_ptr<struct wb_fofb_processing_regs> regs_storage;
     struct wb_fofb_processing_regs &regs;
 
@@ -20,7 +20,7 @@ class Core: public RegisterDecoder {
     void read_monitors() override;
     void print(FILE *, bool) const override;
 
-  public:
+public:
     Core(struct pcie_bars &);
     ~Core();
 
@@ -28,8 +28,8 @@ class Core: public RegisterDecoder {
     std::vector<std::vector<double>> coefficients_x, coefficients_y;
 };
 
-class Controller: public RegisterController {
-  protected:
+class Controller : public RegisterController {
+protected:
     std::unique_ptr<struct wb_fofb_processing_regs> regs_storage;
     struct wb_fofb_processing_regs &regs;
 
@@ -38,11 +38,12 @@ class Controller: public RegisterController {
 
     unsigned fixed_point_coeff, fixed_point_gains;
 
-  public:
+public:
     Controller(struct pcie_bars &);
     ~Controller();
 
-    bool intlk_sta_clr = false, intlk_en_orb_distort = false, intlk_en_packet_loss = false;
+    bool intlk_sta_clr = false, intlk_en_orb_distort = false,
+         intlk_en_packet_loss = false;
     unsigned orb_distort_limit = 0, min_num_packets = 0;
 
     std::vector<int32_t> ref_orb_x, ref_orb_y;
