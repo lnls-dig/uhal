@@ -6,8 +6,8 @@
 #define PCIE_STRUCT_H
 
 #include <pthread.h>
-#include <stdint.h>
-#include <stdio.h>
+#include <cstdint>
+#include <cstdio>
 #include <sys/types.h>
 
 enum bar_lock {

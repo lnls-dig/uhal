@@ -1,4 +1,4 @@
-#include <inttypes.h>
+#include <cinttypes>
 
 #include <algorithm>
 #include <chrono>
@@ -369,7 +369,7 @@ int main(int argc, char *argv[])
 
                 if (type == "pos_calc") {
                     /* force module to actually read these registers */
-                    auto dec_pos_calc
+                    auto *dec_pos_calc
                         = dynamic_cast<pos_calc::Core *>(dec.get());
                     dec_pos_calc->fifo_empty();
                     dec_pos_calc->get_fifo_amps();

@@ -13,9 +13,8 @@ size_t get_index(
     auto it = std::ranges::find(value_list, value);
     if (it != value_list.end())
         return it - value_list.begin();
-    else
-        throw std::runtime_error(
-            "option must be one of " + list_of_keys(value_list));
+    throw std::runtime_error(
+        "option must be one of " + list_of_keys(value_list));
 }
 
 void clear_and_insert_index(uint32_t &dest, uint32_t mask,
@@ -26,7 +25,8 @@ void clear_and_insert_index(uint32_t &dest, uint32_t mask,
 
 uint32_t float2fixed(double v, unsigned point_pos, bool saturate)
 {
-    const uint32_t max_value_rep = 0x7fffffff, min_value_rep = 0x80000000;
+    const uint32_t max_value_rep = 0x7fffffff;
+    const uint32_t min_value_rep = 0x80000000;
 
     /* we know a 32-bit value fits inside the significand of a double, so these
      * are exact */
@@ -77,5 +77,7 @@ std::string list_of_keys(const std::vector<std::string> &v)
 {
     auto b = v.begin();
     return std::accumulate(std::next(b), v.end(), *b,
-        [](std::string a, std::string b) { return a + ", " + b; });
+        [](const std::string &a, const std::string &b) {
+            return a + ", " + b;
+        });
 }

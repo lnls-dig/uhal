@@ -91,17 +91,16 @@ void Core::read_monitors()
     for (unsigned i = 0; i < *number_of_channels; i++)
         get_register(WB_FOFB_PROCESSING_REGS_CH
             + WB_FOFB_PROCESSING_REGS_CH_SP_DECIM_DATA
-            + i * WB_FOFB_PROCESSING_REGS_CH_SIZE);
+            + (i * WB_FOFB_PROCESSING_REGS_CH_SIZE));
 }
 
 void Core::decode()
 {
-    uint32_t fixed_point_gain
+    auto fixed_point_gain
         = extract_value<uint32_t>(regs.fixed_point_pos.accs_gains,
             WB_FOFB_PROCESSING_REGS_FIXED_POINT_POS_ACCS_GAINS_VAL_MASK);
-    uint32_t fixed_point_coeff
-        = extract_value<uint32_t>(regs.fixed_point_pos.coeff,
-            WB_FOFB_PROCESSING_REGS_FIXED_POINT_POS_COEFF_VAL_MASK);
+    auto fixed_point_coeff = extract_value<uint32_t>(regs.fixed_point_pos.coeff,
+        WB_FOFB_PROCESSING_REGS_FIXED_POINT_POS_COEFF_VAL_MASK);
     add_general("FIXED_POINT_POS_GAINS", fixed_point_gain);
     add_general("FIXED_POINT_POS_COEFF", fixed_point_coeff);
 
@@ -168,11 +167,11 @@ void Core::decode()
     }
 
     size_t u = 0;
-    std::generate(ref_orb_x.begin(), ref_orb_x.end(),
-        [&]() { return (int32_t)regs.sps_ram_bank[u++].data; });
+    std::ranges::generate(
+        ref_orb_x, [&]() { return (int32_t)regs.sps_ram_bank[u++].data; });
     u = MAX_BPMS; /* access the second half of the RAM bank */
-    std::generate(ref_orb_y.begin(), ref_orb_y.end(),
-        [&]() { return (int32_t)regs.sps_ram_bank[u++].data; });
+    std::ranges::generate(
+        ref_orb_y, [&]() { return (int32_t)regs.sps_ram_bank[u++].data; });
 }
 
 void Core::print(FILE *f, bool verbose) const
@@ -184,11 +183,11 @@ void Core::print(FILE *f, bool verbose) const
     if (verbose) {
         fputs("reference orbit x:\n", f);
         for (auto v : ref_orb_x)
-            fprintf(f, "%d ", (int)v);
+            fprintf(f, "%d ", v);
 
         fputs("\nreference orbit y:\n", f);
         for (auto v : ref_orb_y)
-            fprintf(f, "%d ", (int)v);
+            fprintf(f, "%d ", v);
         fputc('\n', f);
     }
 

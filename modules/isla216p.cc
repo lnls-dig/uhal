@@ -70,6 +70,10 @@ bool Controller::set_reg(uint8_t addr, uint8_t rdata, spi::Channel channel)
         wdata, sizeof wdata, &rdata, sizeof rdata, channel.channel);
 }
 
-bool Controller::set_defaults(spi::Channel) { return false; }
+bool Controller::set_defaults(spi::Channel)
+{
+    (void)this;
+    return false;
+}
 
 } /* namespace isla216p */

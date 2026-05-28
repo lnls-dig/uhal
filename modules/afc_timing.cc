@@ -164,7 +164,7 @@ void Core::decode()
     add_general("ALIVE", regs.alive);
 
     size_t i = 0;
-    for (auto clockp : { &regs.rtm_clock, &regs.afc_clock }) {
+    for (auto *clockp : { &regs.rtm_clock, &regs.afc_clock }) {
         add_channel("RFREQ_HI", i, clockp->rfreq_hi);
         add_channel("RFREQ_LO", i, clockp->rfreq_lo);
         add_channel("N1", i,
@@ -200,8 +200,8 @@ void Core::decode()
         add_channel("CH_ITL", i, rf_get_bit(*pt, TIMING_AMC0_ITL));
 
         auto ch_src = rf_extract_value(*pt, TIMING_AMC0_SRC_MASK);
-        assert(std::get<int32_t>(ch_src.value)
-            < (ssize_t)Controller::sources_list.size());
+        assert(std::cmp_less(std::get<int32_t>(ch_src.value)
+            ,Controller::sources_list.size());
         add_channel("CH_SRC", i, ch_src);
 
         add_channel("CH_DIR", i, rf_get_bit(*pt, TIMING_AMC0_DIR));
