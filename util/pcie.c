@@ -144,7 +144,11 @@ void bar2_read_v(struct pcie_bars *bars, size_t addr, void *dest, size_t n)
         size_t i = 0;
 
 #ifdef USE_SSE41
-        const size_t cache_line_alignment = 64, read_size = 1024;
+        const size_t sse_ins_alignment = 16, cache_line_alignment = 64,
+                     read_size = 1024;
+
+        if (addr_now % sse_ins_alignment || (uintptr_t)destp % sse_ins_alignment)
+            goto bad_alignment;
 
         size_t head = addr_now % cache_line_alignment;
         /* if addr_now is aligned to e.g. 16 bytes, we need to read 48 bytes to
@@ -191,6 +195,7 @@ void bar2_read_v(struct pcie_bars *bars, size_t addr, void *dest, size_t n)
                 _mm_stream_si128((__m128i *)(destp + base + 12), d);
             }
         }
+    bad_alignment:
 #endif
         for (; i < to_read / 4; i++)
             destp[i] = *bar2_get_u32p_small(bars, addr_now, i);

@@ -49,8 +49,8 @@ int main()
     bar2_read_v(&bars, 0, dest, bars.sizes[1]);
     compare(0, 0, bars.sizes[1]);
 
-    const size_t offs[] = { 4096, 2048, 1024, 768, 512, 256, 128, 64, 32, 16,
-        /*FIXME: 8, 4, */ 0 };
+    const size_t offs[]
+        = { 4096, 2048, 1024, 768, 512, 256, 128, 64, 32, 16, 8, 4, 0 };
     for (auto off : offs) {
         bar2_read_v(&bars, off, dest, bars.sizes[1] - off);
         compare(off, 0, bars.sizes[1] - off);
