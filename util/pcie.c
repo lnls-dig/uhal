@@ -144,10 +144,13 @@ void bar2_read_v(struct pcie_bars *bars, size_t addr, void *dest, size_t n)
         size_t i = 0;
 
 #ifdef USE_SSE41
-        const size_t alignment = 64, read_size = 1024;
+        const size_t cache_line_alignment = 64, read_size = 1024;
 
-        size_t head = addr_now % alignment;
-        head = head ? alignment - head : 0;
+        size_t head = addr_now % cache_line_alignment;
+        /* if addr_now is aligned to e.g. 16 bytes, we need to read 48 bytes to
+         * reach the next 64-byte aligned block */
+        head = head ? cache_line_alignment - head : 0;
+
         for (size_t j = head; i < to_read / 4 && j; i++, j -= 4)
             destp[i] = *bar2_get_u32p_small(bars, addr_now, i);
 
