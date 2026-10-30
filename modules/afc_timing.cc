@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cstddef>
 #include <stdexcept>
 
 #include "modules/afc_timing.h"
@@ -55,7 +56,20 @@ struct afc_timing {
         uint32_t config, pulses, count, evt, dly, wdt;
     } trigger[NUM_CHANNELS];
     uint32_t dbg_ctl, dbg_cfg_1, dbg_cfg_2, dbg_sta;
+    struct {
+        uint32_t phase_eff_pro, phase_eff_int, freq_eff_pro, freq_eff_int,
+            mul_err_phase, mul_avg_phase, mul_err_freq, phase_avg,
+            control_phase, dac_value, control_freq, rfreq_msb, rfreq_lsb;
+    } afc_control;
+    struct {
+        uint32_t phase_eff_pro, phase_eff_int, freq_eff_pro, freq_eff_int,
+            mul_err_phase, mul_avg_phase, mul_err_freq, phase_avg,
+            control_phase, control_freq, rfreq_msb, rfreq_lsb;
+    } rtm_control;
 };
+
+static_assert(
+    TIMING_REG_DBG_RTM_RFREQ_RTM_LSB == offsetof(afc_timing, rtm_control.rfreq_lsb));
 
 Core::Core(struct pcie_bars &bars)
     : RegisterDecoder(bars, ref_devinfo,
@@ -128,6 +142,30 @@ Core::Core(struct pcie_bars &bars)
               PRINTER("DBG_COUNTER",
                   "Counts how many times the debugging procedure was triggered",
                   PrinterType::value),
+
+              PRINTER("PHASE_EFF_PRO", "Proportional phase effort",
+                  PrinterType::value),
+              PRINTER(
+                  "PHASE_EFF_INT", "Integral phase effort", PrinterType::value),
+              PRINTER("FREQ_EFF_PRO", "Proportional frequency effort",
+                  PrinterType::value),
+              PRINTER("FREQ_EFF_INT", "Integral frequency effort",
+                  PrinterType::value),
+              PRINTER("MUL_ERR_PHASE", "Proportional phase error",
+                  PrinterType::value),
+              PRINTER(
+                  "MUL_AVG_PHASE", "Integral phase error", PrinterType::value),
+              PRINTER("MUL_ERR_FREQ", "Frequency error", PrinterType::value),
+              PRINTER("PHASE_AVG", "Phase average error", PrinterType::value),
+              PRINTER("CONTROL_PHASE", "Phase control effort before DAC bias",
+                  PrinterType::value),
+              PRINTER("DAC_VALUE", "Phase dac control effort after dac bias",
+                  PrinterType::value),
+              PRINTER("CONTROL_FREQ", "Frequency control effort",
+                  PrinterType::value),
+              PRINTER("CURR_RFREQ_MSB", "Current RFREQ value msb", PrinterType::value),
+              PRINTER("CURR_RFREQ_LSB", "Current RFREQ value lsb", PrinterType::value),
+              PRINTER("CURR_RFREQ", "Current RFREQ value", PrinterType::value_float),
           })
     , CONSTRUCTOR_REGS(struct afc_timing)
 {
@@ -228,6 +266,34 @@ void Core::decode()
 
     add_general("DBG_EVT_REPS", rf_whole_register(regs.dbg_cfg_2));
     add_general("DBG_COUNTER", regs.dbg_sta);
+
+    auto add_control_dbg = [this](unsigned index, auto &control) {
+        add_channel("PHASE_EFF_PRO", index, control.phase_eff_pro);
+        add_channel("PHASE_EFF_INT", index, control.phase_eff_int);
+        add_channel("FREQ_EFF_PRO", index, control.freq_eff_pro);
+        add_channel("FREQ_EFF_INT", index, control.freq_eff_int);
+        add_channel("MUL_ERR_PHASE", index, control.mul_err_phase);
+        add_channel("MUL_AVG_PHASE", index, control.mul_avg_phase);
+        add_channel("MUL_ERR_FREQ", index, control.mul_err_freq);
+        add_channel("PHASE_AVG", index, control.phase_avg);
+        add_channel("CONTROL_PHASE", index, control.control_phase);
+        /* skip DAC value, handled below because one of the structs lacks it */
+        add_channel("CONTROL_FREQ", index, control.control_freq);
+
+        auto rfreq_msb = extract_value(control.rfreq_msb, TIMING_DBG_AFC_RFREQ_AFC_MSB_VALUE_MASK);
+        add_channel("CURR_RFREQ_MSB", index, rfreq_msb);
+        add_channel("CURR_RFREQ_LSB", index, control.rfreq_lsb);
+        uint64_t rfreq = ((uint64_t)rfreq_msb << 32) | control.rfreq_lsb;
+        /* FIXME: find some way to share with si57x_util.cc */
+        const double rfreq_factor = 1 << 28;
+        add_channel_double("CURR_RFREQ", index, rfreq / rfreq_factor);
+    };
+    add_control_dbg(0, regs.rtm_control);
+    add_control_dbg(1, regs.afc_control);
+    add_channel("DAC_VALUE", 0, 0);
+    add_channel("DAC_VALUE", 1,
+        extract_value(
+            regs.afc_control.dac_value, TIMING_DBG_AFC_DAC_VALUE_VALUE_MASK));
 }
 
 Controller::Controller(struct pcie_bars &bars)
